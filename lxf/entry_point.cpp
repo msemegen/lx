@@ -357,8 +357,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
             VkPhysicalDeviceProperties vk_device_properties;
             VkPhysicalDeviceFeatures vk_device_features;
 
+            std::unique_ptr<VkExtensionProperties[]> vk_device_extensions_buffer;
+
             vkGetPhysicalDeviceProperties(gpus_buffer[gpu_index], &vk_device_properties);
             vkGetPhysicalDeviceFeatures(gpus_buffer[gpu_index], &vk_device_features);
+            //vkEnumerateDeviceExtensionProperties();
 
             bool is_primary = vk_device_properties.deviceName == primary_display_device_name;
 

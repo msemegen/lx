@@ -60,16 +60,24 @@ Int64 lxf::entry_point(std::string_view,
 
         if (true == p_main_window->is_created())
         {
-            p_main_window->set_visible(true);
-            logger::write_line(logger::Level::info, module_name, "Main window created.");
+            const device::GPU::Queue qs[] = { device::GPU::Queue { .kind = device::GPU::Queue::graphics, .count = 1u } };
+            renderer::Context* p_rendering_context = renderer::create<renderer::Context>(gpu, qs, device::GPU::Feature::none);
 
-            logger::write_line(logger::Level::info, module_name, "Application started.");
-
-            while (true == p_main_window->update())
+            if (nullptr != p_rendering_context)
             {
-            }
+                p_main_window->set_visible(true);
+                logger::write_line(logger::Level::info, module_name, "Main window created.");
 
-            logger::write_line(logger::Level::info, module_name, "Application stopped.");
+                logger::write_line(logger::Level::info, module_name, "Application started.");
+
+                while (true == p_main_window->update())
+                {
+                }
+
+                logger::write_line(logger::Level::info, module_name, "Application stopped.");
+
+                renderer::destroy<renderer::Context>(&p_rendering_context);
+            }
         }
         else
         {

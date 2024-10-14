@@ -40,7 +40,7 @@ private:
         {
         }
 
-        bool is_created() const
+        [[nodiscard]] bool is_created() const
         {
             return this->created;
         }

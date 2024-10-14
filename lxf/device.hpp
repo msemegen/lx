@@ -366,6 +366,11 @@ struct device : private common::non_constructible
             return *this;
         }
 
+        operator VkPhysicalDevice() const
+        {
+            return this->vk_physical_device;
+        }
+
     private:
         Kind from(VkPhysicalDeviceType type_a) const
         {
