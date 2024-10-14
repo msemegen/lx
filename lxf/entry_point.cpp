@@ -354,7 +354,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
             VkPhysicalDeviceProperties vk_device_properties;
             VkPhysicalDeviceFeatures vk_device_features;
 
-            std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>> device_extensions_names;
+            std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>> device_extension_names;
 
             std::unique_ptr<VkExtensionProperties[]> vk_device_extensions_buffer;
 
@@ -370,7 +370,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                 vkEnumerateDeviceExtensionProperties(
                     gpus_buffer[gpu_index], nullptr, &device_extensions_count, vk_device_extensions_buffer.get());
 
-                device_extensions_names.reserve(device_extensions_count);
+                device_extension_names.reserve(device_extensions_count);
 
                 for (std::uint32_t ex_index = 0; ex_index < device_extensions_count; ex_index++)
                 {
@@ -378,7 +378,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                     std::copy(std::begin(vk_device_extensions_buffer[ex_index].extensionName),
                               std::end(vk_device_extensions_buffer[ex_index].extensionName),
                               std::begin(tmp));
-                    device_extensions_names.push_back(tmp);
+                    device_extension_names.push_back(tmp);
                 }
             }
 
@@ -466,8 +466,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                                    vk_queue_family_properties_buffer[qf_index].queueCount);
             }
 
-            logger::write_line(logger::info, module_name, "\t\t Extensions {}", device_extensions_names.size());
-            for (const auto& ext_name : device_extensions_names)
+            logger::write_line(logger::info, module_name, "\t\t Extensions {}", device_extension_names.size());
+            for (const auto& ext_name : device_extension_names)
             {
                 logger::write_line(logger::Level::debug, module_name, "\t\t\t - {}", &(ext_name[0]));
             }
@@ -477,6 +477,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                               vk_device_properties.limits,
                               vk_device_features,
                               std::span { vk_queue_family_properties_buffer.get(), queue_family_property_count },
+                              (device_extension_names),
                               is_primary,
                               vk_device_properties.deviceName);
         }

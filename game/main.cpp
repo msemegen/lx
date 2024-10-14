@@ -37,9 +37,9 @@ Int64 lxf::entry_point(std::string_view,
                        Windower* p_windower_a)
 {
     const std::vector<device::GPU> avaliable_integrated_gpus =
-        device::filter<device::GPU>(gpus_a, device::GPU::integrated, device::GPU::Queue::graphics, device::GPU::Feature::none);
+        device::filter<device::GPU>(gpus_a, device::GPU::integrated, device::GPU::Queue::graphics, device::GPU::Feature::none, { "VK_EXT_multi_draw" });
     const std::vector<device::GPU> avaliable_discrete_gpus =
-        device::filter<device::GPU>(gpus_a, device::GPU::discrete, device::GPU::Queue::graphics, device::GPU::Feature::none);
+        device::filter<device::GPU>(gpus_a, device::GPU::discrete, device::GPU::Queue::graphics, device::GPU::Feature::none, { "VK_EXT_multi_draw" });
     const std::vector<device::Display> avaliable_displays = device::filter<device::Display>(displays_a, { .w = 800u, .h = 600u }, 32u);
 
     if ((false == avaliable_integrated_gpus.empty() || false == avaliable_discrete_gpus.empty()) && false == avaliable_displays.empty())

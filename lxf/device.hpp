@@ -6,6 +6,7 @@
  */
 
 // std
+#include <array>
 #include <memory>
 #include <span>
 #include <string>
@@ -288,6 +289,7 @@ struct device : private common::non_constructible
             Feature features;
             Limits limits;
             std::span<const Queue> queue_families;
+            std::span<const std::string_view> extensions;
             std::string_view name;
         };
 
@@ -300,10 +302,18 @@ struct device : private common::non_constructible
             , limits(other_a.limits)
             , queues { std::make_unique<Queue[]>(other_a.queues_count) }
             , queues_count(other_a.queues_count)
+            , extension_names_buffer(other_a.extension_names_buffer)
         {
             for (std::size_t i = 0; i < this->queues_count; i++)
             {
                 this->queues[i] = { .kind = other_a.queues[i].kind, .count = other_a.queues[i].count };
+            }
+
+            this->extension_names.reserve(this->extension_names_buffer.size());
+
+            for (const auto& ex_name : this->extension_names_buffer)
+            {
+                this->extension_names.emplace_back(ex_name.data());
             }
 
             std::memcpy(this->name, other_a.name, sizeof(this->name));
@@ -314,6 +324,7 @@ struct device : private common::non_constructible
             const VkPhysicalDeviceLimits& limits_a,
             const VkPhysicalDeviceFeatures& features_a,
             std::span<VkQueueFamilyProperties> queue_family_properties_a,
+            const std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>>& extension_names_a,
             bool is_primary_a,
             std::string_view name_a)
             : vk_physical_device(vk_physical_device_a)
@@ -323,11 +334,19 @@ struct device : private common::non_constructible
             , limits(this->from(limits_a))
             , queues { std::make_unique<Queue[]>(queue_family_properties_a.size()) }
             , queues_count(queue_family_properties_a.size())
+            , extension_names_buffer(extension_names_a)
         {
             for (std::size_t i = 0; i < this->queues_count; i++)
             {
                 this->queues[i].kind = static_cast<Queue::Kind>(queue_family_properties_a[i].queueFlags);
                 this->queues[i].count = queue_family_properties_a[i].queueCount;
+            }
+
+            this->extension_names.reserve(this->extension_names_buffer.size());
+
+            for (const auto& ex_name : this->extension_names_buffer)
+            {
+                this->extension_names.emplace_back(ex_name.data());
             }
 
             static_assert(VK_MAX_PHYSICAL_DEVICE_NAME_SIZE > 1u);
@@ -344,6 +363,7 @@ struct device : private common::non_constructible
                      .features = this->features,
                      .limits = this->limits,
                      .queue_families = { this->queues.get(), this->queues_count },
+                     .extensions = { this->extension_names.data(), this->extension_names.size() },
                      .name = this->name };
         }
 
@@ -743,6 +763,8 @@ struct device : private common::non_constructible
         std::size_t queues_count;
 
         char name[VK_MAX_PHYSICAL_DEVICE_NAME_SIZE];
+        std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>> extension_names_buffer;
+        std::vector<std::string_view> extension_names;
     };
     struct Input
     {
@@ -773,7 +795,7 @@ struct device : private common::non_constructible
                                                       common::Uint8 bits_per_pixel_a) = delete;
     template<typename Device_t> [[nodiscard]] static std::vector<Device_t> filter(Input::Kind) = delete;
     template<typename Device_t> [[nodiscard]] static std::vector<Device_t>
-    filter(const std::vector<GPU>& gpus_a, GPU::Kind, GPU::Queue::Kind, GPU::Feature) = delete;
+    filter(const std::vector<GPU>& gpus_a, GPU::Kind, GPU::Queue::Kind, GPU::Feature, const std::vector<std::string_view>&) = delete;
 };
 
 template<>
@@ -799,7 +821,8 @@ template<>
 template<> inline std::vector<device::GPU> [[nodiscard]] device::filter<device::GPU>(const std::vector<GPU>& gpus_a,
                                                                                      GPU::Kind gpu_kind_flags_a,
                                                                                      GPU::Queue::Kind queue_family_kind_a,
-                                                                                     GPU::Feature features_a)
+                                                                                     GPU::Feature features_a,
+                                                                                     const std::vector<std::string_view>& extensions_a)
 {
     std::vector<GPU> ret;
 
@@ -813,7 +836,20 @@ template<> inline std::vector<device::GPU> [[nodiscard]] device::filter<device::
             {
                 if (true == common::bit::flag::is(qf.kind, queue_family_kind_a))
                 {
-                    ret.push_back(device);
+                    bool found = true;
+                    for (std::string_view extension : extensions_a)
+                    {
+                        if (descriptor.extensions.end() == std::find(descriptor.extensions.begin(), descriptor.extensions.end(), extension))
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+
+                    if (true == found)
+                    {
+                        ret.push_back(device);
+                    }
                     break;
                 }
             }
