@@ -57,7 +57,7 @@ LRESULT __stdcall window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, L
 } // namespace
 
 namespace lxf {
-bool canvas::Windowed::create_window(const Descriptor& descriptor_a)
+bool canvas::Windowed::create_window(const device::Display& display_a, const Descriptor& descriptor_a)
 {
     WNDCLASSEX window_class_descriptor {};
     window_class_descriptor.cbSize = sizeof(WNDCLASSEXW);
@@ -88,8 +88,8 @@ bool canvas::Windowed::create_window(const Descriptor& descriptor_a)
         const std::uint32_t size_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(descriptor_a.size) >> 16u);
         std::memcpy(&wnd_size, &size_tmp, sizeof(wnd_size));
 
-        wnd_pos = { .x = static_cast<common::Uint16>(this->display.get_logical_rect().size.w / 2u - wnd_size.w / 2u),
-                    .y = static_cast<common::Uint16>(this->display.get_logical_rect().size.h / 2u - wnd_size.h / 2u) };
+        wnd_pos = { .x = static_cast<common::Uint16>(display_a.get_logical_rect().size.w / 2u - wnd_size.w / 2u),
+                    .y = static_cast<common::Uint16>(display_a.get_logical_rect().size.h / 2u - wnd_size.h / 2u) };
     }
     else if (Position::automatic == (descriptor_a.position & Position::automatic) && Size::maximize == (descriptor_a.size & Size::maximize))
     {

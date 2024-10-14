@@ -33,18 +33,23 @@ private:
     class Window : private common::non_copyable
     {
     public:
-        Window(const device::Display& display_a)
-            : handle(nullptr)
+        Window()
+            : created(false)
+            , handle(nullptr)
             , wnd_class(0x0u)
-            , display(display_a)
         {
         }
 
+        bool is_created() const
+        {
+            return this->created;
+        }
+
     protected:
+        bool created;
+
         HWND handle;
         ATOM wnd_class;
-
-        device::Display display;
 
         VkSurfaceKHR vk_surface;
     };
@@ -62,7 +67,7 @@ public:
         automatic
     };
 
-    class Windowed : private Window
+    class Windowed : public Window
     {
     public:
         struct Descriptor
@@ -74,18 +79,13 @@ public:
         };
 
         Windowed(const device::Display& display_a, const Descriptor& descriptor_a)
-            : Window(display_a)
-            , created(this->create_window(descriptor_a))
+            : Window()
         {
+            this->created = this->create_window(display_a, descriptor_a);
         }
 
         void set_visible(bool visible_a);
         bool update();
-
-        bool is_created() const
-        {
-            return this->created;
-        }
 
         bool operator==(const Windowed& obj_a)
         {
@@ -97,14 +97,12 @@ public:
         }
 
     private:
-        bool create_window(const Descriptor& descriptor_a);
+        bool create_window(const device::Display& display_a, const Descriptor& descriptor_a);
         void destroy();
-
-        bool created;
 
         friend class lxf::Windower;
     };
-    class Fullscreen : private Window
+    class Fullscreen : public Window
     {
     public:
         struct Descriptor
@@ -114,17 +112,13 @@ public:
         };
 
         Fullscreen(const device::Display& display_a, const Descriptor descriptor_a)
-            : Window(display_a)
+            : Window()
         {
+            this->created = this->create_window(display_a, descriptor_a);
         }
 
-        void set_descriptor(const Descriptor& descriptor_a);
         void set_visible(bool visible_a);
-
-        bool update()
-        {
-            return true;
-        }
+        bool update();
 
         bool operator==(const Fullscreen& obj_a)
         {
@@ -136,6 +130,7 @@ public:
         }
 
     private:
+        bool create_window(const device::Display& display_a, const Descriptor& descriptor_a);
         void destroy();
 
         friend class lxf::Windower;

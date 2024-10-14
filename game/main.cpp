@@ -13,7 +13,7 @@ using namespace ::lxf::common;
 using namespace ::lxf::utils;
 
 // logger config
-std::string_view config::log::file_path = "test.txt";
+std::string_view config::log::file_path = "log.log";
 logger::Severity config::log::severity = logger::Severity::omg | logger::Severity::error | logger::Severity::debug;
 bool config::log::console = true;
 
