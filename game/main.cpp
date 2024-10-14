@@ -15,7 +15,7 @@ using namespace ::lxf::utils;
 
 // logger config
 std::string_view config::log::file_path = "log.log";
-logger::Severity config::log::severity = logger::Severity::omg | logger::Severity::error | logger::Severity::debug;
+logger::Severity config::log::severity = logger::Severity::omg | logger::Severity::error | logger::Severity::info | logger::Severity::debug;
 bool config::log::console = true;
 
 // app config

@@ -34,18 +34,14 @@ public:
     };
     enum class Level : common::Uint64
     {
-        info = 0u,
-        warning = 1u,
-        error = 2u,
-        omg = 4u,
-        debug = 8u
+        info = 0x1u,
+        warning = 0x2u,
+        error = 0x4u,
+        omg = 0x8u,
+        debug = 0x10u
     };
 
-    struct Force
-    {
-    };
-
-    inline static Force force;
+    using enum Level;
 
     template<typename... Args_t>
     static void write(Level level_a, std::string_view module_name_a, std::string_view format_a, Args_t... args_a)
@@ -61,8 +57,7 @@ public:
     template<typename... Args>
     static void write_line(Level level_a, std::string_view module_name_a, std::string_view format_a, Args... args_a)
     {
-        if ((true == common::bit::flag::is(static_cast<common::Uint64>(severity), static_cast<common::Uint8>(level_a)) ||
-             true == common::bit::flag::is(static_cast<common::Uint64>(level_a), 0x10ull)) &&
+        if ((true == common::bit::flag::is(static_cast<common::Uint64>(severity), static_cast<common::Uint8>(level_a))) &&
             true == is_open())
         {
             timestamp(std::time(nullptr));
@@ -109,11 +104,6 @@ constexpr logger::Severity operator|(logger::Severity left_a, logger::Severity r
 constexpr logger::Severity operator&(logger::Severity left_a, logger::Severity right_a)
 {
     return static_cast<logger::Severity>(static_cast<common::Uint64>(left_a) & static_cast<common::Uint64>(right_a));
-}
-
-constexpr logger::Level operator|(logger::Level left_a, logger::Force)
-{
-    return static_cast<logger::Level>(static_cast<common::Uint64>(left_a) | 0x10ull);
 }
 } // namespace utils
 } // namespace lxf

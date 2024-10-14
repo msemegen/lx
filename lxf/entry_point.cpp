@@ -9,6 +9,7 @@
 #include <lxf/entry_point.hpp>
 
 // std
+#include <array>
 #include <memory>
 
 // platform
@@ -36,9 +37,9 @@ FILE* p_log_file = nullptr;
 
 constexpr std::string_view module_name = "lxf:main";
 
-logger::Severity get_log_severity_from_config(const std::vector<std::string_view>& config_a)
+logger::Severity get_log_severity_from_config(logger::Severity default_a, const std::vector<std::string_view>& config_a)
 {
-    logger::Severity ret = logger::Severity::none;
+    logger::Severity ret = true == config_a.empty() ? default_a : logger::Severity::none;
 
     for (const std::string_view& s : config_a)
     {
@@ -64,7 +65,7 @@ logger::Severity get_log_severity_from_config(const std::vector<std::string_view
 
         if ("dbg" == s)
         {
-            ret = ret | logger::Severity::debug;
+            ret = ret | logger::Severity::info;
         }
     }
 
@@ -146,7 +147,7 @@ bool logger::is_open()
 
 const char* logger::to_string(Level level_a)
 {
-    switch (static_cast<Level>(static_cast<common::Uint64>(level_a) & 0xFull))
+    switch (static_cast<Level>(static_cast<common::Uint64>(level_a) & 0x1Full))
     {
         case Level::debug:
             return "dbg";
@@ -171,8 +172,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
     config_parser::allocate(p_cmd_line_a);
 
-    const Version v = { VK_MAKE_API_VERSION(0u, 3u, 1u, 1u) };
-
     // config reading
     {
         const std::vector<std::string_view> log_file = config_parser::get_value({ "lxf", "log", "file" });
@@ -181,7 +180,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
         const std::vector<std::string_view> app_name = config_parser::get_value({ "lxf", "app", "name" });
 
         config::log::file_path = 1ull == log_file.size() ? log_file[0] : config::log::file_path;
-        config::log::severity = get_log_severity_from_config(log_severity);
+        config::log::severity = get_log_severity_from_config(config::log::severity, log_severity);
         config::log::console = 1ull == log_console_redirection.size() ? "true" == log_console_redirection[0] : config::log::console;
     }
 
@@ -214,36 +213,36 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
     }
 
     logger::set_severity(config::log::severity);
-    logger::write_line(logger::Level::info | logger::force, module_name, "Log started.");
+    logger::write_line(logger::info, module_name, "Log started.");
 
     // instance layers enumeration an logging
     {
-        logger::write_line(logger::Level::info | logger::force, module_name, "Avaliable instance layers: ");
-
         std::uint32_t instance_layers_count = 0;
         vkEnumerateInstanceLayerProperties(&instance_layers_count, nullptr);
         std::unique_ptr<VkLayerProperties[]> instnace_layers_buffer = std::make_unique<VkLayerProperties[]>(instance_layers_count);
         vkEnumerateInstanceLayerProperties(&instance_layers_count, instnace_layers_buffer.get());
 
+        logger::write_line(logger::Level::info, module_name, "Avaliable instance layers {} ", instance_layers_count);
+
         for (std::uint32_t i = 0; i < instance_layers_count; i++)
         {
-            logger::write_line(logger::Level::info | logger::force, module_name, "\t - {}", instnace_layers_buffer[i].layerName);
+            logger::write_line(logger::debug, module_name, "\t - {}", instnace_layers_buffer[i].layerName);
         }
     }
 
     // instance extensions enumeration and logging
     {
-        logger::write_line(logger::Level::info | logger::force, module_name, "Avaliable instance extensions: ");
-
         std::uint32_t instance_extensions_count = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &instance_extensions_count, nullptr);
         std::unique_ptr<VkExtensionProperties[]> instnace_extensions_buffer =
             std::make_unique<VkExtensionProperties[]>(instance_extensions_count);
         vkEnumerateInstanceExtensionProperties(nullptr, &instance_extensions_count, instnace_extensions_buffer.get());
 
+        logger::write_line(logger::info, module_name, "Avaliable instance extensions {}", instance_extensions_count);
+
         for (std::uint32_t i = 0; i < instance_extensions_count; i++)
         {
-            logger::write_line(logger::Level::info | logger::force, module_name, "\t - {}", instnace_extensions_buffer[i].extensionName);
+            logger::write_line(logger::debug, module_name, "\t - {}", instnace_extensions_buffer[i].extensionName);
         }
     }
 
@@ -266,7 +265,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
         if (false == found)
         {
-            logger::write_line(logger::Level::omg | logger::force, module_name, "No primary display adapter found.");
+            logger::write_line(logger::omg, module_name, "No primary display adapter found.");
             return -1;
         }
     }
@@ -296,14 +295,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
         if (VK_SUCCESS != vk_result)
         {
-            logger::write_line(logger::Level::omg | logger::force,
-                               module_name,
-                               "Cannot create Vulkan instance (error code: {})",
-                               static_cast<std::int32_t>(vk_result));
+            logger::write_line(
+                logger::omg, module_name, "Cannot create Vulkan instance (error code: {})", static_cast<std::int32_t>(vk_result));
             return -1;
         }
 
-        logger::write_line(logger::Level::info | logger::force,
+        logger::write_line(logger::info,
                            module_name,
                            "Vulkan instance created (API version: {}.{}.{}).",
                            config::vulkan::version.get().major,
@@ -312,11 +309,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
         if (false == instance_extensions.empty())
         {
-            logger::write_line(logger::Level::info | logger::force, module_name, "Selected extensions:");
+            logger::write_line(logger::info, module_name, "Selected extensions:");
 
             for (const char* p_extension_name : instance_extensions)
             {
-                logger::write_line(logger::Level::info | logger::force, module_name, "\t - {}", p_extension_name);
+                logger::write_line(logger::info, module_name, "\t - {}", p_extension_name);
             }
         }
     }
@@ -345,7 +342,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
             return "";
         };
-        logger::write_line(logger::Level::info | logger::force, module_name, "Avaliable display adapters: ");
+        logger::write_line(logger::info, module_name, "Avaliable display adapters: ");
 
         std::uint32_t gpus_count = 0;
         vkEnumeratePhysicalDevices(vk_instance, &gpus_count, nullptr);
@@ -357,11 +354,33 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
             VkPhysicalDeviceProperties vk_device_properties;
             VkPhysicalDeviceFeatures vk_device_features;
 
+            std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>> device_extensions_names;
+
             std::unique_ptr<VkExtensionProperties[]> vk_device_extensions_buffer;
 
             vkGetPhysicalDeviceProperties(gpus_buffer[gpu_index], &vk_device_properties);
             vkGetPhysicalDeviceFeatures(gpus_buffer[gpu_index], &vk_device_features);
-            //vkEnumerateDeviceExtensionProperties();
+
+            std::uint32_t device_extensions_count = 0u;
+            vkEnumerateDeviceExtensionProperties(gpus_buffer[gpu_index], nullptr, &device_extensions_count, nullptr);
+
+            if (0u != device_extensions_count)
+            {
+                vk_device_extensions_buffer = std::make_unique<VkExtensionProperties[]>(device_extensions_count);
+                vkEnumerateDeviceExtensionProperties(
+                    gpus_buffer[gpu_index], nullptr, &device_extensions_count, vk_device_extensions_buffer.get());
+
+                device_extensions_names.reserve(device_extensions_count);
+
+                for (std::uint32_t ex_index = 0; ex_index < device_extensions_count; ex_index++)
+                {
+                    std::array<char, VK_MAX_EXTENSION_NAME_SIZE> tmp;
+                    std::copy(std::begin(vk_device_extensions_buffer[ex_index].extensionName),
+                              std::end(vk_device_extensions_buffer[ex_index].extensionName),
+                              std::begin(tmp));
+                    device_extensions_names.push_back(tmp);
+                }
+            }
 
             bool is_primary = vk_device_properties.deviceName == primary_display_device_name;
 
@@ -373,7 +392,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
             vkGetPhysicalDeviceQueueFamilyProperties(
                 gpus_buffer[gpu_index], &queue_family_property_count, vk_queue_family_properties_buffer.get());
 
-            logger::write_line(logger::Level::info | logger::force,
+            logger::write_line(logger::info,
                                module_name,
                                "\t - [{}{}] - {}",
                                true == is_primary ? "*" : " ",
@@ -440,11 +459,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
                 buff[pos] = '\0';
 
-                logger::write_line(logger::Level::info | logger::force,
+                logger::write_line(logger::info,
                                    module_name,
                                    "\t\t Queue family: {}, count: {}",
                                    buff,
                                    vk_queue_family_properties_buffer[qf_index].queueCount);
+            }
+
+            logger::write_line(logger::info, module_name, "\t\t Extensions {}", device_extensions_names.size());
+            for (const auto& ext_name : device_extensions_names)
+            {
+                logger::write_line(logger::Level::debug, module_name, "\t\t\t - {}", &(ext_name[0]));
             }
 
             gpus.emplace_back(gpus_buffer[gpu_index],
@@ -460,13 +485,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
     // displays enumerating an logging
     std::vector<device::Display> displays;
     {
-        logger::write_line(logger::Level::info | logger::force, module_name, "Avaliable displays: ");
+        logger::write_line(logger::info, module_name, "Avaliable displays: ");
 
         EnumDisplayMonitors(nullptr, nullptr, enum_monitors_handler, reinterpret_cast<LPARAM>(&displays));
 
         for (const device::Display& display : displays)
         {
-            logger::write_line(logger::Level::info | logger::force,
+            logger::write_line(logger::info,
                                module_name,
                                "\t - {}, bpp: {}, logical resolution: {}x{}, physical resolution: {}x{}",
                                display.get_name(),
@@ -483,8 +508,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
     entry_point(p_cmd_line_a, gpus, displays, &windower);
 
     vkDestroyInstance(vk_instance, nullptr);
-    logger::write_line(logger::Level::info | logger::force, module_name, "Vulkan instance destroyed.");
-    logger::write_line(logger::Level::info | logger::force, module_name, "Log ended.");
+    logger::write_line(logger::info, module_name, "Vulkan instance destroyed.");
+    logger::write_line(logger::info, module_name, "Log ended.");
     fclose(p_log_file);
 
     if (true == console_allocated)
