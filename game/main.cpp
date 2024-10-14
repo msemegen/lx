@@ -7,6 +7,7 @@
 #include <lxf/Windower.hpp>
 #include <lxf/config.hpp>
 #include <lxf/entry_point.hpp>
+#include <lxf/renderer.hpp>
 
 using namespace ::lxf;
 using namespace ::lxf::common;
@@ -63,6 +64,7 @@ Int64 lxf::entry_point(std::string_view,
             logger::write_line(logger::Level::info, module_name, "Main window created.");
 
             logger::write_line(logger::Level::info, module_name, "Application started.");
+
             while (true == p_main_window->update())
             {
             }
