@@ -4,6 +4,9 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # User-specific files
+*.sln
+*.vcxproj
+*.vcxproj.filters
 *.rsuser
 *.suo
 *.user
@@ -12,6 +15,9 @@
 
 #premake files
 *.exe
+
+#log files
+*.log
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -24,6 +30,7 @@ mono_crash.*
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+[Oo]utput/
 x64/
 x86/
 [Ww][Ii][Nn]32/
