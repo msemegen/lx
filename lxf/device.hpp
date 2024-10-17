@@ -7,6 +7,7 @@
 
 // std
 #include <array>
+#include <cassert>
 #include <memory>
 #include <span>
 #include <string>
@@ -20,62 +21,15 @@
 #include <lxf/common/Rect.hpp>
 #include <lxf/common/bit.hpp>
 #include <lxf/common/non_constructible.hpp>
-#include <lxf/common/scalar.hpp>
+#include <lxf/common/non_copyable.hpp>
 #include <lxf/common/various.hpp>
 
 namespace lxf {
 struct device : private common::non_constructible
 {
-    struct Display
+    struct GPU : private common::non_copyable
     {
-    public:
-        Display()
-            : handle(nullptr)
-            , bits_per_pixel(0u)
-        {
-        }
-        Display(HMONITOR handle_a,
-                common::Uint8 bits_per_pixel_a,
-                std::string_view name_a,
-                common::Rect<common::Int32, common::Uint32> logical_rect_a,
-                common::Rect<common::Int32, common::Uint32> physical_rect_a)
-            : logical_rect(logical_rect_a)
-            , physical_rect(physical_rect_a)
-            , handle(handle_a)
-            , bits_per_pixel(bits_per_pixel_a)
-            , name(name_a)
-        {
-        }
-
-        common::Rect<common::Int32, common::Uint32> get_logical_rect() const
-        {
-            return this->logical_rect;
-        }
-        common::Rect<common::Int32, common::Uint32> get_physical_rect() const
-        {
-            return this->physical_rect;
-        }
-        common::Uint8 get_bits_per_pixel() const
-        {
-            return this->bits_per_pixel;
-        }
-        std::string_view get_name() const
-        {
-            return this->name;
-        }
-
-    private:
-        common::Rect<common::Int32, common::Uint32> logical_rect;
-        common::Rect<common::Int32, common::Uint32> physical_rect;
-        common::Uint8 bits_per_pixel;
-
-        HMONITOR handle;
-
-        std::string name;
-    };
-    struct GPU
-    {
-        enum class Kind : common::Uint64
+        enum class Kind : std::uint32_t
         {
             software = 0x1u,
             discrete = 0x2u,
@@ -83,7 +37,7 @@ struct device : private common::non_constructible
             indirect = 0x8u,
             primary = 0x10u
         };
-        enum class Feature : common::Uint64
+        enum class Feature : std::uint64_t
         {
             none = 0x0u,
             robust_buffer_access = 0x1ull,
@@ -145,7 +99,7 @@ struct device : private common::non_constructible
 
         struct Limits
         {
-            enum class Sample_count : common::Uint32
+            enum class Sample_count : std::uint32_t
             {
                 _1 = VK_SAMPLE_COUNT_1_BIT,
                 _2 = VK_SAMPLE_COUNT_2_BIT,
@@ -156,235 +110,156 @@ struct device : private common::non_constructible
                 _64 = VK_SAMPLE_COUNT_64_BIT
             };
 
-            common::Uint32 max_image_dimension_1d = 0u;
-            common::Uint32 max_image_dimension_2d = 0u;
-            common::Uint32 max_image_dimension_3d = 0u;
-            common::Uint32 max_image_dimensioncube = 0u;
-            common::Uint32 max_image_arraylayers = 0u;
-            common::Uint32 max_texel_buffer_elements = 0u;
-            common::Uint32 max_uniform_buffer_range = 0u;
-            common::Uint32 max_storage_buffer_range = 0u;
-            common::Uint32 max_push_constants_size = 0u;
-            common::Uint32 max_memory_allocation_count = 0u;
-            common::Uint32 max_sampler_allocation_count = 0u;
-            common::Uint64 buffer_image_granularity = 0ull;
-            common::Uint64 sparse_address_space_size = 0ull;
-            common::Uint32 max_bound_descriptor_sets = 0u;
-            common::Uint32 max_per_stage_descriptor_samplers = 0u;
-            common::Uint32 max_per_stage_descriptor_uniform_buffers = 0u;
-            common::Uint32 max_per_stage_descriptor_storage_buffers = 0u;
-            common::Uint32 max_per_stage_descriptor_sampled_images = 0u;
-            common::Uint32 max_per_stage_descriptor_storage_images = 0u;
-            common::Uint32 max_per_stage_descriptor_input_attachments = 0u;
-            common::Uint32 max_per_stage_resources = 0u;
-            common::Uint32 max_descriptor_set_samplers = 0u;
-            common::Uint32 max_descriptor_set_uniform_buffers = 0u;
-            common::Uint32 max_descriptor_set_uniform_buffers_dynamic = 0u;
-            common::Uint32 max_descriptor_set_storage_buffers = 0u;
-            common::Uint32 max_descriptor_set_storage_buffers_dynamic = 0u;
-            common::Uint32 max_descriptor_set_sampled_images = 0u;
-            common::Uint32 max_descriptor_set_storage_images = 0u;
-            common::Uint32 max_descriptor_set_input_attachments = 0u;
-            common::Uint32 max_vertex_input_attributes = 0u;
-            common::Uint32 max_vertex_input_bindings = 0u;
-            common::Uint32 max_vertex_input_attribute_offset = 0u;
-            common::Uint32 max_vertex_input_binding_stride = 0u;
-            common::Uint32 max_vertex_output_components = 0u;
-            common::Uint32 max_tessellation_generationlevel = 0u;
-            common::Uint32 max_tessellation_patchsize = 0u;
-            common::Uint32 max_tessellation_control_per_vertex_input_components = 0u;
-            common::Uint32 max_tessellation_control_per_vertex_output_components = 0u;
-            common::Uint32 max_tessellation_control_per_patch_output_components = 0u;
-            common::Uint32 max_tessellation_control_total_output_components = 0u;
-            common::Uint32 max_tessellation_evaluation_input_components = 0u;
-            common::Uint32 max_tessellation_evaluation_output_components = 0u;
-            common::Uint32 max_geometry_shader_invocations = 0u;
-            common::Uint32 max_geometry_input_components = 0u;
-            common::Uint32 max_geometry_output_components = 0u;
-            common::Uint32 max_geometry_output_vertices = 0u;
-            common::Uint32 max_geometry_total_output_components = 0u;
-            common::Uint32 max_fragment_input_components = 0u;
-            common::Uint32 max_fragment_output_attachments = 0u;
-            common::Uint32 max_fragment_dual_src_attachments = 0u;
-            common::Uint32 max_fragment_combined_output_resources = 0u;
-            common::Uint32 max_compute_shared_memory_size = 0u;
-            common::Uint32 max_compute_work_group_count[3] = { 0u, 0u, 0u };
-            common::Uint32 max_compute_work_group_invocations = 0u;
-            common::Uint32 max_compute_work_group_size[3] = { 0u, 0u, 0u };
-            common::Uint32 sub_pixel_precision_bits = 0u;
-            common::Uint32 sub_texel_precision_bits = 0u;
-            common::Uint32 mipmap_precision_bits = 0u;
-            common::Uint32 max_draw_indexed_index_value = 0u;
-            common::Uint32 max_draw_indirect_count = 0u;
-            common::Float32 max_sampler_lod_bias = 0.0f;
-            common::Float32 max_sampler_anisotropy = 0.0f;
-            common::Uint32 max_viewports = 0u;
-            common::Uint32 max_viewport_dimensions[2] = { 0u, 0u };
-            common::Float32 viewport_bounds_range[2] = { 0.0f, 0.0f };
-            common::Uint32 viewport_sub_pixel_bits = 0u;
-            common::Uint64 min_memory_map_alignment = 0ull;
-            common::Uint64 min_texel_buffer_offset_alignment = 0ull;
-            common::Uint64 min_uniform_buffer_offset_alignment = 0ull;
-            common::Uint64 min_storage_buffer_offset_alignment = 0ull;
-            common::Int32 min_texel_offset = 0;
-            common::Uint32 max_texel_offset = 0u;
-            common::Int32 min_texel_gather_offset = 0;
-            common::Uint32 max_texel_gather_offset = 0u;
-            common::Float32 min_interpolation_offset = 0.0f;
-            common::Float32 max_interpolation_offset = 0.0f;
-            common::Uint32 sub_pixel_interpolation_offset_bits = 0u;
-            common::Uint32 max_framebuffer_width = 0u;
-            common::Uint32 max_framebuffer_height = 0u;
-            common::Uint32 max_framebuffer_layers = 0u;
+            std::uint32_t max_image_dimension_1d = 0u;
+            std::uint32_t max_image_dimension_2d = 0u;
+            std::uint32_t max_image_dimension_3d = 0u;
+            std::uint32_t max_image_dimensioncube = 0u;
+            std::uint32_t max_image_arraylayers = 0u;
+            std::uint32_t max_texel_buffer_elements = 0u;
+            std::uint32_t max_uniform_buffer_range = 0u;
+            std::uint32_t max_storage_buffer_range = 0u;
+            std::uint32_t max_push_constants_size = 0u;
+            std::uint32_t max_memory_allocation_count = 0u;
+            std::uint32_t max_sampler_allocation_count = 0u;
+            std::uint64_t buffer_image_granularity = 0ull;
+            std::uint64_t sparse_address_space_size = 0ull;
+            std::uint32_t max_bound_descriptor_sets = 0u;
+            std::uint32_t max_per_stage_descriptor_samplers = 0u;
+            std::uint32_t max_per_stage_descriptor_uniform_buffers = 0u;
+            std::uint32_t max_per_stage_descriptor_storage_buffers = 0u;
+            std::uint32_t max_per_stage_descriptor_sampled_images = 0u;
+            std::uint32_t max_per_stage_descriptor_storage_images = 0u;
+            std::uint32_t max_per_stage_descriptor_input_attachments = 0u;
+            std::uint32_t max_per_stage_resources = 0u;
+            std::uint32_t max_descriptor_set_samplers = 0u;
+            std::uint32_t max_descriptor_set_uniform_buffers = 0u;
+            std::uint32_t max_descriptor_set_uniform_buffers_dynamic = 0u;
+            std::uint32_t max_descriptor_set_storage_buffers = 0u;
+            std::uint32_t max_descriptor_set_storage_buffers_dynamic = 0u;
+            std::uint32_t max_descriptor_set_sampled_images = 0u;
+            std::uint32_t max_descriptor_set_storage_images = 0u;
+            std::uint32_t max_descriptor_set_input_attachments = 0u;
+            std::uint32_t max_vertex_input_attributes = 0u;
+            std::uint32_t max_vertex_input_bindings = 0u;
+            std::uint32_t max_vertex_input_attribute_offset = 0u;
+            std::uint32_t max_vertex_input_binding_stride = 0u;
+            std::uint32_t max_vertex_output_components = 0u;
+            std::uint32_t max_tessellation_generationlevel = 0u;
+            std::uint32_t max_tessellation_patchsize = 0u;
+            std::uint32_t max_tessellation_control_per_vertex_input_components = 0u;
+            std::uint32_t max_tessellation_control_per_vertex_output_components = 0u;
+            std::uint32_t max_tessellation_control_per_patch_output_components = 0u;
+            std::uint32_t max_tessellation_control_total_output_components = 0u;
+            std::uint32_t max_tessellation_evaluation_input_components = 0u;
+            std::uint32_t max_tessellation_evaluation_output_components = 0u;
+            std::uint32_t max_geometry_shader_invocations = 0u;
+            std::uint32_t max_geometry_input_components = 0u;
+            std::uint32_t max_geometry_output_components = 0u;
+            std::uint32_t max_geometry_output_vertices = 0u;
+            std::uint32_t max_geometry_total_output_components = 0u;
+            std::uint32_t max_fragment_input_components = 0u;
+            std::uint32_t max_fragment_output_attachments = 0u;
+            std::uint32_t max_fragment_dual_src_attachments = 0u;
+            std::uint32_t max_fragment_combined_output_resources = 0u;
+            std::uint32_t max_compute_shared_memory_size = 0u;
+            std::uint32_t max_compute_work_group_count[3] = { 0u, 0u, 0u };
+            std::uint32_t max_compute_work_group_invocations = 0u;
+            std::uint32_t max_compute_work_group_size[3] = { 0u, 0u, 0u };
+            std::uint32_t sub_pixel_precision_bits = 0u;
+            std::uint32_t sub_texel_precision_bits = 0u;
+            std::uint32_t mipmap_precision_bits = 0u;
+            std::uint32_t max_draw_indexed_index_value = 0u;
+            std::uint32_t max_draw_indirect_count = 0u;
+            float max_sampler_lod_bias = 0.0f;
+            float max_sampler_anisotropy = 0.0f;
+            std::uint32_t max_viewports = 0u;
+            std::uint32_t max_viewport_dimensions[2] = { 0u, 0u };
+            float viewport_bounds_range[2] = { 0.0f, 0.0f };
+            std::uint32_t viewport_sub_pixel_bits = 0u;
+            std::uint64_t min_memory_map_alignment = 0ull;
+            std::uint64_t min_texel_buffer_offset_alignment = 0ull;
+            std::uint64_t min_uniform_buffer_offset_alignment = 0ull;
+            std::uint64_t min_storage_buffer_offset_alignment = 0ull;
+            std::int32_t min_texel_offset = 0;
+            std::uint32_t max_texel_offset = 0u;
+            std::int32_t min_texel_gather_offset = 0;
+            std::uint32_t max_texel_gather_offset = 0u;
+            float min_interpolation_offset = 0.0f;
+            float max_interpolation_offset = 0.0f;
+            std::uint32_t sub_pixel_interpolation_offset_bits = 0u;
+            std::uint32_t max_framebuffer_width = 0u;
+            std::uint32_t max_framebuffer_height = 0u;
+            std::uint32_t max_framebuffer_layers = 0u;
             Sample_count framebuffer_color_sample_counts;
             Sample_count framebuffer_depth_sample_counts;
             Sample_count framebuffer_stencil_sample_counts;
             Sample_count framebuffer_no_attachments_sample_counts;
-            common::Uint32 max_color_attachments = 0u;
+            std::uint32_t max_color_attachments = 0u;
             Sample_count sampled_image_color_sample_counts;
             Sample_count sampled_image_integer_sample_counts;
             Sample_count sampled_image_depth_sample_counts;
             Sample_count sampled_image_stencil_sample_counts;
             Sample_count storage_image_sample_counts;
-            common::Uint32 max_sample_mask_words = 0u;
+            std::uint32_t max_sample_mask_words = 0u;
             bool timestamp_compute_and_graphics = false;
-            common::Float32 timestamp_period = 0.0f;
-            common::Uint32 max_clip_distances = 0u;
-            common::Uint32 max_cull_distances = 0u;
-            common::Uint32 max_combined_clip_and_cull_distances = 0u;
-            common::Uint32 discrete_queue_priorities = 0u;
-            common::Float32 point_size_range[2] = { 0.0f, 0.0f };
-            common::Float32 line_width_hrange[2] = { 0.0f, 0.0f };
-            common::Float32 point_size_granularity = 0.0f;
-            common::Float32 line_width_granularity = 0.0f;
+            float timestamp_period = 0.0f;
+            std::uint32_t max_clip_distances = 0u;
+            std::uint32_t max_cull_distances = 0u;
+            std::uint32_t max_combined_clip_and_cull_distances = 0u;
+            std::uint32_t discrete_queue_priorities = 0u;
+            float point_size_range[2] = { 0.0f, 0.0f };
+            float line_width_hrange[2] = { 0.0f, 0.0f };
+            float point_size_granularity = 0.0f;
+            float line_width_granularity = 0.0f;
             bool strict_lines = false;
             bool standard_sample_locations = false;
-            common::Uint64 optimal_buffer_copy_offset_alignment = 0ull;
-            common::Uint64 optimal_buffer_copy_row_pitch_alignment = 0ull;
-            common::Uint64 non_coherent_atom_size = 0ull;
+            std::uint64_t optimal_buffer_copy_offset_alignment = 0ull;
+            std::uint64_t optimal_buffer_copy_row_pitch_alignment = 0ull;
+            std::uint64_t non_coherent_atom_size = 0ull;
         };
-        struct Queue
+        struct Properties
         {
-            enum class Kind : std::uint32_t
+            struct Queue_family
             {
-                graphics = VK_QUEUE_GRAPHICS_BIT,
-                compute = VK_QUEUE_COMPUTE_BIT,
-                transfer = VK_QUEUE_TRANSFER_BIT,
-                sparse_binding = VK_QUEUE_SPARSE_BINDING_BIT,
-                protected_memory = VK_QUEUE_PROTECTED_BIT,
-                video_decode = VK_QUEUE_VIDEO_DECODE_BIT_KHR,
-                video_encode = VK_QUEUE_VIDEO_ENCODE_BIT_KHR,
-                optical_flow = VK_QUEUE_OPTICAL_FLOW_BIT_NV
+                enum class Kind : std::uint32_t
+                {
+                    graphics = VK_QUEUE_GRAPHICS_BIT,
+                    compute = VK_QUEUE_COMPUTE_BIT,
+                    transfer = VK_QUEUE_TRANSFER_BIT,
+                    sparse_binding = VK_QUEUE_SPARSE_BINDING_BIT,
+                    protected_memory = VK_QUEUE_PROTECTED_BIT,
+                    video_decode = VK_QUEUE_VIDEO_DECODE_BIT_KHR,
+                    video_encode = VK_QUEUE_VIDEO_ENCODE_BIT_KHR,
+                    optical_flow = VK_QUEUE_OPTICAL_FLOW_BIT_NV
+                };
+
+                using enum Kind;
+
+                Kind kind;
+                std::uint32_t count;
             };
 
-            using enum Kind;
-
-            Kind kind;
-            std::uint32_t count;
-        };
-
-        struct Descriptor
-        {
             Kind kind;
             Feature features;
             Limits limits;
-            std::span<const Queue> queue_families;
-            std::span<const std::string_view> extensions;
+
+            std::span<const Queue_family> queue_families;
+            std::vector<std::string_view> extensions;
             std::string_view name;
         };
 
         using enum Kind;
 
-        GPU(const GPU& other_a)
-            : vk_physical_device(other_a.vk_physical_device)
-            , kind(other_a.kind)
-            , features(other_a.features)
-            , limits(other_a.limits)
-            , queues { std::make_unique<Queue[]>(other_a.queues_count) }
-            , queues_count(other_a.queues_count)
-            , extension_names_buffer(other_a.extension_names_buffer)
-        {
-            for (std::size_t i = 0; i < this->queues_count; i++)
-            {
-                this->queues[i] = { .kind = other_a.queues[i].kind, .count = other_a.queues[i].count };
-            }
-
-            this->extension_names.reserve(this->extension_names_buffer.size());
-
-            for (const auto& ex_name : this->extension_names_buffer)
-            {
-                this->extension_names.emplace_back(ex_name.data());
-            }
-
-            std::memcpy(this->name, other_a.name, sizeof(this->name));
-        }
+        GPU() = default;
+        GPU(GPU&&) = default;
 
         GPU(VkPhysicalDevice vk_physical_device_a,
-            VkPhysicalDeviceType type_a,
-            const VkPhysicalDeviceLimits& limits_a,
-            const VkPhysicalDeviceFeatures& features_a,
-            std::span<VkQueueFamilyProperties> queue_family_properties_a,
-            const std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>>& extension_names_a,
             bool is_primary_a,
-            std::string_view name_a)
-            : vk_physical_device(vk_physical_device_a)
-            , kind(static_cast<Kind>(static_cast<common::Uint64>(this->from(type_a)) |
-                                     (true == is_primary_a ? static_cast<common::Uint64>(Kind::primary) : 0x0ull)))
-            , features(this->from(features_a))
-            , limits(this->from(limits_a))
-            , queues { std::make_unique<Queue[]>(queue_family_properties_a.size()) }
-            , queues_count(queue_family_properties_a.size())
-            , extension_names_buffer(extension_names_a)
-        {
-            for (std::size_t i = 0; i < this->queues_count; i++)
-            {
-                this->queues[i].kind = static_cast<Queue::Kind>(queue_family_properties_a[i].queueFlags);
-                this->queues[i].count = queue_family_properties_a[i].queueCount;
-            }
+            std::span<VkQueueFamilyProperties> queues_a,
+            std::string_view name_a,
+            const std::vector<std::string_view>& extension_names_a);
 
-            this->extension_names.reserve(this->extension_names_buffer.size());
-
-            for (const auto& ex_name : this->extension_names_buffer)
-            {
-                this->extension_names.emplace_back(ex_name.data());
-            }
-
-            static_assert(VK_MAX_PHYSICAL_DEVICE_NAME_SIZE > 1u);
-
-            const std::size_t name_length =
-                name_a.length() >= VK_MAX_PHYSICAL_DEVICE_NAME_SIZE - 1u ? VK_MAX_PHYSICAL_DEVICE_NAME_SIZE - 1u : name_a.length();
-            std::memcpy(this->name, name_a.data(), name_length);
-            this->name[name_length] = '\0';
-        }
-
-        Descriptor get_descriptor() const
-        {
-            return { .kind = this->kind,
-                     .features = this->features,
-                     .limits = this->limits,
-                     .queue_families = { this->queues.get(), this->queues_count },
-                     .extensions = { this->extension_names.data(), this->extension_names.size() },
-                     .name = this->name };
-        }
-
-        GPU& operator=(const GPU& other_a)
-        {
-            this->vk_physical_device = other_a.vk_physical_device;
-            this->kind = other_a.kind;
-            this->features = other_a.features;
-            this->limits = other_a.limits;
-
-            this->queues_count = other_a.queues_count;
-            for (std::size_t i = 0; i < this->queues_count; i++)
-            {
-                this->queues[i].kind = other_a.queues[i].kind;
-                this->queues[i].count = other_a.queues[i].count;
-            }
-
-            std::memcpy(this->name, other_a.name, sizeof(this->name));
-
-            return *this;
-        }
+        Properties get_properties() const;
 
         operator VkPhysicalDevice() const
         {
@@ -392,6 +267,41 @@ struct device : private common::non_constructible
         }
 
     private:
+        struct Info
+        {
+            struct Layout
+            {
+                struct Range
+                {
+                    std::size_t offset_bytes = 0u;
+                    std::size_t size_bytes = 0u;
+                };
+
+                Range name_buffer;
+                Range queue_families_buffer;
+                Range extensions_buffer;
+                Range flags_buffer;
+            };
+
+            Layout layout;
+            std::unique_ptr<std::byte[]> buffer;
+
+            std::span<Properties::Queue_family> get_queue_families() const
+            {
+                assert(this->layout.queue_families_buffer.size_bytes >= sizeof(Properties::Queue_family));
+
+                return { std::bit_cast<Properties::Queue_family*>(this->buffer.get() + this->layout.queue_families_buffer.offset_bytes),
+                         static_cast<std::size_t>(this->layout.queue_families_buffer.size_bytes / sizeof(Properties::Queue_family)) };
+            }
+
+            std::string_view get_name() const
+            {
+                assert(this->layout.name_buffer.size_bytes > 0u);
+                return { std::bit_cast<const char*>(this->buffer.get() + this->layout.name_buffer.offset_bytes),
+                         this->layout.name_buffer.size_bytes - 1u };
+            }
+        };
+
         Kind from(VkPhysicalDeviceType type_a) const
         {
             switch (type_a)
@@ -413,232 +323,232 @@ struct device : private common::non_constructible
         }
         Feature from(const VkPhysicalDeviceFeatures& features_a) const
         {
-            common::Uint64 ret = 0x0ull;
+            std::uint64_t ret = 0x0ull;
 
             if (VK_TRUE == features_a.robustBufferAccess)
             {
-                ret |= static_cast<common::Uint64>(Feature::robust_buffer_access);
+                ret |= static_cast<std::uint64_t>(Feature::robust_buffer_access);
             }
             if (VK_TRUE == features_a.fullDrawIndexUint32)
             {
-                ret |= static_cast<common::Uint64>(Feature::full_draw_index_uint32);
+                ret |= static_cast<std::uint64_t>(Feature::full_draw_index_uint32);
             }
             if (VK_TRUE == features_a.imageCubeArray)
             {
-                ret |= static_cast<common::Uint64>(Feature::image_cube_array);
+                ret |= static_cast<std::uint64_t>(Feature::image_cube_array);
             }
             if (VK_TRUE == features_a.independentBlend)
             {
-                ret |= static_cast<common::Uint64>(Feature::independent_blend);
+                ret |= static_cast<std::uint64_t>(Feature::independent_blend);
             }
             if (VK_TRUE == features_a.geometryShader)
             {
-                ret |= static_cast<common::Uint64>(Feature::geometry_shader);
+                ret |= static_cast<std::uint64_t>(Feature::geometry_shader);
             }
             if (VK_TRUE == features_a.tessellationShader)
             {
-                ret |= static_cast<common::Uint64>(Feature::tessellation_shader);
+                ret |= static_cast<std::uint64_t>(Feature::tessellation_shader);
             }
             if (VK_TRUE == features_a.sampleRateShading)
             {
-                ret |= static_cast<common::Uint64>(Feature::sample_rate_shading);
+                ret |= static_cast<std::uint64_t>(Feature::sample_rate_shading);
             }
             if (VK_TRUE == features_a.dualSrcBlend)
             {
-                ret |= static_cast<common::Uint64>(Feature::dual_src_blend);
+                ret |= static_cast<std::uint64_t>(Feature::dual_src_blend);
             }
             if (VK_TRUE == features_a.logicOp)
             {
-                ret |= static_cast<common::Uint64>(Feature::logic_op);
+                ret |= static_cast<std::uint64_t>(Feature::logic_op);
             }
             if (VK_TRUE == features_a.multiDrawIndirect)
             {
-                ret |= static_cast<common::Uint64>(Feature::multi_draw_indirect);
+                ret |= static_cast<std::uint64_t>(Feature::multi_draw_indirect);
             }
             if (VK_TRUE == features_a.drawIndirectFirstInstance)
             {
-                ret |= static_cast<common::Uint64>(Feature::draw_indirect_first_instance);
+                ret |= static_cast<std::uint64_t>(Feature::draw_indirect_first_instance);
             }
             if (VK_TRUE == features_a.depthClamp)
             {
-                ret |= static_cast<common::Uint64>(Feature::depth_clamp);
+                ret |= static_cast<std::uint64_t>(Feature::depth_clamp);
             }
             if (VK_TRUE == features_a.depthBiasClamp)
             {
-                ret |= static_cast<common::Uint64>(Feature::depth_bias_clamp);
+                ret |= static_cast<std::uint64_t>(Feature::depth_bias_clamp);
             }
             if (VK_TRUE == features_a.fillModeNonSolid)
             {
-                ret |= static_cast<common::Uint64>(Feature::fill_mode_non_nolid);
+                ret |= static_cast<std::uint64_t>(Feature::fill_mode_non_nolid);
             }
             if (VK_TRUE == features_a.depthBounds)
             {
-                ret |= static_cast<common::Uint64>(Feature::depth_bounds);
+                ret |= static_cast<std::uint64_t>(Feature::depth_bounds);
             }
             if (VK_TRUE == features_a.wideLines)
             {
-                ret |= static_cast<common::Uint64>(Feature::wide_lines);
+                ret |= static_cast<std::uint64_t>(Feature::wide_lines);
             }
             if (VK_TRUE == features_a.largePoints)
             {
-                ret |= static_cast<common::Uint64>(Feature::large_points);
+                ret |= static_cast<std::uint64_t>(Feature::large_points);
             }
             if (VK_TRUE == features_a.alphaToOne)
             {
-                ret |= static_cast<common::Uint64>(Feature::alpha_to_one);
+                ret |= static_cast<std::uint64_t>(Feature::alpha_to_one);
             }
             if (VK_TRUE == features_a.multiViewport)
             {
-                ret |= static_cast<common::Uint64>(Feature::multi_viewport);
+                ret |= static_cast<std::uint64_t>(Feature::multi_viewport);
             }
             if (VK_TRUE == features_a.samplerAnisotropy)
             {
-                ret |= static_cast<common::Uint64>(Feature::sampler_anisotropy);
+                ret |= static_cast<std::uint64_t>(Feature::sampler_anisotropy);
             }
             if (VK_TRUE == features_a.textureCompressionETC2)
             {
-                ret |= static_cast<common::Uint64>(Feature::texture_compression_ETC2);
+                ret |= static_cast<std::uint64_t>(Feature::texture_compression_ETC2);
             }
             if (VK_TRUE == features_a.textureCompressionASTC_LDR)
             {
-                ret |= static_cast<common::Uint64>(Feature::texture_compression_ASTC_LDR);
+                ret |= static_cast<std::uint64_t>(Feature::texture_compression_ASTC_LDR);
             }
             if (VK_TRUE == features_a.textureCompressionBC)
             {
-                ret |= static_cast<common::Uint64>(Feature::texture_compression_BC);
+                ret |= static_cast<std::uint64_t>(Feature::texture_compression_BC);
             }
             if (VK_TRUE == features_a.occlusionQueryPrecise)
             {
-                ret |= static_cast<common::Uint64>(Feature::occlusion_query_precise);
+                ret |= static_cast<std::uint64_t>(Feature::occlusion_query_precise);
             }
             if (VK_TRUE == features_a.pipelineStatisticsQuery)
             {
-                ret |= static_cast<common::Uint64>(Feature::pipeline_statistics_query);
+                ret |= static_cast<std::uint64_t>(Feature::pipeline_statistics_query);
             }
             if (VK_TRUE == features_a.vertexPipelineStoresAndAtomics)
             {
-                ret |= static_cast<common::Uint64>(Feature::vertex_pipeline_stores_andatomics);
+                ret |= static_cast<std::uint64_t>(Feature::vertex_pipeline_stores_andatomics);
             }
             if (VK_TRUE == features_a.fragmentStoresAndAtomics)
             {
-                ret |= static_cast<common::Uint64>(Feature::fragment_stores_and_atomics);
+                ret |= static_cast<std::uint64_t>(Feature::fragment_stores_and_atomics);
             }
             if (VK_TRUE == features_a.shaderTessellationAndGeometryPointSize)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_tessellation_and_geometry_point_size);
+                ret |= static_cast<std::uint64_t>(Feature::shader_tessellation_and_geometry_point_size);
             }
             if (VK_TRUE == features_a.shaderImageGatherExtended)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_image_gather_extended);
+                ret |= static_cast<std::uint64_t>(Feature::shader_image_gather_extended);
             }
             if (VK_TRUE == features_a.shaderStorageImageExtendedFormats)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_storage_image_extended_formats);
+                ret |= static_cast<std::uint64_t>(Feature::shader_storage_image_extended_formats);
             }
             if (VK_TRUE == features_a.shaderStorageImageMultisample)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_storage_image_multisample);
+                ret |= static_cast<std::uint64_t>(Feature::shader_storage_image_multisample);
             }
             if (VK_TRUE == features_a.shaderStorageImageReadWithoutFormat)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_storage_image_read_without_format);
+                ret |= static_cast<std::uint64_t>(Feature::shader_storage_image_read_without_format);
             }
             if (VK_TRUE == features_a.shaderStorageImageWriteWithoutFormat)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_storage_image_write_without_format);
+                ret |= static_cast<std::uint64_t>(Feature::shader_storage_image_write_without_format);
             }
             if (VK_TRUE == features_a.shaderUniformBufferArrayDynamicIndexing)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_uniform_buffer_array_dynamic_indexing);
+                ret |= static_cast<std::uint64_t>(Feature::shader_uniform_buffer_array_dynamic_indexing);
             }
             if (VK_TRUE == features_a.shaderSampledImageArrayDynamicIndexing)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_storage_buffer_array_dynamic_indexing);
+                ret |= static_cast<std::uint64_t>(Feature::shader_storage_buffer_array_dynamic_indexing);
             }
             if (VK_TRUE == features_a.shaderStorageBufferArrayDynamicIndexing)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_storage_buffer_array_dynamic_indexing);
+                ret |= static_cast<std::uint64_t>(Feature::shader_storage_buffer_array_dynamic_indexing);
             }
             if (VK_TRUE == features_a.shaderStorageImageArrayDynamicIndexing)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_storage_image_array_dynamic_indexing);
+                ret |= static_cast<std::uint64_t>(Feature::shader_storage_image_array_dynamic_indexing);
             }
             if (VK_TRUE == features_a.shaderClipDistance)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_clip_distance);
+                ret |= static_cast<std::uint64_t>(Feature::shader_clip_distance);
             }
             if (VK_TRUE == features_a.shaderCullDistance)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_cull_distance);
+                ret |= static_cast<std::uint64_t>(Feature::shader_cull_distance);
             }
             if (VK_TRUE == features_a.shaderFloat64)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_float64);
+                ret |= static_cast<std::uint64_t>(Feature::shader_float64);
             }
             if (VK_TRUE == features_a.shaderInt64)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_int64);
+                ret |= static_cast<std::uint64_t>(Feature::shader_int64);
             }
             if (VK_TRUE == features_a.shaderInt16)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_int16);
+                ret |= static_cast<std::uint64_t>(Feature::shader_int16);
             }
             if (VK_TRUE == features_a.shaderResourceResidency)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_resource_residency);
+                ret |= static_cast<std::uint64_t>(Feature::shader_resource_residency);
             }
             if (VK_TRUE == features_a.shaderResourceMinLod)
             {
-                ret |= static_cast<common::Uint64>(Feature::shader_resource_min_lod);
+                ret |= static_cast<std::uint64_t>(Feature::shader_resource_min_lod);
             }
             if (VK_TRUE == features_a.sparseBinding)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_binding);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_binding);
             }
             if (VK_TRUE == features_a.sparseResidencyBuffer)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_buffer);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_buffer);
             }
             if (VK_TRUE == features_a.sparseResidencyImage2D)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_image2d);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_image2d);
             }
             if (VK_TRUE == features_a.sparseResidencyImage3D)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_image3d);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_image3d);
             }
             if (VK_TRUE == features_a.sparseResidency2Samples)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_2_samples);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_2_samples);
             }
             if (VK_TRUE == features_a.sparseResidency4Samples)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_4_samples);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_4_samples);
             }
             if (VK_TRUE == features_a.sparseResidency8Samples)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_8_samples);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_8_samples);
             }
             if (VK_TRUE == features_a.sparseResidency16Samples)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_16_samples);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_16_samples);
             }
             if (VK_TRUE == features_a.sparseResidencyAliased)
             {
-                ret |= static_cast<common::Uint64>(Feature::sparse_residency_aliased);
+                ret |= static_cast<std::uint64_t>(Feature::sparse_residency_aliased);
             }
             if (VK_TRUE == features_a.variableMultisampleRate)
             {
-                ret |= static_cast<common::Uint64>(Feature::variable_multisample_rate);
+                ret |= static_cast<std::uint64_t>(Feature::variable_multisample_rate);
             }
             if (VK_TRUE == features_a.inheritedQueries)
             {
-                ret |= static_cast<common::Uint64>(Feature::inherited_queries);
+                ret |= static_cast<std::uint64_t>(Feature::inherited_queries);
             }
 
             return static_cast<Feature>(ret);
         }
-        Limits from(const VkPhysicalDeviceLimits& limits_a)
+        Limits from(const VkPhysicalDeviceLimits& limits_a) const
         {
             return { .max_image_dimension_1d = limits_a.maxImageDimension1D,
                      .max_image_dimension_2d = limits_a.maxImageDimension2D,
@@ -754,144 +664,575 @@ struct device : private common::non_constructible
         }
 
         VkPhysicalDevice vk_physical_device;
+        std::size_t info_idx;
 
-        Kind kind;
-        Feature features;
-        Limits limits;
-
-        std::unique_ptr<Queue[]> queues;
-        std::size_t queues_count;
-
-        char name[VK_MAX_PHYSICAL_DEVICE_NAME_SIZE];
-        std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>> extension_names_buffer;
-        std::vector<std::string_view> extension_names;
+        static inline std::vector<Info> gpu_info_buffer;
     };
-    struct Input
+    struct Display : private common::non_copyable
     {
-        enum class Kind : common::Uint64
+        struct Properties
         {
-            keyboard = 0x1u,
-            mouse = 0x2u,
-            pad = 0x4u
+            common::Rect<std::int32_t, std::uint32_t> logical_rect;
+            common::Rect<std::int32_t, std::uint32_t> physical_rect;
+            std::uint8_t bits_per_pixel;
+
+            char name[CCHDEVICENAME];
         };
 
-        Input(Kind kind_a)
-            : kind(kind_a)
+        Display()
+            : handle(nullptr)
         {
         }
-
-        Kind get_kind() const
+        Display(HMONITOR handle_a,
+                std::uint8_t bits_per_pixel_a,
+                std::string_view name_a,
+                common::Rect<std::int32_t, std::uint32_t> logical_rect_a,
+                common::Rect<std::int32_t, std::uint32_t> physical_rect_a)
+            : handle(handle_a)
+            , properties { .logical_rect = logical_rect_a, .physical_rect = physical_rect_a, .bits_per_pixel = bits_per_pixel_a }
         {
-            return this->kind;
+            const std::size_t name_length = name_a.size() <= CCHDEVICENAME ? name_a.size() : CCHDEVICENAME;
+
+            std::fill(this->properties.name, this->properties.name + CCHDEVICENAME, '\0');
+            std::copy(name_a.begin(), name_a.begin() + name_length, this->properties.name);
+        }
+
+        const Properties& get_properties() const
+        {
+            return this->properties;
         }
 
     private:
-        Kind kind;
+        HMONITOR handle;
+        Properties properties;
     };
 
-    template<typename Device_t>
-    [[nodiscard]] static std::vector<Device_t> filter(const std::vector<device::Display>& displays_a,
-                                                      const common::Size<common::Uint32>& minimum_physical_resolution_a,
-                                                      common::Uint8 bits_per_pixel_a) = delete;
-    template<typename Device_t> [[nodiscard]] static std::vector<Device_t> filter(Input::Kind) = delete;
-    template<typename Device_t> [[nodiscard]] static std::vector<Device_t>
-    filter(const std::vector<GPU>& gpus_a, GPU::Kind, GPU::Queue::Kind, GPU::Feature, const std::vector<std::string_view>&) = delete;
+    template<typename Device_x> struct Filter : private common::non_constructible
+    {
+    };
+
+    template<typename Device_x> inline static Filter<Device_x> filter;
 };
 
-template<>
-[[nodiscard]] inline std::vector<device::Display> device::filter(const std::vector<device::Display>& displays_a,
-                                                                 const common::Size<common::Uint32>& minimum_physical_resolution_a,
-                                                                 common::Uint8 bits_per_pixel_a)
+template<> struct device::Filter<device::GPU>
 {
-    std::vector<Display> ret;
-
-    for (const Display& device : displays_a)
+    struct Requirements
     {
-        const auto phy_size = device.get_physical_rect().size;
-        if (phy_size.w >= minimum_physical_resolution_a.w && phy_size.h >= minimum_physical_resolution_a.h &&
-            device.get_bits_per_pixel() >= bits_per_pixel_a)
+        struct Queue_family
         {
-            ret.push_back(device);
-        }
-    }
+            using Kind = device::GPU::Properties::Queue_family::Kind;
 
-    return ret;
-}
-
-template<> inline std::vector<device::GPU> [[nodiscard]] device::filter<device::GPU>(const std::vector<GPU>& gpus_a,
-                                                                                     GPU::Kind gpu_kind_flags_a,
-                                                                                     GPU::Queue::Kind queue_family_kind_a,
-                                                                                     GPU::Feature features_a,
-                                                                                     const std::vector<std::string_view>& extensions_a)
-{
-    std::vector<GPU> ret;
-
-    for (const GPU& device : gpus_a)
-    {
-        GPU::Descriptor descriptor = device.get_descriptor();
-        if (true == common::bit::flag::is(descriptor.kind, gpu_kind_flags_a) &&
-            true == common::bit::flag::is(descriptor.features, features_a))
+            Kind kind;
+            std::uint32_t count;
+        };
+        struct Limit
         {
-            for (const GPU::Queue& qf : descriptor.queue_families)
+            enum class Kind : std::uint64_t
             {
-                if (true == common::bit::flag::is(qf.kind, queue_family_kind_a))
-                {
-                    bool found = true;
-                    for (std::string_view extension : extensions_a)
-                    {
-                        if (descriptor.extensions.end() == std::find(descriptor.extensions.begin(), descriptor.extensions.end(), extension))
-                        {
-                            found = false;
-                            break;
-                        }
-                    }
+                max_image_dimension_1d = 1ull,
+                max_image_dimension_2d,
+                max_image_dimension_3d,
+                max_image_dimensioncube,
+                max_image_arraylayers,
+                max_texel_buffer_elements,
+                max_uniform_buffer_range,
+                max_storage_buffer_range,
+                max_push_constants_size,
+                max_memory_allocation_count,
+                max_sampler_allocation_count,
+                buffer_image_granularity,
+                sparse_address_space_size,
+                max_bound_descriptor_sets,
+                max_per_stage_descriptor_samplers,
+                max_per_stage_descriptor_uniform_buffers,
+                max_per_stage_descriptor_storage_buffers,
+                max_per_stage_descriptor_sampled_images,
+                max_per_stage_descriptor_storage_images,
+                max_per_stage_descriptor_input_attachments,
+                max_per_stage_resources,
+                max_descriptor_set_samplers,
+                max_descriptor_set_uniform_buffers,
+                max_descriptor_set_uniform_buffers_dynamic,
+                max_descriptor_set_storage_buffers,
+                max_descriptor_set_storage_buffers_dynamic,
+                max_descriptor_set_sampled_images,
+                max_descriptor_set_storage_images,
+                max_descriptor_set_input_attachments,
+                max_vertex_input_attributes,
+                max_vertex_input_bindings,
+                max_vertex_input_attribute_offset,
+                max_vertex_input_binding_stride,
+                max_vertex_output_components,
+                max_tessellation_generationlevel,
+                max_tessellation_patchsize,
+                max_tessellation_control_per_vertex_input_components,
+                max_tessellation_control_per_vertex_output_components,
+                max_tessellation_control_per_patch_output_components,
+                max_tessellation_control_total_output_components,
+                max_tessellation_evaluation_input_components,
+                max_tessellation_evaluation_output_components,
+                max_geometry_shader_invocations,
+                max_geometry_input_components,
+                max_geometry_output_components,
+                max_geometry_output_vertices,
+                max_geometry_total_output_components,
+                max_fragment_input_components,
+                max_fragment_output_attachments,
+                max_fragment_dual_src_attachments,
+                max_fragment_combined_output_resources,
+                max_compute_shared_memory_size,
+                max_compute_work_group_count_0,
+                max_compute_work_group_count_1,
+                max_compute_work_group_count_2,
+                max_compute_work_group_invocations,
+                max_compute_work_group_size_0,
+                max_compute_work_group_size_1,
+                max_compute_work_group_size_2,
+                sub_pixel_precision_bits,
+                sub_texel_precision_bits,
+                mipmap_precision_bits,
+                max_draw_indexed_index_value,
+                max_draw_indirect_count,
+                max_sampler_lod_bias,
+                max_sampler_anisotropy,
+                max_viewports,
+                max_viewport_dimensions_0,
+                max_viewport_dimensions_1,
+                viewport_bounds_range_0,
+                viewport_bounds_range_1,
+                viewport_sub_pixel_bits,
+                min_memory_map_alignment,
+                min_texel_buffer_offset_alignment,
+                min_uniform_buffer_offset_alignment,
+                min_storage_buffer_offset_alignment,
+                min_texel_offset,
+                max_texel_offset,
+                min_texel_gather_offset,
+                max_texel_gather_offset,
+                min_interpolation_offset,
+                max_interpolation_offset,
+                sub_pixel_interpolation_offset_bits,
+                max_framebuffer_width,
+                max_framebuffer_height,
+                max_framebuffer_layers,
+                framebuffer_color_sample_counts,
+                framebuffer_depth_sample_counts,
+                framebuffer_stencil_sample_counts,
+                framebuffer_no_attachments_sample_counts,
+                max_color_attachments,
+                sampled_image_color_sample_counts,
+                sampled_image_integer_sample_counts,
+                sampled_image_depth_sample_counts,
+                sampled_image_stencil_sample_counts,
+                storage_image_sample_counts,
+                max_sample_mask_words,
+                timestamp_compute_and_graphics,
+                timestamp_period,
+                max_clip_distances,
+                max_cull_distances,
+                max_combined_clip_and_cull_distances,
+                discrete_queue_priorities,
+                point_size_range_0,
+                point_size_range_1,
+                line_width_hrange_0,
+                line_width_hrange_1,
+                point_size_granularity,
+                line_width_granularity,
+                strict_lines,
+                standard_sample_locations,
+                optimal_buffer_copy_offset_alignment,
+                optimal_buffer_copy_row_pitch_alignment,
+                non_coherent_atom_size,
+            };
 
-                    if (true == found)
-                    {
-                        ret.push_back(device);
-                    }
-                    break;
-                }
+            struct Value
+            {
+            private:
+                enum class Operation : std::uint64_t
+                {
+                    less,
+                    less_or_equal,
+                    greater,
+                    greater_or_equal,
+                    equals
+                };
+
+                Operation operation;
+                std::byte data[8];
+
+                friend Limit;
+                friend device;
+            };
+
+            using enum Kind;
+
+            Kind kind;
+            Value value;
+
+            static constexpr Value less_than(std::uint32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_than(std::int32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_than(std::uint64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_than(std::int64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_than(float v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+
+                return ret;
+            }
+
+            static constexpr Value less_or_equal_than(std::uint32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_or_equal_than(std::int32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_or_equal_than(std::uint64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_or_equal_than(std::int64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value less_or_equal_than(float v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::less_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+
+                return ret;
+            }
+
+            static constexpr Value greater_than(std::uint32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_than(std::int32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_than(std::uint64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_than(std::int64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_than(float v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+
+                return ret;
+            }
+
+            static constexpr Value greater_or_equal_than(std::uint32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_or_equal_than(std::int32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_or_equal_than(std::uint64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_or_equal_than(std::int64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value greater_or_equal_than(float v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::greater_or_equal;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+
+                return ret;
+            }
+
+            static constexpr Value equals(std::uint32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::equals;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value equals(std::int32_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::equals;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value equals(std::uint64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::equals;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value equals(std::int64_t v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::equals;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+
+                return ret;
+            }
+            static constexpr Value equals(float v)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v));
+
+                Value ret;
+                ret.operation = Value::Operation::equals;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+
+                return ret;
+            }
+        };
+
+        using Kind = GPU::Kind;
+        using Feature = GPU::Feature;
+
+        Kind kind;
+        Feature features;
+
+        std::span<const Queue_family> queue_families;
+        std::span<const std::string_view> extensions;
+        std::span<const Limit> limits;
+    };
+
+    std::vector<const device::GPU*> operator()(std::span<GPU> gpus_a, const Requirements& requirements_a);
+};
+template<> struct device::Filter<device::Display>
+{
+    struct Requirements
+    {
+        common::Size<std::uint16_t> minimum_logical_resolution;
+        common::Size<std::uint16_t> minimum_physical_resolution;
+
+        std::uint8_t bpp;
+    };
+
+    std::vector<const device::Display*> operator()(std::span<Display> displays_a, const Requirements& requirements_a)
+    {
+        std::vector<const device::Display*> ret;
+        ret.reserve(displays_a.size());
+
+        for (const Display& display : displays_a)
+        {
+            const device::Display::Properties& properties = display.get_properties();
+
+            if (properties.bits_per_pixel >= requirements_a.bpp &&
+                properties.physical_rect.size.w >= requirements_a.minimum_physical_resolution.w &&
+                properties.physical_rect.size.h >= requirements_a.minimum_physical_resolution.h &&
+                properties.logical_rect.size.w >= requirements_a.minimum_logical_resolution.w &&
+                properties.logical_rect.size.h >= requirements_a.minimum_logical_resolution.h)
+            {
+                ret.push_back(&(display));
             }
         }
-    }
 
-    return ret;
-}
+        return ret;
+    }
+};
 
 constexpr device::GPU::Kind operator|(device::GPU::Kind left_a, device::GPU::Kind right_a)
 {
-    return static_cast<device::GPU::Kind>(static_cast<common::Uint64>(left_a) | static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Kind>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
 }
 constexpr device::GPU::Kind operator&(device::GPU::Kind left_a, device::GPU::Kind right_a)
 {
-    return static_cast<device::GPU::Kind>(static_cast<common::Uint64>(left_a) & static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Kind>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
 }
 
 constexpr device::GPU::Feature operator|(device::GPU::Feature left_a, device::GPU::Feature right_a)
 {
-    return static_cast<device::GPU::Feature>(static_cast<common::Uint64>(left_a) | static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Feature>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
 }
 constexpr device::GPU::Feature operator&(device::GPU::Feature left_a, device::GPU::Feature right_a)
 {
-    return static_cast<device::GPU::Feature>(static_cast<common::Uint64>(left_a) & static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Feature>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
 }
 
-constexpr device::GPU::Queue::Kind operator|(device::GPU::Queue::Kind left_a, device::GPU::Queue::Kind right_a)
+constexpr device::GPU::Properties::Queue_family::Kind operator|(device::GPU::Properties::Queue_family::Kind left_a,
+                                                                device::GPU::Properties::Queue_family::Kind right_a)
 {
-    return static_cast<device::GPU::Queue::Kind>(static_cast<common::Uint64>(left_a) | static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Properties::Queue_family::Kind>(static_cast<std::uint64_t>(left_a) |
+                                                                    static_cast<std::uint64_t>(right_a));
 }
-constexpr device::GPU::Queue::Kind operator&(device::GPU::Queue::Kind left_a, device::GPU::Queue::Kind right_a)
+constexpr device::GPU::Properties::Queue_family::Kind operator&(device::GPU::Properties::Queue_family::Kind left_a,
+                                                                device::GPU::Properties::Queue_family::Kind right_a)
 {
-    return static_cast<device::GPU::Queue::Kind>(static_cast<common::Uint64>(left_a) & static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Properties::Queue_family::Kind>(static_cast<std::uint64_t>(left_a) &
+                                                                    static_cast<std::uint64_t>(right_a));
 }
 
 constexpr device::GPU::Limits::Sample_count operator|(device::GPU::Limits::Sample_count left_a, device::GPU::Limits::Sample_count right_a)
 {
-    return static_cast<device::GPU::Limits::Sample_count>(static_cast<common::Uint64>(left_a) | static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Limits::Sample_count>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
 }
 constexpr device::GPU::Limits::Sample_count operator&(device::GPU::Limits::Sample_count left_a, device::GPU::Limits::Sample_count right_a)
 {
-    return static_cast<device::GPU::Limits::Sample_count>(static_cast<common::Uint64>(left_a) & static_cast<common::Uint64>(right_a));
+    return static_cast<device::GPU::Limits::Sample_count>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
 }
 } // namespace lxf

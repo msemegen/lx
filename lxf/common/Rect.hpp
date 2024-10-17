@@ -9,16 +9,13 @@
 #include <cassert>
 
 // lx
-#include <lxf/common/Size.hpp>
 #include <lxf/common/Position.hpp>
-#include <lxf/common/scalar.hpp>
+#include <lxf/common/Size.hpp>
 
-namespace lxf {
-namespace common {
+namespace lxf::common {
 template<typename Position_scalar_t, typename Size_scalar_t> struct Rect
 {
     Position<Position_scalar_t> position;
     Size<Size_scalar_t> size;
 };
-} // namespace common
-} // namespace lxf
+} // namespace lxf::common

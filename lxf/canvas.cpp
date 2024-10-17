@@ -57,7 +57,9 @@ LRESULT __stdcall window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, L
 } // namespace
 
 namespace lxf {
-bool canvas::Windowed::create_window(const device::Display& display_a, const Descriptor& descriptor_a)
+using namespace common;
+
+bool canvas::Windowed::create_window(const device::Display* p_display_a, const Descriptor& descriptor_a)
 {
     WNDCLASSEX window_class_descriptor {};
     window_class_descriptor.cbSize = sizeof(WNDCLASSEXW);
@@ -70,8 +72,8 @@ bool canvas::Windowed::create_window(const device::Display& display_a, const Des
 
     this->wnd_class = RegisterClassEx(&window_class_descriptor);
 
-    common::Size<common::Uint16> wnd_size;
-    common::Position<common::Uint16> wnd_pos;
+    common::Size<std::uint16_t> wnd_size;
+    common::Position<std::uint16_t> wnd_pos;
 
     assert(Position::automatic != (descriptor_a.position & Position::automatic) || Size::custom != (descriptor_a.size & Size::custom));
 
@@ -85,11 +87,12 @@ bool canvas::Windowed::create_window(const device::Display& display_a, const Des
     }
     else if (Position::centered == (descriptor_a.position & Position::centered) && Size::custom == (descriptor_a.size & Size::custom))
     {
+        device::Display::Properties display_properties = p_display_a->get_properties();
         const std::uint32_t size_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(descriptor_a.size) >> 16u);
         std::memcpy(&wnd_size, &size_tmp, sizeof(wnd_size));
 
-        wnd_pos = { .x = static_cast<common::Uint16>(display_a.get_logical_rect().size.w / 2u - wnd_size.w / 2u),
-                    .y = static_cast<common::Uint16>(display_a.get_logical_rect().size.h / 2u - wnd_size.h / 2u) };
+        wnd_pos = { .x = static_cast<std::uint16_t>(display_properties.logical_rect.size.w / 2u - wnd_size.w / 2u),
+                    .y = static_cast<std::uint16_t>(display_properties.logical_rect.size.h / 2u - wnd_size.h / 2u) };
     }
     else if (Position::automatic == (descriptor_a.position & Position::automatic) && Size::maximize == (descriptor_a.size & Size::maximize))
     {

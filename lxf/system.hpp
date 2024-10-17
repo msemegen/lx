@@ -7,6 +7,7 @@
 
 // std
 #include <cassert>
+#include <cstdint>
 #include <string_view>
 
 // platform
@@ -14,7 +15,6 @@
 
 // lxf
 #include <lxf/common/non_constructible.hpp>
-#include <lxf/common/scalar.hpp>
 #include <lxf/common/various.hpp>
 
 namespace lxf {
@@ -22,7 +22,7 @@ struct system : common::non_constructible
 {
     struct message_box : common::non_constructible
     {
-        enum class Icon : common::Uint32
+        enum class Icon : std::uint32_t
         {
             exclamation = MB_ICONEXCLAMATION,
             warning = MB_ICONWARNING,
@@ -34,7 +34,7 @@ struct system : common::non_constructible
             hand = MB_ICONHAND
         };
 
-        enum class Button : common::Uint32
+        enum class Button : std::uint32_t
         {
             ok = 0x1u,
             cancel = 0x2u,
@@ -48,8 +48,8 @@ struct system : common::non_constructible
 
         static Button show(std::string_view title_a, std::string_view message_a, Icon icon_a, Button buttons_a)
         {
-            common::Uint32 ret = MessageBox(
-                HWND_DESKTOP, message_a.data(), title_a.data(), static_cast<common::Uint32>(icon_a) | get_win32_button_flag(buttons_a));
+            std::uint32_t ret = MessageBox(
+                HWND_DESKTOP, message_a.data(), title_a.data(), static_cast<std::uint32_t>(icon_a) | get_win32_button_flag(buttons_a));
 
             switch (ret)
             {
@@ -82,45 +82,45 @@ struct system : common::non_constructible
         }
 
     private:
-        static common::Uint32 get_win32_button_flag(Button buttons_a);
+        static std::uint32_t get_win32_button_flag(Button buttons_a);
     };
 };
 
 constexpr system::message_box::Button operator|(system::message_box::Button left_a, system::message_box::Button right_a)
 {
-    return static_cast<system::message_box::Button>(static_cast<common::Uint32>(left_a) | static_cast<common::Uint32>(right_a));
+    return static_cast<system::message_box::Button>(static_cast<std::uint32_t>(left_a) | static_cast<std::uint32_t>(right_a));
 }
 constexpr system::message_box::Button operator&(system::message_box::Button left_a, system::message_box::Button right_a)
 {
-    return static_cast<system::message_box::Button>(static_cast<common::Uint32>(left_a) & static_cast<common::Uint32>(right_a));
+    return static_cast<system::message_box::Button>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
 }
 
-inline common::Uint32 system::message_box::get_win32_button_flag(Button buttons_a)
+inline std::uint32_t system::message_box::get_win32_button_flag(Button buttons_a)
 {
-    switch (static_cast<common::Uint32>(buttons_a))
+    switch (static_cast<std::uint32_t>(buttons_a))
     {
-        case static_cast<common::Uint32>(Button::ok):
+        case static_cast<std::uint32_t>(Button::ok):
             return MB_OK;
 
-        case static_cast<common::Uint32>(Button::help):
+        case static_cast<std::uint32_t>(Button::help):
             return MB_HELP;
 
-        case static_cast<common::Uint32>(Button::ok | Button::cancel):
+        case static_cast<std::uint32_t>(Button::ok | Button::cancel):
             return MB_OKCANCEL;
 
-        case static_cast<common::Uint32>(Button::yes | Button::no):
+        case static_cast<std::uint32_t>(Button::yes | Button::no):
             return MB_YESNO;
 
-        case static_cast<common::Uint32>(Button::retry | Button::cancel):
+        case static_cast<std::uint32_t>(Button::retry | Button::cancel):
             return MB_RETRYCANCEL;
 
-        case static_cast<common::Uint32>(Button::yes | Button::no | Button::cancel):
+        case static_cast<std::uint32_t>(Button::yes | Button::no | Button::cancel):
             return MB_YESNOCANCEL;
 
-        case static_cast<common::Uint32>(Button::abort | Button::retry | Button::ignore):
+        case static_cast<std::uint32_t>(Button::abort | Button::retry | Button::ignore):
             return MB_ABORTRETRYIGNORE;
 
-        case static_cast<common::Uint32>(Button::cancel | Button::retry | Button::ignore):
+        case static_cast<std::uint32_t>(Button::cancel | Button::retry | Button::ignore):
             return MB_CANCELTRYCONTINUE;
 
         default: {

@@ -18,25 +18,25 @@ namespace lxf {
 class Windower : private common::non_copyable
 {
 public:
-    template<typename Type_t> [[nodiscard]] Type_t* create(const device::Display& display_a, typename const Type_t::Descriptor& descriptor_a) = delete;
+    template<typename Type_t>
+    [[nodiscard]] Type_t* create(const device::Display* p_display_a, typename const Type_t::Descriptor& descriptor_a) = delete;
     template<typename Type_t> [[nodiscard]] bool destroy(Type_t** p_object_a) = delete;
 
 private:
-
     std::vector<canvas::Fullscreen> fullscreen_canvases;
     std::vector<canvas::Windowed> windowed_canvases;
 };
 
-template<>
-inline [[nodiscard]] canvas::Fullscreen* Windower::create<canvas::Fullscreen>(const device::Display& display_a, const canvas::Fullscreen::Descriptor& descriptor_a)
+template<> inline [[nodiscard]] canvas::Fullscreen* Windower::create<canvas::Fullscreen>(const device::Display* p_display_a,
+                                                                                         const canvas::Fullscreen::Descriptor& descriptor_a)
 {
-    this->fullscreen_canvases.emplace_back(display_a, descriptor_a);
+    this->fullscreen_canvases.emplace_back(p_display_a, descriptor_a);
     return &(this->fullscreen_canvases.back());
 }
-template<>
-inline [[nodiscard]] canvas::Windowed* Windower::create<canvas::Windowed>(const device::Display& display_a, const canvas::Windowed::Descriptor& descriptor_a)
+template<> inline [[nodiscard]] canvas::Windowed* Windower::create<canvas::Windowed>(const device::Display* p_display_a,
+                                                                                     const canvas::Windowed::Descriptor& descriptor_a)
 {
-    this->windowed_canvases.emplace_back(display_a, descriptor_a);
+    this->windowed_canvases.emplace_back(p_display_a, descriptor_a);
     return &(this->windowed_canvases.back());
 }
 

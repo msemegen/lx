@@ -7,6 +7,8 @@
 
 // std
 #include <cassert>
+#include <cstdint>
+#include <utility>
 
 // platform
 #include <vulkan/vulkan.hpp>
@@ -14,7 +16,6 @@
 // lxf
 #include <lxf/common/non_constructible.hpp>
 #include <lxf/common/non_copyable.hpp>
-#include <lxf/common/scalar.hpp>
 #include <lxf/device.hpp>
 
 namespace lxf {
@@ -34,7 +35,9 @@ struct renderer : private common::non_constructible
         {
         }
 
-        bool create(const device::GPU& gpu_a, std::span<const device::GPU::Queue> queues_a, device::GPU::Feature features_a);
+        bool create(const device::GPU* p_gpu_a,
+                    std::span<const std::pair<device::GPU::Properties::Queue_family, std::span<std::uint8_t>>> queues_a,
+                    device::GPU::Feature features_a);
         void release();
 
         VkDevice vk_device;
@@ -43,7 +46,9 @@ struct renderer : private common::non_constructible
     };
 
     template<typename Type_t> static [[nodiscard]] Context*
-    create(const device::GPU& gpu_a, std::span<const device::GPU::Queue> queues_a, device::GPU::Feature features_a) = delete;
+    create(const device::GPU* p_gpu_a,
+           std::span<const std::pair<device::GPU::Properties::Queue_family, std::span<std::uint8_t>>> queues_a,
+           device::GPU::Feature features_a) = delete;
     template<typename Type_t> static void destroy(Type_t** p_object_a) = delete;
 
 private:
@@ -51,11 +56,13 @@ private:
 };
 
 template<> [[nodiscard]] inline renderer::Context*
-renderer::create<renderer::Context>(const device::GPU& gpu_a, std::span<const device::GPU::Queue> queues_a, device::GPU::Feature features_a)
+renderer::create<renderer::Context>(const device::GPU* p_gpu_a,
+                                    std::span<const std::pair<device::GPU::Properties::Queue_family, std::span<std::uint8_t>>> queues_a,
+                                    device::GPU::Feature features_a)
 {
     assert(false == context.is_created());
 
-    if (true == context.create(gpu_a, queues_a, features_a))
+    if (true == context.create(p_gpu_a, queues_a, features_a))
     {
         return &(context);
     }

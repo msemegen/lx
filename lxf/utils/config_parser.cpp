@@ -39,11 +39,11 @@ void config_parser::free()
 
     std::string_view data = p_storage;
 
-    common::Uint64 start = 0ull;
+    std::uint64_t start = 0ull;
     for (; start < data.length() && true == contains(white_spces, data[start]); start++) continue;
 
     bool push_new = true;
-    common::Uint64 i = start;
+    std::uint64_t i = start;
 
     // splt storage into '\0' seperated parts
     for (; i + 1ull < storage_capacity; i++)
@@ -88,7 +88,7 @@ void config_parser::free()
     i = start;
     for (; i + 1ull < storage_capacity; i++)
     {
-        common::Uint64 m = 0ull;
+        std::uint64_t m = 0ull;
         if ('\0' == p_storage[i])
         {
             m = 0ull;
@@ -141,7 +141,7 @@ void config_parser::free()
     Entry entry;
     Token::Kind last = various::get_enum_incorrect_value<Token::Kind>();
 
-    for (common::Uint64 i = 0; i < tokens_a.size(); i++)
+    for (std::uint64_t i = 0; i < tokens_a.size(); i++)
     {
         Token::Kind current = tokens_a[i].kind;
 

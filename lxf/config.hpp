@@ -6,6 +6,7 @@
  */
 
 // std
+#include <cstdint>
 #include <string_view>
 
 // lxf
@@ -33,6 +34,9 @@ struct config : private common::non_constructible
     {
         static std::string_view name;
         static common::Version version;
+
+        const static inline std::uint64_t max_supported_gpus = 10ull;
+        const static inline std::uint64_t max_supported_displays = 10ull;
     };
 
     struct vulkan

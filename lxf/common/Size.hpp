@@ -7,30 +7,26 @@
 
 // std
 #include <cassert>
+#include <cstdint>
 
-// lx
-#include <lxf/common/scalar.hpp>
-
-namespace lxf {
-namespace common {
+namespace lxf::common {
 template<typename Scalar_t> struct Size
 {
     Scalar_t w = static_cast<Scalar_t>(0);
     Scalar_t h = static_cast<Scalar_t>(0);
 
-    Uint32 operator[](Uint64 index_a) const
+    Scalar_t operator[](std::size_t index_a) const
     {
         assert(index_a <= 2);
 
-        return reinterpret_cast<const Uint32*>(this)[index_a];
+        return reinterpret_cast<const Scalar_t*>(this)[index_a];
     }
 
-    Uint32& operator[](Uint64 index_a)
+    Scalar_t& operator[](std::size_t index_a)
     {
         assert(index_a <= 2);
 
-        return reinterpret_cast<Uint32*>(this)[index_a];
+        return reinterpret_cast<Scalar_t*>(this)[index_a];
     }
 };
-} // namespace common
-} // namespace lxf
+} // namespace lxf::common

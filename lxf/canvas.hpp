@@ -19,7 +19,6 @@
 #include <lxf/common/Size.hpp>
 #include <lxf/common/non_constructible.hpp>
 #include <lxf/common/non_copyable.hpp>
-#include <lxf/common/scalar.hpp>
 #include <lxf/device.hpp>
 
 namespace lxf {
@@ -55,12 +54,12 @@ private:
     };
 
 public:
-    enum class Size : common::Uint64
+    enum class Size : std::uint64_t
     {
         custom = 0x1ull,
         maximize
     };
-    enum class Position : common::Uint64
+    enum class Position : std::uint64_t
     {
         custom = 0x1ull,
         centered,
@@ -78,10 +77,10 @@ public:
             Size size;
         };
 
-        Windowed(const device::Display& display_a, const Descriptor& descriptor_a)
+        Windowed(const device::Display* p_display_a, const Descriptor& descriptor_a)
             : Window()
         {
-            this->created = this->create_window(display_a, descriptor_a);
+            this->created = this->create_window(p_display_a, descriptor_a);
         }
 
         void set_visible(bool visible_a);
@@ -97,7 +96,7 @@ public:
         }
 
     private:
-        bool create_window(const device::Display& display_a, const Descriptor& descriptor_a);
+        bool create_window(const device::Display* p_display_a, const Descriptor& descriptor_a);
         void destroy();
 
         friend class lxf::Windower;
@@ -107,14 +106,14 @@ public:
     public:
         struct Descriptor
         {
-            common::Size<common::Uint32> resolution;
-            common::Uint8 bits_per_pixel;
+            common::Size<std::uint32_t> resolution;
+            std::uint8_t bits_per_pixel;
         };
 
-        Fullscreen(const device::Display& display_a, const Descriptor descriptor_a)
+        Fullscreen(const device::Display* p_display_a, const Descriptor descriptor_a)
             : Window()
         {
-            this->created = this->create_window(display_a, descriptor_a);
+            this->created = this->create_window(p_display_a, descriptor_a);
         }
 
         void set_visible(bool visible_a);
@@ -130,31 +129,31 @@ public:
         }
 
     private:
-        bool create_window(const device::Display& display_a, const Descriptor& descriptor_a);
+        bool create_window(const device::Display* p_display_a, const Descriptor& descriptor_a);
         void destroy();
 
         friend class lxf::Windower;
     };
 };
 
-constexpr canvas::Size operator|(canvas::Size type_a, common::Size<common::Uint16> size_a)
+constexpr canvas::Size operator|(canvas::Size type_a, common::Size<std::uint16_t> size_a)
 {
     assert(canvas::Size::custom == type_a);
 
-    return static_cast<canvas::Size>(static_cast<common::Uint16>(type_a) | (size_a.w << 16u) |
-                                     (static_cast<common::Uint64>(size_a.h) << 32u));
+    return static_cast<canvas::Size>(static_cast<std::uint16_t>(type_a) | (size_a.w << 16u) |
+                                     (static_cast<std::uint64_t>(size_a.h) << 32u));
 }
 constexpr canvas::Size operator&(canvas::Size left_a, canvas::Size right_a)
 {
     return static_cast<canvas::Size>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
 }
 
-constexpr canvas::Position operator|(canvas::Position type_a, common::Position<common::Uint16> size_a)
+constexpr canvas::Position operator|(canvas::Position type_a, common::Position<std::uint16_t> size_a)
 {
     assert(canvas::Position::custom == type_a);
 
-    return static_cast<canvas::Position>(static_cast<common::Uint16>(type_a) | (size_a.x << 16u) |
-                                         (static_cast<common::Uint64>(size_a.y) << 32u));
+    return static_cast<canvas::Position>(static_cast<std::uint16_t>(type_a) | (size_a.x << 16u) |
+                                         (static_cast<std::uint64_t>(size_a.y) << 32u));
 }
 constexpr canvas::Position operator&(canvas::Position left_a, canvas::Position right_a)
 {

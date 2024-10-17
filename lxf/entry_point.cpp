@@ -10,6 +10,7 @@
 
 // std
 #include <array>
+#include <cstdint>
 #include <memory>
 
 // platform
@@ -74,7 +75,8 @@ logger::Severity get_log_severity_from_config(logger::Severity default_a, const 
 
 BOOL enum_monitors_handler(HMONITOR monitor_handle_a, HDC, LPRECT, LPARAM user_data_a)
 {
-    std::vector<device::Display>* p_displays = reinterpret_cast<std::vector<device::Display>*>(user_data_a);
+    std::pair<std::array<device::Display, config::engine::max_supported_displays>*, std::size_t>* p_displays =
+        std::bit_cast<std::pair<std::array<device::Display, config::engine::max_supported_displays>*, std::size_t>*>(user_data_a);
 
     MONITORINFOEX monitor_info;
     DEVMODE dev_mode;
@@ -85,17 +87,23 @@ BOOL enum_monitors_handler(HMONITOR monitor_handle_a, HDC, LPRECT, LPARAM user_d
     GetMonitorInfo(monitor_handle_a, &monitor_info);
     EnumDisplaySettings(monitor_info.szDevice, ENUM_CURRENT_SETTINGS, &dev_mode);
 
-    p_displays->emplace_back(monitor_handle_a,
-                             static_cast<Uint8>(dev_mode.dmBitsPerPel),
-                             reinterpret_cast<const char*>(dev_mode.dmDeviceName),
-                             Rect<Int32, Uint32> { .position = { .x = monitor_info.rcMonitor.left, .y = monitor_info.rcMonitor.top },
-                                                   .size = { .w = static_cast<Uint16>(monitor_info.rcMonitor.right),
-                                                             .h = static_cast<Uint16>(monitor_info.rcMonitor.bottom) } },
-                             Rect<Int32, Uint32> { .position = { .x = dev_mode.dmPosition.x, .y = dev_mode.dmPosition.y },
-                                                   .size = { .w = dev_mode.dmPosition.x + dev_mode.dmPelsWidth,
-                                                             .h = dev_mode.dmPosition.y + dev_mode.dmPelsHeight } });
+    if ((p_displays->second) < config::engine::max_supported_displays)
+    {
+        new (&p_displays->first[(p_displays->second)++]) device::Display(
+            monitor_handle_a,
+            static_cast<std::uint8_t>(dev_mode.dmBitsPerPel),
+            reinterpret_cast<const char*>(dev_mode.dmDeviceName),
+            Rect<std::int32_t, std::uint32_t> { .position = { .x = monitor_info.rcMonitor.left, .y = monitor_info.rcMonitor.top },
+                                                .size = { .w = static_cast<std::uint16_t>(monitor_info.rcMonitor.right),
+                                                          .h = static_cast<std::uint16_t>(monitor_info.rcMonitor.bottom) } },
+            Rect<std::int32_t, std::uint32_t> {
+                .position = { .x = dev_mode.dmPosition.x, .y = dev_mode.dmPosition.y },
+                .size = { .w = dev_mode.dmPosition.x + dev_mode.dmPelsWidth, .h = dev_mode.dmPosition.y + dev_mode.dmPelsHeight } });
 
-    return TRUE;
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 } // namespace
@@ -147,7 +155,7 @@ bool logger::is_open()
 
 const char* logger::to_string(Level level_a)
 {
-    switch (static_cast<Level>(static_cast<common::Uint64>(level_a) & 0x1Full))
+    switch (static_cast<Level>(static_cast<std::uint64_t>(level_a) & 0x1Full))
     {
         case Level::debug:
             return "dbg";
@@ -319,7 +327,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
     }
 
     // physical devices enumeration and logging
-    std::vector<device::GPU> gpus;
+    std::array<device::GPU, config::engine::max_supported_gpus> gpus;
+    std::uint32_t gpus_count = 0;
     {
         auto to_string = [](VkPhysicalDeviceType type_a) -> std::string_view {
             switch (type_a)
@@ -344,17 +353,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
         };
         logger::write_line(logger::info, module_name, "Avaliable display adapters: ");
 
-        std::uint32_t gpus_count = 0;
         vkEnumeratePhysicalDevices(vk_instance, &gpus_count, nullptr);
         std::unique_ptr<VkPhysicalDevice[]> gpus_buffer = std::make_unique<VkPhysicalDevice[]>(gpus_count);
         vkEnumeratePhysicalDevices(vk_instance, &gpus_count, gpus_buffer.get());
 
-        for (std::uint32_t gpu_index = 0; gpu_index < gpus_count; gpu_index++)
+        for (std::uint32_t gpu_index = 0; gpu_index < gpus_count && config::engine::max_supported_gpus; gpu_index++)
         {
             VkPhysicalDeviceProperties vk_device_properties;
             VkPhysicalDeviceFeatures vk_device_features;
 
-            std::vector<std::array<char, VK_MAX_EXTENSION_NAME_SIZE>> device_extension_names;
+            std::vector<std::string_view> device_extension_names;
 
             std::unique_ptr<VkExtensionProperties[]> vk_device_extensions_buffer;
 
@@ -374,11 +382,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
                 for (std::uint32_t ex_index = 0; ex_index < device_extensions_count; ex_index++)
                 {
-                    std::array<char, VK_MAX_EXTENSION_NAME_SIZE> tmp;
-                    std::copy(std::begin(vk_device_extensions_buffer[ex_index].extensionName),
-                              std::end(vk_device_extensions_buffer[ex_index].extensionName),
-                              std::begin(tmp));
-                    device_extension_names.push_back(tmp);
+                    device_extension_names.emplace_back(vk_device_extensions_buffer[ex_index].extensionName);
                 }
             }
 
@@ -472,41 +476,44 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                 logger::write_line(logger::Level::debug, module_name, "\t\t\t - {}", &(ext_name[0]));
             }
 
-            gpus.emplace_back(gpus_buffer[gpu_index],
-                              vk_device_properties.deviceType,
-                              vk_device_properties.limits,
-                              vk_device_features,
-                              std::span { vk_queue_family_properties_buffer.get(), queue_family_property_count },
-                              (device_extension_names),
-                              is_primary,
-                              vk_device_properties.deviceName);
+            // placement new in array element
+            new (&(gpus[gpu_index])) device::GPU(gpus_buffer[gpu_index],
+                                                 is_primary,
+                                                 std::span { vk_queue_family_properties_buffer.get(), queue_family_property_count },
+                                                 vk_device_properties.deviceName,
+                                                 device_extension_names);
         }
     }
 
     // displays enumerating an logging
-    std::vector<device::Display> displays;
+    std::array<device::Display, config::engine::max_supported_displays> displays;
+    std::size_t displays_count = 0;
     {
-        logger::write_line(logger::info, module_name, "Avaliable displays: ");
+        std::pair<std::array<device::Display, config::engine::max_supported_displays>*, std::size_t> enum_callback_data { &displays, 0u };
+        EnumDisplayMonitors(nullptr, nullptr, enum_monitors_handler, reinterpret_cast<LPARAM>(&enum_callback_data));
 
-        EnumDisplayMonitors(nullptr, nullptr, enum_monitors_handler, reinterpret_cast<LPARAM>(&displays));
+        displays_count = enum_callback_data.second;
+        logger::write_line(logger::info, module_name, "Avaliable displays {}", displays_count);
 
-        for (const device::Display& display : displays)
+        for (std::size_t display_index = 0; display_index < displays_count; display_index++)
         {
-            logger::write_line(logger::info,
+            device::Display::Properties display_properties = displays[display_index].get_properties();
+
+            logger::write_line(logger::debug,
                                module_name,
                                "\t - {}, bpp: {}, logical resolution: {}x{}, physical resolution: {}x{}",
-                               display.get_name(),
-                               display.get_bits_per_pixel(),
-                               display.get_logical_rect().size.w,
-                               display.get_logical_rect().size.h,
-                               display.get_physical_rect().size.w,
-                               display.get_physical_rect().size.h);
+                               display_properties.name,
+                               display_properties.bits_per_pixel,
+                               display_properties.logical_rect.size.w,
+                               display_properties.logical_rect.size.h,
+                               display_properties.physical_rect.size.w,
+                               display_properties.physical_rect.size.h);
         }
     }
 
     Windower windower;
 
-    entry_point(p_cmd_line_a, gpus, displays, &windower);
+    entry_point(p_cmd_line_a, std::span<device::GPU> { &(gpus[0]), gpus_count }, { &displays[0], displays_count }, &windower);
 
     vkDestroyInstance(vk_instance, nullptr);
     logger::write_line(logger::info, module_name, "Vulkan instance destroyed.");

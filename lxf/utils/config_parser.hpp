@@ -6,12 +6,12 @@
  */
 
 // std
+#include <cstdint>
 #include <string_view>
 #include <vector>
 
 // lx
 #include <lxf/common/non_constructible.hpp>
-#include <lxf/common/scalar.hpp>
 
 namespace lxf {
 namespace utils {
@@ -41,7 +41,7 @@ public:
 private:
     struct Token
     {
-        enum class Kind : common::Uint64
+        enum class Kind : std::uint64_t
         {
             name,
             separator,
@@ -85,12 +85,12 @@ private:
         return false;
     }
 
-    static [[nodiscard]] common::Uint64 calculate_tail(std::string_view data_a)
+    static [[nodiscard]] std::uint64_t calculate_tail(std::string_view data_a)
     {
-        common::Uint64 ret = 0;
+        std::uint64_t ret = 0;
         bool in_string = false;
 
-        for (common::Uint64 i = 0; i + 1ull < data_a.length(); i++)
+        for (std::uint64_t i = 0; i + 1ull < data_a.length(); i++)
         {
             if (string_delimeter == data_a[i])
             {
@@ -120,9 +120,8 @@ private:
     static [[nodiscard]] std::vector<Token> tokenize();
     static [[nodiscard]] std::vector<Entry> build(const std::vector<Token>& tokens_a);
 
-
     inline static char* p_storage = nullptr;
-    inline static common::Uint64 storage_capacity = 0ull;
+    inline static std::uint64_t storage_capacity = 0ull;
 
     inline static std::vector<Entry> entries;
 };

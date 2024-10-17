@@ -11,17 +11,15 @@
 
 // lx
 #include <lxf/common/Limited.hpp>
-#include <lxf/common/scalar.hpp>
 
-namespace lxf {
-namespace common {
+namespace lxf::common {
 struct Version
 {
     struct Components
     {
-        common::Uint16 major;
-        common::Uint16 minor;
-        common::Uint16 path;
+        std::uint16_t major;
+        std::uint16_t minor;
+        std::uint16_t path;
     };
 
     Version()
@@ -34,39 +32,41 @@ struct Version
     {
     }
 
-    Version(Limited<Uint16, 0u, 0x3FFu> major_a, Limited<Uint16, 0u, 0x3FFu> minor_a, Limited<Uint16, 0u, 0xFFFu> patch_a)
+    Version(Limited<std::uint16_t, 0u, 0x3FFu> major_a,
+            Limited<std::uint16_t, 0u, 0x3FFu> minor_a,
+            Limited<std::uint16_t, 0u, 0xFFFu> patch_a)
     {
-        this->value = (static_cast<common::Uint32>(major_a) << 22u) | (static_cast<common::Uint32>(minor_a) << 12U) |
-                      (static_cast<common::Uint32>(patch_a));
+        this->value = (static_cast<std::uint32_t>(major_a) << 22u) | (static_cast<std::uint32_t>(minor_a) << 12U) |
+                      (static_cast<std::uint32_t>(patch_a));
     }
 
-    void set(Limited<Uint16, 0u, 0x3FFu> major_a, Limited<Uint16, 0u, 0x3FFu> minor_a, Limited<Uint16, 0u, 0xFFFu> patch_a)
+    void
+    set(Limited<std::uint16_t, 0u, 0x3FFu> major_a, Limited<std::uint16_t, 0u, 0x3FFu> minor_a, Limited<std::uint16_t, 0u, 0xFFFu> patch_a)
     {
-        this->value = (static_cast<common::Uint32>(major_a) << 22u) | (static_cast<common::Uint32>(minor_a) << 12U) |
-                      (static_cast<common::Uint32>(patch_a));
+        this->value = (static_cast<std::uint32_t>(major_a) << 22u) | (static_cast<std::uint32_t>(minor_a) << 12U) |
+                      (static_cast<std::uint32_t>(patch_a));
     }
 
     Components get() const
     {
-        return { .major = static_cast<common::Uint16>((this->value >> 22u) & 0xFFFu),
-                 .minor = static_cast<common::Uint16>((this->value >> 12u) & 0x3FFu),
-                 .path = static_cast<common::Uint16>(this->value & 0xFFFu)
+        return { .major = static_cast<std::uint16_t>((this->value >> 22u) & 0xFFFu),
+                 .minor = static_cast<std::uint16_t>((this->value >> 12u) & 0x3FFu),
+                 .path = static_cast<std::uint16_t>(this->value & 0xFFFu)
 
         };
     }
 
-    operator common::Uint32() const
+    operator std::uint32_t() const
     {
         return this->value;
     }
 
-    operator common::Uint32&()
+    operator std::uint32_t&()
     {
         return this->value;
     }
 
 private:
-    common::Uint32 value;
+    std::uint32_t value;
 };
-} // namespace common
-} // namespace lxf
+} // namespace lxf::common

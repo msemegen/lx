@@ -6,6 +6,7 @@
  */
 
 // std
+#include <cstdint>
 #include <cstdio>
 #include <ctime>
 #include <format>
@@ -15,7 +16,6 @@
 // lxf
 #include <lxf/common/bit.hpp>
 #include <lxf/common/non_constructible.hpp>
-#include <lxf/common/scalar.hpp>
 #include <lxf/common/various.hpp>
 
 namespace lxf {
@@ -23,7 +23,7 @@ namespace utils {
 class logger : private common::non_constructible
 {
 public:
-    enum class Severity : common::Uint64
+    enum class Severity : std::uint64_t
     {
         none = 0x0u,
         info = 0x1u,
@@ -32,7 +32,7 @@ public:
         omg = 0x8u,
         debug = 0x10u
     };
-    enum class Level : common::Uint64
+    enum class Level : std::uint64_t
     {
         info = 0x1u,
         warning = 0x2u,
@@ -46,8 +46,8 @@ public:
     template<typename... Args_t>
     static void write(Level level_a, std::string_view module_name_a, std::string_view format_a, Args_t... args_a)
     {
-        if ((true == common::bit::flag::is(static_cast<common::Uint64>(severity), static_cast<common::Uint8>(level_a)) ||
-             true == common::bit::flag::is(static_cast<common::Uint64>(severity), 0x10ull)) &&
+        if ((true == common::bit::flag::is(static_cast<std::uint64_t>(severity), static_cast<std::uint8_t>(level_a)) ||
+             true == common::bit::flag::is(static_cast<std::uint64_t>(severity), 0x10ull)) &&
             true == is_open())
         {
             timestamp(std::time(nullptr));
@@ -57,8 +57,7 @@ public:
     template<typename... Args>
     static void write_line(Level level_a, std::string_view module_name_a, std::string_view format_a, Args... args_a)
     {
-        if ((true == common::bit::flag::is(static_cast<common::Uint64>(severity), static_cast<common::Uint8>(level_a))) &&
-            true == is_open())
+        if ((true == common::bit::flag::is(static_cast<std::uint64_t>(severity), static_cast<std::uint8_t>(level_a))) && true == is_open())
         {
             timestamp(std::time(nullptr));
             log(level_a, module_name_a, std::vformat(std::locale {}, format_a.data(), std::make_format_args(args_a...)));
@@ -68,11 +67,11 @@ public:
 
     static void set_severity(Severity severity_a)
     {
-        common::bit::flag::set(reinterpret_cast<common::Uint64*>(&severity), 0x1Full, static_cast<common::Uint64>(severity_a));
+        common::bit::flag::set(reinterpret_cast<std::uint64_t*>(&severity), 0x1Full, static_cast<std::uint64_t>(severity_a));
     }
     static void clear_severity(Severity severity_a)
     {
-        common::bit::flag::clear(reinterpret_cast<common::Uint64*>(&severity), static_cast<common::Uint64>(severity_a));
+        common::bit::flag::clear(reinterpret_cast<std::uint64_t*>(&severity), static_cast<std::uint64_t>(severity_a));
     }
 
     static void set_console_output(bool flag_a)
@@ -99,11 +98,11 @@ private:
 
 constexpr logger::Severity operator|(logger::Severity left_a, logger::Severity right_a)
 {
-    return static_cast<logger::Severity>(static_cast<common::Uint64>(left_a) | static_cast<common::Uint64>(right_a));
+    return static_cast<logger::Severity>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
 }
 constexpr logger::Severity operator&(logger::Severity left_a, logger::Severity right_a)
 {
-    return static_cast<logger::Severity>(static_cast<common::Uint64>(left_a) & static_cast<common::Uint64>(right_a));
+    return static_cast<logger::Severity>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
 }
 } // namespace utils
 } // namespace lxf
