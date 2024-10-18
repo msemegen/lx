@@ -217,28 +217,27 @@ struct device : private common::non_constructible
             std::uint64_t optimal_buffer_copy_row_pitch_alignment = 0ull;
             std::uint64_t non_coherent_atom_size = 0ull;
         };
-        struct Properties
+        struct Queue_family
         {
-            struct Queue_family
+            enum class Kind : std::uint32_t
             {
-                enum class Kind : std::uint32_t
-                {
-                    graphics = VK_QUEUE_GRAPHICS_BIT,
-                    compute = VK_QUEUE_COMPUTE_BIT,
-                    transfer = VK_QUEUE_TRANSFER_BIT,
-                    sparse_binding = VK_QUEUE_SPARSE_BINDING_BIT,
-                    protected_memory = VK_QUEUE_PROTECTED_BIT,
-                    video_decode = VK_QUEUE_VIDEO_DECODE_BIT_KHR,
-                    video_encode = VK_QUEUE_VIDEO_ENCODE_BIT_KHR,
-                    optical_flow = VK_QUEUE_OPTICAL_FLOW_BIT_NV
-                };
-
-                using enum Kind;
-
-                Kind kind;
-                std::uint32_t count;
+                graphics = VK_QUEUE_GRAPHICS_BIT,
+                compute = VK_QUEUE_COMPUTE_BIT,
+                transfer = VK_QUEUE_TRANSFER_BIT,
+                sparse_binding = VK_QUEUE_SPARSE_BINDING_BIT,
+                protected_memory = VK_QUEUE_PROTECTED_BIT,
+                video_decode = VK_QUEUE_VIDEO_DECODE_BIT_KHR,
+                video_encode = VK_QUEUE_VIDEO_ENCODE_BIT_KHR,
+                optical_flow = VK_QUEUE_OPTICAL_FLOW_BIT_NV
             };
 
+            using enum Kind;
+
+            Kind kind;
+            std::uint32_t count;
+        };
+        struct Properties
+        {
             Kind kind;
             Feature features;
             Limits limits;
@@ -286,12 +285,12 @@ struct device : private common::non_constructible
             Layout layout;
             std::unique_ptr<std::byte[]> buffer;
 
-            std::span<Properties::Queue_family> get_queue_families() const
+            std::span<Queue_family> get_queue_families() const
             {
-                assert(this->layout.queue_families_buffer.size_bytes >= sizeof(Properties::Queue_family));
+                assert(this->layout.queue_families_buffer.size_bytes >= sizeof(Queue_family));
 
-                return { std::bit_cast<Properties::Queue_family*>(this->buffer.get() + this->layout.queue_families_buffer.offset_bytes),
-                         static_cast<std::size_t>(this->layout.queue_families_buffer.size_bytes / sizeof(Properties::Queue_family)) };
+                return { std::bit_cast<Queue_family*>(this->buffer.get() + this->layout.queue_families_buffer.offset_bytes),
+                         static_cast<std::size_t>(this->layout.queue_families_buffer.size_bytes / sizeof(Queue_family)) };
             }
 
             std::string_view get_name() const
@@ -720,7 +719,7 @@ template<> struct device::Filter<device::GPU>
     {
         struct Queue_family
         {
-            using Kind = device::GPU::Properties::Queue_family::Kind;
+            using Kind = device::GPU::Queue_family::Kind;
 
             Kind kind;
             std::uint32_t count;
@@ -862,6 +861,8 @@ template<> struct device::Filter<device::GPU>
 
                 friend Limit;
                 friend device;
+
+                template<typename Value_x> friend bool check_limit(const Limit req_limit_a, Value_x value_a);
             };
 
             using enum Kind;
@@ -869,282 +870,294 @@ template<> struct device::Filter<device::GPU>
             Kind kind;
             Value value;
 
-            static constexpr Value less_than(std::uint32_t v)
+            static constexpr Value less_than(std::uint32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_than(std::int32_t v)
+            static constexpr Value less_than(std::int32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_than(std::uint64_t v)
+            static constexpr Value less_than(std::uint64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_than(std::int64_t v)
+            static constexpr Value less_than(std::int64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_than(float v)
+            static constexpr Value less_than(float v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v_a) - 1u]), std::bit_cast<std::byte*>(&v_a));
 
                 return ret;
             }
 
-            static constexpr Value less_or_equal_than(std::uint32_t v)
+            static constexpr Value less_or_equal_than(std::uint32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_or_equal_than(std::int32_t v)
+            static constexpr Value less_or_equal_than(std::int32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_or_equal_than(std::uint64_t v)
+            static constexpr Value less_or_equal_than(std::uint64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_or_equal_than(std::int64_t v)
+            static constexpr Value less_or_equal_than(std::int64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value less_or_equal_than(float v)
+            static constexpr Value less_or_equal_than(float v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::less_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v_a) - 1u]), std::bit_cast<std::byte*>(&v_a));
 
                 return ret;
             }
 
-            static constexpr Value greater_than(std::uint32_t v)
+            static constexpr Value greater_than(std::uint32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_than(std::int32_t v)
+            static constexpr Value greater_than(std::int32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_than(std::uint64_t v)
+            static constexpr Value greater_than(std::uint64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_than(std::int64_t v)
+            static constexpr Value greater_than(std::int64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_than(float v)
+            static constexpr Value greater_than(float v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v_a) - 1u]), std::bit_cast<std::byte*>(&v_a));
 
                 return ret;
             }
 
-            static constexpr Value greater_or_equal_than(std::uint32_t v)
+            static constexpr Value greater_or_equal_than(std::uint32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_or_equal_than(std::int32_t v)
+            static constexpr Value greater_or_equal_than(std::int32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_or_equal_than(std::uint64_t v)
+            static constexpr Value greater_or_equal_than(std::uint64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_or_equal_than(std::int64_t v)
+            static constexpr Value greater_or_equal_than(std::int64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value greater_or_equal_than(float v)
+            static constexpr Value greater_or_equal_than(float v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::greater_or_equal;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v_a) - 1u]), std::bit_cast<std::byte*>(&v_a));
 
                 return ret;
             }
 
-            static constexpr Value equals(std::uint32_t v)
+            static constexpr Value equals(std::uint32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::equals;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value equals(std::int32_t v)
+            static constexpr Value equals(std::int32_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::equals;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value equals(std::uint64_t v)
+            static constexpr Value equals(std::uint64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::equals;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value equals(std::int64_t v)
+            static constexpr Value equals(std::int64_t v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::equals;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(std::bit_cast<std::byte*>(&v), std::bit_cast<std::byte*>(&v) + sizeof(v), ret.data);
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
 
                 return ret;
             }
-            static constexpr Value equals(float v)
+            static constexpr Value equals(device::GPU::Limits::Sample_count v_a)
             {
-                static_assert(sizeof(Value::data) >= sizeof(v));
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
 
                 Value ret;
                 ret.operation = Value::Operation::equals;
                 std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
-                std::copy(&(ret.data[0]), &(ret.data[sizeof(v) - 1u]), std::bit_cast<std::byte*>(&v));
+                std::copy(std::bit_cast<std::byte*>(&v_a), std::bit_cast<std::byte*>(&v_a) + sizeof(v_a), ret.data);
+
+                return ret;
+            }
+
+            static constexpr Value equals(float v_a)
+            {
+                static_assert(sizeof(Value::data) >= sizeof(v_a));
+
+                Value ret;
+                ret.operation = Value::Operation::equals;
+                std::fill(&(ret.data[0]), &(ret.data[sizeof(ret.data) - 1u]), std::byte { 0x0u });
+                std::copy(&(ret.data[0]), &(ret.data[sizeof(v_a) - 1u]), std::bit_cast<std::byte*>(&v_a));
 
                 return ret;
             }
@@ -1214,17 +1227,13 @@ constexpr device::GPU::Feature operator&(device::GPU::Feature left_a, device::GP
     return static_cast<device::GPU::Feature>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
 }
 
-constexpr device::GPU::Properties::Queue_family::Kind operator|(device::GPU::Properties::Queue_family::Kind left_a,
-                                                                device::GPU::Properties::Queue_family::Kind right_a)
+constexpr device::GPU::Queue_family::Kind operator|(device::GPU::Queue_family::Kind left_a, device::GPU::Queue_family::Kind right_a)
 {
-    return static_cast<device::GPU::Properties::Queue_family::Kind>(static_cast<std::uint64_t>(left_a) |
-                                                                    static_cast<std::uint64_t>(right_a));
+    return static_cast<device::GPU::Queue_family::Kind>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
 }
-constexpr device::GPU::Properties::Queue_family::Kind operator&(device::GPU::Properties::Queue_family::Kind left_a,
-                                                                device::GPU::Properties::Queue_family::Kind right_a)
+constexpr device::GPU::Queue_family::Kind operator&(device::GPU::Queue_family::Kind left_a, device::GPU::Queue_family::Kind right_a)
 {
-    return static_cast<device::GPU::Properties::Queue_family::Kind>(static_cast<std::uint64_t>(left_a) &
-                                                                    static_cast<std::uint64_t>(right_a));
+    return static_cast<device::GPU::Queue_family::Kind>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
 }
 
 constexpr device::GPU::Limits::Sample_count operator|(device::GPU::Limits::Sample_count left_a, device::GPU::Limits::Sample_count right_a)

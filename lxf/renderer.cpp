@@ -13,7 +13,7 @@ extern VkInstance vk_instance;
 
 namespace lxf {
 bool renderer::Context::create(const device::GPU* p_gpu_a,
-                               std::span<const std::pair<device::GPU::Properties::Queue_family, std::span<std::uint8_t>>> queues_a,
+                               std::span<const std::pair<device::GPU::Queue_family, std::span<std::uint8_t>>> queues_a,
                                device::GPU::Feature)
 {
     const std::unique_ptr<VkDeviceQueueCreateInfo[]> vk_device_queues_create_info =

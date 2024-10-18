@@ -36,10 +36,10 @@ lxf::entry_point(std::string_view, std::span<device::GPU> gpus_a, std::span<devi
 {
     const auto gpu_properties = gpus_a[0].get_properties();
     constexpr device::Filter<device::GPU>::Requirements::Queue_family queue_families_req[] = {
-        { .kind = device::GPU::Properties::Queue_family::graphics | device::GPU::Properties::Queue_family::transfer, .count = 1u },
-        { .kind = device::GPU::Properties::Queue_family::video_decode, .count = 1u }
+        { .kind = device::GPU::Queue_family::graphics | device::GPU::Queue_family::transfer, .count = 1u },
+        { .kind = device::GPU::Queue_family::video_decode, .count = 1u }
     };
-    constexpr std::string_view extensions_req[] = { "VK_EXT_external_memory_host", "VK_KHR_swapchain" };
+    constexpr std::string_view extensions_req[] = { "VK_KHR_swapchain" };
 
     const device::Filter<device::GPU>::Requirements::Limit limits_req[] = {
         { .kind = device::Filter<device::GPU>::Requirements::Limit::max_image_dimension_1d,

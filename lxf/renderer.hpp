@@ -36,7 +36,7 @@ struct renderer : private common::non_constructible
         }
 
         bool create(const device::GPU* p_gpu_a,
-                    std::span<const std::pair<device::GPU::Properties::Queue_family, std::span<std::uint8_t>>> queues_a,
+                    std::span<const std::pair<device::GPU::Queue_family, std::span<std::uint8_t>>> queues_a,
                     device::GPU::Feature features_a);
         void release();
 
@@ -45,10 +45,10 @@ struct renderer : private common::non_constructible
         friend struct renderer;
     };
 
-    template<typename Type_t> static [[nodiscard]] Context*
-    create(const device::GPU* p_gpu_a,
-           std::span<const std::pair<device::GPU::Properties::Queue_family, std::span<std::uint8_t>>> queues_a,
-           device::GPU::Feature features_a) = delete;
+    template<typename Type_t>
+    static [[nodiscard]] Context* create(const device::GPU* p_gpu_a,
+                                         std::span<const std::pair<device::GPU::Queue_family, std::span<std::uint8_t>>> queues_a,
+                                         device::GPU::Feature features_a) = delete;
     template<typename Type_t> static void destroy(Type_t** p_object_a) = delete;
 
 private:
@@ -57,7 +57,7 @@ private:
 
 template<> [[nodiscard]] inline renderer::Context*
 renderer::create<renderer::Context>(const device::GPU* p_gpu_a,
-                                    std::span<const std::pair<device::GPU::Properties::Queue_family, std::span<std::uint8_t>>> queues_a,
+                                    std::span<const std::pair<device::GPU::Queue_family, std::span<std::uint8_t>>> queues_a,
                                     device::GPU::Feature features_a)
 {
     assert(false == context.is_created());
