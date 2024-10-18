@@ -522,6 +522,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
     if (true == console_allocated)
     {
+        printf("Press any key...\n");
         std::ignore = getc(stdin);
         FreeConsole();
     }

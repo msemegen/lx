@@ -98,9 +98,7 @@ device::GPU::GPU(VkPhysicalDevice vk_physical_device_a,
 
     if (true == is_primary_a)
     {
-        std::uint64_t* p_flags = std::bit_cast<std::uint64_t*>(gpu_info.buffer.get() + gpu_info.layout.flags_buffer.offset_bytes +
-                                                               gpu_info.layout.flags_buffer.size_bytes);
-
+        std::uint64_t* p_flags = std::bit_cast<std::uint64_t*>(gpu_info.buffer.get() + gpu_info.layout.flags_buffer.offset_bytes);
         bit::set(p_flags, 1u);
     }
 
