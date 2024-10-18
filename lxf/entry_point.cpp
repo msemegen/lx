@@ -13,21 +13,43 @@
 #include <cstdint>
 #include <memory>
 
-// platform
-#include <Windows.h>
-#include <vulkan/vulkan.h>
-
 // lxf
 #include <lxf/Windower.hpp>
 #include <lxf/common/bit.hpp>
 #include <lxf/common/non_constructible.hpp>
 #include <lxf/config.hpp>
 #include <lxf/device.hpp>
+#include <lxf/loader.hpp>
 #include <lxf/system.hpp>
 #include <lxf/utils/config_parser.hpp>
 #include <lxf/utils/logger.hpp>
 
 VkInstance vk_instance;
+VkDebugUtilsMessengerEXT vk_debug_messenger;
+
+PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties;
+PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties;
+
+// instance level functions
+PFN_vkCreateDevice vkCreateDevice;
+PFN_vkDestroyDevice vkDestroyDevice;
+PFN_vkDestroyInstance vkDestroyInstance;
+PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties;
+PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures;
+PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices;
+PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties;
+PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties;
+#if defined(VK_KHR_win32_surface)
+PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
+PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR;
+#endif
+#if defined(VK_KHR_surface)
+PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
+#endif
+#if defined(VK_EXT_debug_utils)
+PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
+PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT;
+#endif
 
 namespace {
 using namespace ::lxf;
@@ -107,10 +129,18 @@ BOOL enum_monitors_handler(HMONITOR monitor_handle_a, HDC, LPRECT, LPARAM user_d
     return FALSE;
 }
 
+VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT,
+                                             VkDebugUtilsMessageTypeFlagsEXT,
+                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                             void*)
+{
+    printf("VALIDATION LAYER: %s\n", pCallbackData->pMessage);
+    return VK_FALSE;
+}
+
 } // namespace
 
-namespace lxf {
-namespace utils {
+namespace lxf::utils {
 void logger::timestamp(std::time_t timestamp_a)
 {
     std::tm tim;
@@ -171,8 +201,7 @@ const char* logger::to_string(Level level_a)
     }
     return "";
 }
-} // namespace utils
-} // namespace lxf
+} // namespace lxf::utils
 
 using namespace ::lxf;
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, _In_ int)
@@ -223,6 +252,26 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
     logger::set_severity(config::log::severity);
     logger::write_line(logger::info, module_name, "Log started.");
+
+    bool vk_loaded = loader::load();
+
+    if (false == vk_loaded)
+    {
+        logger::write_line(logger::omg, module_name, "Vulkan not present in system");
+
+        fclose(p_log_file);
+
+        if (true == console_allocated)
+        {
+            printf("Press any key...\n");
+            std::ignore = getc(stdin);
+            FreeConsole();
+        }
+
+        return -1;
+    }
+
+    logger::write_line(logger::omg, module_name, "Vulkan successfully loaded");
 
     // instance layers enumeration an logging
     {
@@ -275,11 +324,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
         if (false == found)
         {
             logger::write_line(logger::omg, module_name, "No primary display adapter found.");
-            return -1;
         }
     }
 
     std::vector<const char*> instance_extensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+    std::vector<const char*> instance_layers;
+
+    if (true == config::vulkan::validation_layer::enabled)
+    {
+        instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        instance_layers.push_back("VK_LAYER_KHRONOS_validation");
+    }
 
     const VkApplicationInfo application_info { .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
                                                .pNext = nullptr,
@@ -292,9 +347,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                                                          .pNext = nullptr,
                                                          .flags = 0x0u,
                                                          .pApplicationInfo = &application_info,
-                                                         .enabledLayerCount = 0u, /* + gathered from config*/
-                                                         .ppEnabledLayerNames = nullptr,
-                                                         .enabledExtensionCount = 2u /* + gathered from config*/,
+                                                         .enabledLayerCount = static_cast<std::uint32_t>(instance_layers.size()),
+                                                         .ppEnabledLayerNames = instance_layers.data(),
+                                                         .enabledExtensionCount = static_cast<std::uint32_t>(instance_extensions.size()),
                                                          .ppEnabledExtensionNames = instance_extensions.data() };
 
     // instance creation
@@ -316,14 +371,34 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                            config::vulkan::version.get().minor,
                            config::vulkan::version.get().path);
 
-        if (false == instance_extensions.empty())
+        logger::write_line(logger::info, module_name, "Selected layers {}", vk_instance_create_info.enabledLayerCount);
+        for (std::uint32_t layer_index = 0u; layer_index < vk_instance_create_info.enabledLayerCount; layer_index++)
         {
-            logger::write_line(logger::info, module_name, "Selected extensions:");
+            logger::write_line(logger::info, module_name, "\t - {}", vk_instance_create_info.ppEnabledLayerNames[layer_index]);
+        }
 
-            for (const char* p_extension_name : instance_extensions)
-            {
-                logger::write_line(logger::info, module_name, "\t - {}", p_extension_name);
-            }
+        logger::write_line(logger::info, module_name, "Selected extensions {}", vk_instance_create_info.enabledExtensionCount);
+        for (std::uint32_t extension_index = 0u; extension_index < vk_instance_create_info.enabledExtensionCount; extension_index++)
+        {
+            logger::write_line(logger::info, module_name, "\t - {}", vk_instance_create_info.ppEnabledExtensionNames[extension_index]);
+        }
+
+        if (true == config::vulkan::validation_layer::enabled)
+        {
+            assert(config::vulkan::validation_layer::Type::none != config::vulkan::validation_layer::type &&
+                   config::vulkan::validation_layer::Severity::none != config::vulkan::validation_layer::severity);
+
+            VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo {
+                .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+                .pNext = nullptr,
+                .flags = 0x0u,
+                .messageSeverity = static_cast<VkDebugUtilsMessageSeverityFlagsEXT>(config::vulkan::validation_layer::severity),
+                .messageType = static_cast<VkDebugUtilsMessageTypeFlagsEXT>(config::vulkan::validation_layer::type),
+                .pfnUserCallback = debugCallback,
+                .pUserData = nullptr
+            };
+
+            vkCreateDebugUtilsMessengerEXT(vk_instance, &debugCreateInfo, nullptr, &vk_debug_messenger);
         }
     }
 
@@ -517,9 +592,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
     entry_point(p_cmd_line_a, std::span<device::GPU> { &(gpus[0]), gpus_count }, { &displays[0], displays_count }, &windower);
 
+    if (true == config::vulkan::validation_layer::enabled)
+    {
+        vkDestroyDebugUtilsMessengerEXT(vk_instance, vk_debug_messenger, nullptr);
+    }
+
     vkDestroyInstance(vk_instance, nullptr);
     logger::write_line(logger::info, module_name, "Vulkan instance destroyed.");
+
+    loader::close();
+    logger::write_line(logger::info, module_name, "Vulkan unloaded.");
+
     logger::write_line(logger::info, module_name, "Log ended.");
+
     fclose(p_log_file);
 
     if (true == console_allocated)

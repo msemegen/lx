@@ -25,16 +25,16 @@ project "game"
    }
    
    filter "configurations:Debug Windows"
-      defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR" }
+      defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES" }
       symbols "On"
       links { "lxf_d.lib", "vulkan-1.lib" }
       targetname "game_d"
       buildoptions { "/W4" }
 
    filter "configurations:Release Windows"
-      defines { "NDEBUG", "LX_AMD64", "VK_USE_PLATFORM_WIN32_KHR" }
+      defines { "NDEBUG", "LX_AMD64", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES" }
       optimize "On"
-      links { "lxf.lib", "vulkan-1.lib" }
+      links { "lxf.lib" }
       targetname "game"
       buildoptions { "/W4" }
 
@@ -58,13 +58,13 @@ project "lxf"
    }
 
    filter "configurations:Debug Windows"
-      defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR" }
+      defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES" }
       symbols "On"
       targetname "lxf_d"
       buildoptions { "/W4" }
 
    filter "configurations:Release Windows"
-      defines { "NDEBUG", "LX_AMD64", "VK_USE_PLATFORM_WIN32_KHR" }
+      defines { "NDEBUG", "LX_AMD64", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES" }
       optimize "On"
       targetname "lxf"
       buildoptions { "/W4" }
@@ -89,7 +89,7 @@ project "lxe"
    }
 
    filter "configurations:Debug Windows"
-      defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR" }
+      defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES" }
       symbols "On"
       targetname "lxf_d"
 	  buildoptions { "/W4" }

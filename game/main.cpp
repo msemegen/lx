@@ -15,7 +15,7 @@ using namespace ::lxf::utils;
 
 // logger config
 std::string_view config::log::file_path = "log.log";
-logger::Severity config::log::severity = logger::Severity::omg | logger::Severity::error | logger::Severity::info;
+logger::Severity config::log::severity = logger::Severity::omg | logger::Severity::error | logger::Severity::info | logger::Severity::debug;
 bool config::log::console = true;
 
 // app config
@@ -27,6 +27,14 @@ std::string_view config::engine::name = "lxe";
 Version config::engine::version = Version { 0u, 0u, 1u };
 
 // vulkan config
+bool config::vulkan::validation_layer::enabled = true;
+config::vulkan::validation_layer::Severity config::vulkan::validation_layer::severity =
+    config::vulkan::validation_layer::Severity::info | config::vulkan::validation_layer::Severity::warning |
+    config::vulkan::validation_layer::Severity::error | config::vulkan::validation_layer::Severity::verbose;
+config::vulkan::validation_layer::Type config::vulkan::validation_layer::type =
+    config::vulkan::validation_layer::Type::general | config::vulkan::validation_layer::Type::performance |
+    config::vulkan::validation_layer::Type::validation | config::vulkan::validation_layer::Type::device_address_binding;
+
 Version config::vulkan::version = Version { VK_API_VERSION_1_3 };
 
 constexpr std::string_view module_name = "game:main";

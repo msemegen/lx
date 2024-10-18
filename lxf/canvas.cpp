@@ -9,6 +9,9 @@
 // std
 #include <string_view>
 
+// lxf
+#include <lxf/loader.hpp>
+
 extern VkInstance vk_instance;
 
 namespace {

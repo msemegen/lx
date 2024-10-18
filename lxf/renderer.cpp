@@ -9,6 +9,9 @@
 // std
 #include <memory>
 
+// lxf
+#include <lxf/loader.hpp>
+
 extern VkInstance vk_instance;
 
 namespace lxf {

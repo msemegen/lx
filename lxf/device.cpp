@@ -9,6 +9,9 @@
 // std
 #include <limits>
 
+// lxf
+#include <lxf/loader.hpp>
+
 namespace lxf {
 using namespace common;
 
