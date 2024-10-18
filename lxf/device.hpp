@@ -27,6 +27,10 @@
 namespace lxf {
 struct device : private common::non_constructible
 {
+    template<typename Device_x> struct Filter : private common::non_constructible
+    {
+    };
+
     struct GPU : private common::non_copyable
     {
         enum class Kind : std::uint32_t
@@ -669,11 +673,19 @@ struct device : private common::non_constructible
     };
     struct Display : private common::non_copyable
     {
+        enum class Kind : std::uint32_t
+        {
+            primary,
+            additional
+        };
+
         struct Properties
         {
+            Kind kind;
+
             common::Rect<std::int32_t, std::uint32_t> logical_rect;
             common::Rect<std::int32_t, std::uint32_t> physical_rect;
-            std::uint8_t bits_per_pixel;
+            std::uint8_t bits_per_pixel = 0u;
 
             char name[CCHDEVICENAME];
         };
@@ -683,12 +695,16 @@ struct device : private common::non_constructible
         {
         }
         Display(HMONITOR handle_a,
+                bool is_primary_a,
                 std::uint8_t bits_per_pixel_a,
                 std::string_view name_a,
                 common::Rect<std::int32_t, std::uint32_t> logical_rect_a,
                 common::Rect<std::int32_t, std::uint32_t> physical_rect_a)
             : handle(handle_a)
-            , properties { .logical_rect = logical_rect_a, .physical_rect = physical_rect_a, .bits_per_pixel = bits_per_pixel_a }
+            , properties { .kind = true == is_primary_a ? Kind::primary : Kind::additional,
+                           .logical_rect = logical_rect_a,
+                           .physical_rect = physical_rect_a,
+                           .bits_per_pixel = bits_per_pixel_a }
         {
             const std::size_t name_length = name_a.size() <= CCHDEVICENAME ? name_a.size() : CCHDEVICENAME;
 
@@ -704,10 +720,6 @@ struct device : private common::non_constructible
     private:
         HMONITOR handle;
         Properties properties;
-    };
-
-    template<typename Device_x> struct Filter : private common::non_constructible
-    {
     };
 
     template<typename Device_x> inline static Filter<Device_x> filter;
@@ -1180,10 +1192,11 @@ template<> struct device::Filter<device::Display>
 {
     struct Requirements
     {
+        device::Display::Kind kind;
         common::Size<std::uint16_t> minimum_logical_resolution;
         common::Size<std::uint16_t> minimum_physical_resolution;
 
-        std::uint8_t bpp;
+        std::uint8_t bpp = 0u;
     };
 
     std::vector<const device::Display*> operator()(std::span<Display> displays_a, const Requirements& requirements_a)
@@ -1243,5 +1256,14 @@ constexpr device::GPU::Limits::Sample_count operator|(device::GPU::Limits::Sampl
 constexpr device::GPU::Limits::Sample_count operator&(device::GPU::Limits::Sample_count left_a, device::GPU::Limits::Sample_count right_a)
 {
     return static_cast<device::GPU::Limits::Sample_count>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
+}
+
+constexpr device::Display::Kind operator|(device::Display::Kind left_a, device::Display::Kind right_a)
+{
+    return static_cast<device::Display::Kind>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
+}
+constexpr device::Display::Kind operator&(device::Display::Kind left_a, device::Display::Kind right_a)
+{
+    return static_cast<device::Display::Kind>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
 }
 } // namespace lxf

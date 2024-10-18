@@ -91,6 +91,7 @@ BOOL enum_monitors_handler(HMONITOR monitor_handle_a, HDC, LPRECT, LPARAM user_d
     {
         new (&p_displays->first[(p_displays->second)++]) device::Display(
             monitor_handle_a,
+            0 == monitor_info.rcMonitor.left && 0 == monitor_info.rcMonitor.top,
             static_cast<std::uint8_t>(dev_mode.dmBitsPerPel),
             reinterpret_cast<const char*>(dev_mode.dmDeviceName),
             Rect<std::int32_t, std::uint32_t> { .position = { .x = monitor_info.rcMonitor.left, .y = monitor_info.rcMonitor.top },
@@ -501,7 +502,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
             logger::write_line(logger::debug,
                                module_name,
-                               "\t - {}, bpp: {}, logical resolution: {}x{}, physical resolution: {}x{}",
+                               "\t - {}{}, bpp: {}, logical resolution: {}x{}, physical resolution: {}x{}",
+                               device::Display::Kind::primary == display_properties.kind ? "*" : "",
                                display_properties.name,
                                display_properties.bits_per_pixel,
                                display_properties.logical_rect.size.w,

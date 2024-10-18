@@ -48,7 +48,8 @@ lxf::entry_point(std::string_view, std::span<device::GPU> gpus_a, std::span<devi
 
     auto gpus = device::filter<device::GPU>(
         gpus_a, { .kind = device::GPU::primary, .queue_families = queue_families_req, .extensions = extensions_req, .limits = limits_req });
-    auto displays = device::filter<device::Display>(displays_a, {});
+    auto displays =
+        device::filter<device::Display>(displays_a, { .kind = device::Display::Kind::primary | device::Display::Kind::additional });
 
     // const std::vector<const device::GPU*> avaliable_integrated_gpus = device::filter<device::GPU>(gpus_a,
     //                                 device::GPU::integrated,
