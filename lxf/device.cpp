@@ -66,7 +66,7 @@ device::GPU::GPU(VkPhysicalDevice vk_physical_device_a,
     };
 
     const std::size_t name_buffer_size_bytes = name_a.size() + 1u;
-    const std::size_t queue_families_buffer_size_bytes = queues_a.size() * sizeof(Queue_family);
+    const std::size_t queue_families_buffer_size_bytes = queues_a.size() * sizeof(Properties::Queue_family);
     const std::size_t extensions_buffer_size_bytes = calculate_extensions_buffer_size();
     const std::size_t flags_buffer_size_bytes = 8u;
 
@@ -86,10 +86,12 @@ device::GPU::GPU(VkPhysicalDevice vk_physical_device_a,
     std::byte* p_current =
         std::bit_cast<std::byte*>(std::copy(name_a.begin(), name_a.end(), std::bit_cast<char*>(gpu_info.buffer.get()))) + 1u;
 
+    std::size_t qf_index = 0;
     for (const VkQueueFamilyProperties& vk_queue_family_properties : queues_a)
     {
-        Queue_family q { .kind = static_cast<Queue_family::Kind>(vk_queue_family_properties.queueFlags),
-                         .count = vk_queue_family_properties.queueCount };
+        Properties::Queue_family q { .kind = static_cast<Properties::Queue_family::Kind>(vk_queue_family_properties.queueFlags),
+                                     .count = vk_queue_family_properties.queueCount,
+                                     .index = qf_index++ };
         p_current = std::copy(std::bit_cast<std::byte*>(&q), std::bit_cast<std::byte*>(&q) + sizeof(q), p_current);
     }
 
@@ -136,7 +138,8 @@ device::GPU::Properties device::GPU::get_properties() const
                                                                  gpu_info_buffer[this->info_idx].layout.flags_buffer.offset_bytes +
                                                                  gpu_info_buffer[this->info_idx].layout.flags_buffer.size_bytes);
 
-    return { .kind = this->from(vk_physical_device_properties.deviceType) | (true == bit::is(*p_flags, 1u) ? Kind::primary : Kind { 0x0 }),
+    return { .kind = this->from(vk_physical_device_properties.deviceType) |
+                     (true == bit::is(*p_flags, 1u) ? Properties::Kind::primary : Properties::Kind { 0x0 }),
              .features = this->from(vk_physical_device_features),
              .limits = this->from(vk_physical_device_properties.limits),
              .queue_families = gpu_info_buffer[this->info_idx].get_queue_families(),
@@ -158,7 +161,7 @@ std::vector<const device::GPU*> device::Filter<device::GPU>::operator()(std::spa
         {
             bool qf_compatible = true;
 
-            std::vector<GPU::Queue_family> qf_temp { properties.queue_families.begin(), properties.queue_families.end() };
+            std::vector<GPU::Properties::Queue_family> qf_temp { properties.queue_families.begin(), properties.queue_families.end() };
 
             for (std::size_t qf_req_index = 0; qf_req_index < requirements_a.queue_families.size() && true == qf_compatible; qf_req_index++)
             {
@@ -167,9 +170,10 @@ std::vector<const device::GPU*> device::Filter<device::GPU>::operator()(std::spa
                 if (true == qf_compatible)
                 {
                     const Requirements::Queue_family qf_req = requirements_a.queue_families[qf_req_index];
-                    auto found_itr = std::find_if(qf_temp.begin(), qf_temp.end(), [&qf_req](const GPU::Queue_family& qf_a) -> bool {
-                        return qf_a.count >= qf_req.count && true == common::bit::flag::is(qf_a.kind, qf_req.kind);
-                    });
+                    auto found_itr =
+                        std::find_if(qf_temp.begin(), qf_temp.end(), [&qf_req](const GPU::Properties::Queue_family& qf_a) -> bool {
+                            return qf_a.count >= qf_req.count && true == common::bit::flag::is(qf_a.kind, qf_req.kind);
+                        });
 
                     qf_compatible = found_itr != qf_temp.end();
 

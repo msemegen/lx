@@ -129,12 +129,13 @@ BOOL enum_monitors_handler(HMONITOR monitor_handle_a, HDC, LPRECT, LPARAM user_d
     return FALSE;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT,
-                                             VkDebugUtilsMessageTypeFlagsEXT,
-                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                             void*)
+VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT,
+                                                 VkDebugUtilsMessageTypeFlagsEXT,
+                                                 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                 void*)
 {
-    printf("VALIDATION LAYER: %s\n", pCallbackData->pMessage);
+    // logger::write_line(logger::Level::)
+    printf("VALIDATION LAYER:\n %s\n", pCallbackData->pMessage);
     return VK_FALSE;
 }
 
@@ -394,7 +395,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                 .flags = 0x0u,
                 .messageSeverity = static_cast<VkDebugUtilsMessageSeverityFlagsEXT>(config::vulkan::validation_layer::severity),
                 .messageType = static_cast<VkDebugUtilsMessageTypeFlagsEXT>(config::vulkan::validation_layer::type),
-                .pfnUserCallback = debugCallback,
+                .pfnUserCallback = vk_debug_callback,
                 .pUserData = nullptr
             };
 
@@ -578,7 +579,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
             logger::write_line(logger::debug,
                                module_name,
                                "\t - {}{}, bpp: {}, logical resolution: {}x{}, physical resolution: {}x{}",
-                               device::Display::Kind::primary == display_properties.kind ? "*" : "",
+                               device::Display::Properties::Kind::primary == display_properties.kind ? "*" : "",
                                display_properties.name,
                                display_properties.bits_per_pixel,
                                display_properties.logical_rect.size.w,

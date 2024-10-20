@@ -24,6 +24,27 @@ struct renderer : private common::non_constructible
     class Context : private common::non_copyable
     {
     public:
+        struct Properties
+        {
+            struct Queue_family
+            {
+                using Kind = device::GPU::Properties::Queue_family::Kind;
+
+                using enum Kind;
+
+                Kind kind;
+                std::size_t count;
+
+                std::span<std::uint16_t> priorities;
+            };
+
+            using Feature = device::GPU::Properties::Feature;
+
+            Feature features;
+            std::span<const Queue_family> queue_families;
+            std::span<const std::string_view> extensions;
+        };
+
         [[nodiscard]] bool is_created() const
         {
             return VK_NULL_HANDLE != this->vk_device;
@@ -35,9 +56,7 @@ struct renderer : private common::non_constructible
         {
         }
 
-        bool create(const device::GPU* p_gpu_a,
-                    std::span<const std::pair<device::GPU::Queue_family, std::span<std::uint8_t>>> queues_a,
-                    device::GPU::Feature features_a);
+        bool create(const device::GPU* p_gpu_a, const Properties& properties_a);
         void release();
 
         VkDevice vk_device;
@@ -46,23 +65,19 @@ struct renderer : private common::non_constructible
     };
 
     template<typename Type_t>
-    static [[nodiscard]] Context* create(const device::GPU* p_gpu_a,
-                                         std::span<const std::pair<device::GPU::Queue_family, std::span<std::uint8_t>>> queues_a,
-                                         device::GPU::Feature features_a) = delete;
+    static [[nodiscard]] Context* create(const device::GPU* p_gpu_a, const Context::Properties& properties_a) = delete;
     template<typename Type_t> static void destroy(Type_t** p_object_a) = delete;
 
 private:
     inline static Context context;
 };
 
-template<> [[nodiscard]] inline renderer::Context*
-renderer::create<renderer::Context>(const device::GPU* p_gpu_a,
-                                    std::span<const std::pair<device::GPU::Queue_family, std::span<std::uint8_t>>> queues_a,
-                                    device::GPU::Feature features_a)
+template<> [[nodiscard]] inline renderer::Context* renderer::create<renderer::Context>(const device::GPU* p_gpu_a,
+                                                                                       const Context::Properties& properties_a)
 {
     assert(false == context.is_created());
 
-    if (true == context.create(p_gpu_a, queues_a, features_a))
+    if (true == context.create(p_gpu_a, properties_a))
     {
         return &(context);
     }
