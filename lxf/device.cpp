@@ -10,7 +10,7 @@
 #include <limits>
 
 // lxf
-#include <lxf/loader.hpp>
+#include <lxf/loader/vulkan.hpp>
 
 namespace lxf {
 using namespace common;
@@ -119,7 +119,7 @@ device::GPU::Properties device::GPU::get_properties() const
     vkGetPhysicalDeviceProperties(this->vk_physical_device, &vk_physical_device_properties);
     vkGetPhysicalDeviceFeatures(this->vk_physical_device, &vk_physical_device_features);
 
-    std::vector<std::string_view> extensions;
+    std::vector<const char*> extensions;
 
     const char* p_extensions_current = std::bit_cast<const char*>(gpu_info_buffer[this->info_idx].buffer.get() +
                                                                   gpu_info_buffer[this->info_idx].layout.extensions_buffer.offset_bytes);
@@ -129,9 +129,8 @@ device::GPU::Properties device::GPU::get_properties() const
 
     while (p_extensions_current != p_extensions_end)
     {
-        const auto name = std::string_view { p_extensions_current };
-        extensions.push_back(name);
-        p_extensions_current += name.size() + 1u;
+        extensions.push_back(p_extensions_current);
+        p_extensions_current += std::strlen(p_extensions_current) + 1u;
     }
 
     const std::uint64_t* p_flags = std::bit_cast<std::uint64_t*>(gpu_info_buffer[this->info_idx].buffer.get() +
@@ -144,7 +143,7 @@ device::GPU::Properties device::GPU::get_properties() const
              .limits = this->from(vk_physical_device_properties.limits),
              .queue_families = gpu_info_buffer[this->info_idx].get_queue_families(),
              .extensions = extensions,
-             .name = gpu_info_buffer[this->info_idx].get_name() };
+             .p_name = gpu_info_buffer[this->info_idx].get_name() };
 }
 
 std::vector<const device::GPU*> device::Filter<device::GPU>::operator()(std::span<GPU> gpus_a, const Requirements& requirements_a)
@@ -196,8 +195,10 @@ std::vector<const device::GPU*> device::Filter<device::GPU>::operator()(std::spa
                          extension_req_index < requirements_a.extensions.size() && true == extension_compatible;
                          extension_req_index++)
                     {
-                        auto found_itr = std::find(
-                            properties.extensions.begin(), properties.extensions.end(), requirements_a.extensions[extension_req_index]);
+                        auto found_itr =
+                            std::find_if(properties.extensions.begin(), properties.extensions.end(), [&](const char* p_name_a) {
+                                return 0 == strncmp(requirements_a.extensions[extension_req_index], p_name_a, 128u);
+                            });
 
                         extension_compatible = properties.extensions.end() != found_itr;
                     }

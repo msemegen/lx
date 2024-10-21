@@ -10,7 +10,7 @@
 #include <string_view>
 
 // lxf
-#include <lxf/loader.hpp>
+#include <lxf/loader/vulkan.hpp>
 
 extern VkInstance vk_instance;
 

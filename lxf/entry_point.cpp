@@ -19,37 +19,13 @@
 #include <lxf/common/non_constructible.hpp>
 #include <lxf/config.hpp>
 #include <lxf/device.hpp>
-#include <lxf/loader.hpp>
+#include <lxf/loader/vulkan.hpp>
 #include <lxf/system.hpp>
 #include <lxf/utils/config_parser.hpp>
 #include <lxf/utils/logger.hpp>
 
 VkInstance vk_instance;
 VkDebugUtilsMessengerEXT vk_debug_messenger;
-
-PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties;
-PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties;
-
-// instance level functions
-PFN_vkCreateDevice vkCreateDevice;
-PFN_vkDestroyDevice vkDestroyDevice;
-PFN_vkDestroyInstance vkDestroyInstance;
-PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties;
-PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures;
-PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices;
-PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties;
-PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties;
-#if defined(VK_KHR_win32_surface)
-PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
-PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR;
-#endif
-#if defined(VK_KHR_surface)
-PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
-#endif
-#if defined(VK_EXT_debug_utils)
-PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
-PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT;
-#endif
 
 namespace {
 using namespace ::lxf;
@@ -207,6 +183,7 @@ const char* logger::to_string(Level level_a)
 using namespace ::lxf;
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, _In_ int)
 {
+    using namespace ::lxf::loader;
     using namespace ::lxf::utils;
 
     config_parser::allocate(p_cmd_line_a);
@@ -254,7 +231,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
     logger::set_severity(config::log::severity);
     logger::write_line(logger::info, module_name, "Log started.");
 
-    bool vk_loaded = loader::load();
+    bool vk_loaded = vulkan::load();
 
     if (false == vk_loaded)
     {
@@ -601,7 +578,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
     vkDestroyInstance(vk_instance, nullptr);
     logger::write_line(logger::info, module_name, "Vulkan instance destroyed.");
 
-    loader::close();
+    vulkan::release();
     logger::write_line(logger::info, module_name, "Vulkan unloaded.");
 
     logger::write_line(logger::info, module_name, "Log ended.");

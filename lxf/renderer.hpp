@@ -35,14 +35,14 @@ struct renderer : private common::non_constructible
                 Kind kind;
                 std::size_t count;
 
-                std::span<std::uint16_t> priorities;
+                std::span<const std::uint16_t> priorities;
             };
 
             using Feature = device::GPU::Properties::Feature;
 
             Feature features;
             std::span<const Queue_family> queue_families;
-            std::span<const std::string_view> extensions;
+            std::span<const char*> extensions;
         };
 
         [[nodiscard]] bool is_created() const
@@ -60,6 +60,8 @@ struct renderer : private common::non_constructible
         void release();
 
         VkDevice vk_device;
+
+        std::vector<VkQueue> vk_queues;
 
         friend struct renderer;
     };

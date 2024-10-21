@@ -249,8 +249,8 @@ struct device : private common::non_constructible
             Limits limits;
 
             std::span<const Queue_family> queue_families;
-            std::vector<std::string_view> extensions;
-            std::string_view name;
+            std::vector<const char*> extensions;
+            const char* p_name;
         };
 
         using enum Properties::Kind;
@@ -299,11 +299,11 @@ struct device : private common::non_constructible
                          static_cast<std::size_t>(this->layout.queue_families_buffer.size_bytes / sizeof(Properties::Queue_family)) };
             }
 
-            std::string_view get_name() const
+            const char* get_name() const
             {
                 assert(this->layout.name_buffer.size_bytes > 0u);
-                return { std::bit_cast<const char*>(this->buffer.get() + this->layout.name_buffer.offset_bytes),
-                         this->layout.name_buffer.size_bytes - 1u };
+
+                return std::bit_cast<const char*>(this->buffer.get() + this->layout.name_buffer.offset_bytes);
             }
         };
 
@@ -1190,7 +1190,7 @@ template<> struct device::Filter<device::GPU>
         Feature features;
 
         std::span<const Queue_family> queue_families;
-        std::span<const std::string_view> extensions;
+        std::span<const char*> extensions;
         std::span<const Limit> limits;
     };
 
