@@ -458,6 +458,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                                vk_device_properties.deviceName);
             for (std::uint32_t qf_index = 0; qf_index < queue_family_property_count; qf_index++)
             {
+
+                if (VK_TRUE == vkGetPhysicalDeviceWin32PresentationSupportKHR(gpus_buffer[gpu_index], qf_index))
+                {
+                    vk_queue_family_properties_buffer[qf_index].queueFlags |= 0x200u;
+                }
+
                 char buff[30];
                 std::size_t pos = 0u;
 
@@ -519,7 +525,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
                 logger::write_line(logger::info,
                                    module_name,
-                                   "\t\t Queue family: {}, count: {}",
+                                   "\t\t Queue family: {} {}, count: {}",
+                                   true == bit::flag::is(vk_queue_family_properties_buffer[qf_index].queueFlags, 0x200u) ? ">" : " ",
                                    buff,
                                    vk_queue_family_properties_buffer[qf_index].queueCount);
             }
@@ -530,7 +537,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                 logger::write_line(logger::Level::debug, module_name, "\t\t\t - {}", &(ext_name[0]));
             }
 
-            // placement new in array element
             new (&(gpus[gpu_index])) device::GPU(gpus_buffer[gpu_index],
                                                  is_primary,
                                                  std::span { vk_queue_family_properties_buffer.get(), queue_family_property_count },
@@ -568,7 +574,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
 
     Windower windower;
 
-    entry_point(p_cmd_line_a, std::span<device::GPU> { &(gpus[0]), gpus_count }, { &displays[0], displays_count }, &windower);
+    std::array<const device::GPU*, config::engine::max_supported_gpus> entry_point_gpus;
+    std::array<const device::Display*, config::engine::max_supported_displays> entry_point_displays;
+
+    for (std::size_t i = 0; i < gpus_count; i++)
+    {
+        entry_point_gpus[i] = &(gpus[i]);
+    }
+    for (std::size_t i = 0; i < displays_count; i++)
+    {
+        entry_point_displays[i] = &(displays[i]);
+    }
+
+    entry_point(p_cmd_line_a, { &(entry_point_gpus[0]), gpus_count }, { &entry_point_displays[0], displays_count }, &windower);
 
     if (true == config::vulkan::validation_layer::enabled)
     {

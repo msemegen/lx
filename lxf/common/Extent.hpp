@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- *   Name: Size.hpp
+ *   Name: Extent.hpp
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  */
 
@@ -10,7 +10,7 @@
 #include <cstdint>
 
 namespace lxf::common {
-template<typename Scalar_t> struct Size
+template<typename Scalar_t> struct Extent
 {
     Scalar_t w = static_cast<Scalar_t>(0);
     Scalar_t h = static_cast<Scalar_t>(0);

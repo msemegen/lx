@@ -18,8 +18,10 @@ extern VkInstance vk_instance;
 namespace lxf {
 using namespace lxf::common;
 
-bool renderer::Context::create(const device::GPU* p_gpu_a, const Properties& properties_a)
+bool renderer::Context::create(const device::GPU* p_gpu_a, HWND window_handle_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a)
 {
+    assert(false == renderer::context.is_created());
+
     const device::GPU::Properties gpu_properties = p_gpu_a->get_properties();
     const float prio_step = 1.0f / static_cast<float>(gpu_properties.limits.discrete_queue_priorities);
 
@@ -36,7 +38,9 @@ bool renderer::Context::create(const device::GPU* p_gpu_a, const Properties& pro
         auto itr = std::find_if(gpu_properties.queue_families.begin(),
                                 gpu_properties.queue_families.end(),
                                 [&](const device::GPU::Properties::Queue_family& qf_a) {
-                                    return true == bit::flag::is(qf_a.kind, properties_a.queue_families[qf_property_index].kind) &&
+                                    return true == bit::flag::is(
+                                                       static_cast<std::uint32_t>(qf_a.kind),
+                                                       static_cast<std::uint32_t>(properties_a.queue_families[qf_property_index].kind)) &&
                                            qf_a.count >= properties_a.queue_families[qf_property_index].count;
                                 });
         if (gpu_properties.queue_families.end() != itr)
@@ -92,19 +96,49 @@ bool renderer::Context::create(const device::GPU* p_gpu_a, const Properties& pro
             for (std::size_t queue_index = 0u; queue_index < vk_queue_descriptor.queueCount; queue_index++)
             {
                 VkQueue vk_queue;
-                vkGetDeviceQueue(this->vk_device, vk_queue_descriptor.queueFamilyIndex, queue_index, &vk_queue);
+                vkGetDeviceQueue(this->vk_device, vk_queue_descriptor.queueFamilyIndex, static_cast<std::uint32_t>(queue_index), &vk_queue);
                 this->vk_queues.push_back(vk_queue);
             }
         }
 
         this->vk_queues.shrink_to_fit();
+
+        RECT wnd_rect {};
+        GetClientRect(window_handle_a, &wnd_rect);
+        VkSwapchainCreateInfoKHR vk_swap_chain_create_info {
+            .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            .pNext = nullptr,
+            .flags = 0x0u,
+            .surface = vk_surface_a,
+            .minImageCount = static_cast<std::uint32_t>(properties_a.swap_chain.images_count),
+            .imageFormat = static_cast<VkFormat>(properties_a.swap_chain.pixel),
+            .imageColorSpace = static_cast<VkColorSpaceKHR>(properties_a.swap_chain.color_space),
+            .imageExtent = { .width = static_cast<std::uint32_t>(wnd_rect.right - wnd_rect.left),
+                             .height = static_cast<std::uint32_t>(wnd_rect.bottom - wnd_rect.top) },
+            .imageArrayLayers = 1u,
+            .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0u,
+            .pQueueFamilyIndices = nullptr,
+            .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+            .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            .presentMode = static_cast<VkPresentModeKHR>(properties_a.swap_chain.mode),
+            .clipped = VK_TRUE,
+            .oldSwapchain = VK_NULL_HANDLE
+        };
+        vkCreateSwapchainKHR(this->vk_device, &vk_swap_chain_create_info, nullptr, &(this->vk_swap_chain));
     }
 
     return ret;
 }
+
 void renderer::Context::release()
 {
+    assert(true == this->is_created());
+
+    vkDestroySwapchainKHR(this->vk_device, this->vk_swap_chain, nullptr);
     vkDestroyDevice(this->vk_device, nullptr);
+
     this->vk_device = VK_NULL_HANDLE;
 }
 } // namespace lxf

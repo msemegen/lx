@@ -10,20 +10,16 @@
 #include <string>
 #include <string_view>
 
-// platform
-#include <Windows.h>
-#include <vulkan/vulkan.h>
-
 // lxf
 #include <lxf/common/Position.hpp>
-#include <lxf/common/Size.hpp>
+#include <lxf/common/Rect.hpp>
 #include <lxf/common/non_constructible.hpp>
 #include <lxf/common/non_copyable.hpp>
-#include <lxf/device.hpp>
+#include <lxf/loader/vulkan.hpp>
 
 namespace lxf {
 class Windower;
-}
+} // namespace lxf
 
 namespace lxf {
 class canvas : private common::non_constructible
@@ -44,13 +40,21 @@ private:
             return this->created;
         }
 
+        operator HWND() const
+        {
+            return this->handle;
+        }
+        operator VkSurfaceKHR() const
+        {
+            return this->vk_surface;
+        }
+
     protected:
         bool created;
 
         HWND handle;
-        ATOM wnd_class;
-
         VkSurfaceKHR vk_surface;
+        ATOM wnd_class;
     };
 
 public:
@@ -69,7 +73,7 @@ public:
     class Windowed : public Window
     {
     public:
-        struct Descriptor
+        struct Properties
         {
             std::string_view title;
 
@@ -77,10 +81,10 @@ public:
             Size size;
         };
 
-        Windowed(const device::Display* p_display_a, const Descriptor& descriptor_a)
+        Windowed(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties& properties_a)
             : Window()
         {
-            this->created = this->create_window(p_display_a, descriptor_a);
+            this->created = this->create_window(screen_a, properties_a);
         }
 
         void set_visible(bool visible_a);
@@ -96,7 +100,7 @@ public:
         }
 
     private:
-        bool create_window(const device::Display* p_display_a, const Descriptor& descriptor_a);
+        bool create_window(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties& properties_a);
         void destroy();
 
         friend class lxf::Windower;
@@ -104,16 +108,16 @@ public:
     class Fullscreen : public Window
     {
     public:
-        struct Descriptor
+        struct Properties
         {
-            common::Size<std::uint32_t> resolution;
+            common::Extent<std::uint32_t> resolution;
             std::uint8_t bits_per_pixel;
         };
 
-        Fullscreen(const device::Display* p_display_a, const Descriptor descriptor_a)
+        Fullscreen(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties properties_a)
             : Window()
         {
-            this->created = this->create_window(p_display_a, descriptor_a);
+            this->created = this->create_window(screen_a, properties_a);
         }
 
         void set_visible(bool visible_a);
@@ -129,14 +133,14 @@ public:
         }
 
     private:
-        bool create_window(const device::Display* p_display_a, const Descriptor& descriptor_a);
+        bool create_window(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties& properties_a);
         void destroy();
 
         friend class lxf::Windower;
     };
 };
 
-constexpr canvas::Size operator|(canvas::Size type_a, common::Size<std::uint16_t> size_a)
+constexpr canvas::Size operator|(canvas::Size type_a, common::Extent<std::uint16_t> size_a)
 {
     assert(canvas::Size::custom == type_a);
 
@@ -148,12 +152,12 @@ constexpr canvas::Size operator&(canvas::Size left_a, canvas::Size right_a)
     return static_cast<canvas::Size>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
 }
 
-constexpr canvas::Position operator|(canvas::Position type_a, common::Position<std::uint16_t> size_a)
+constexpr canvas::Position operator|(canvas::Position type_a, common::Position<std::uint16_t> position_a)
 {
     assert(canvas::Position::custom == type_a);
 
-    return static_cast<canvas::Position>(static_cast<std::uint16_t>(type_a) | (size_a.x << 16u) |
-                                         (static_cast<std::uint64_t>(size_a.y) << 32u));
+    return static_cast<canvas::Position>(static_cast<std::uint16_t>(type_a) | (position_a.x << 16u) |
+                                         (static_cast<std::uint64_t>(position_a.y) << 32u));
 }
 constexpr canvas::Position operator&(canvas::Position left_a, canvas::Position right_a)
 {

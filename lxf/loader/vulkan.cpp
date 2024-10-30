@@ -28,12 +28,20 @@ PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures;
 PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices;
 PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties;
 PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties;
+#if defined(VK_KHR_surface)
+PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR;
+PFN_vkGetPhysicalDeviceSurfaceFormatsKHR vkGetPhysicalDeviceSurfaceFormatsKHR;
+PFN_vkGetPhysicalDeviceSurfacePresentModesKHR vkGetPhysicalDeviceSurfacePresentModesKHR;
+PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR;
+PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
+#endif
 #if defined(VK_KHR_win32_surface)
 PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
 PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR;
 #endif
-#if defined(VK_KHR_surface)
-PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
+#if defined(VK_KHR_swapchain)
+PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR;
+PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR;
 #endif
 #if defined(VK_EXT_debug_utils)
 PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
@@ -94,15 +102,22 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCre
             vk_get_instance_proc_addr(*pInstance, "vkEnumerateDeviceExtensionProperties"));
         vkGetPhysicalDeviceQueueFamilyProperties = reinterpret_cast<decltype(vkGetPhysicalDeviceQueueFamilyProperties)>(
             vk_get_instance_proc_addr(*pInstance, "vkGetPhysicalDeviceQueueFamilyProperties"));
-
+#if defined(VK_KHR_surface)
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR = reinterpret_cast<decltype(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)>(
+            vk_get_instance_proc_addr(*pInstance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR"));
+        vkGetPhysicalDeviceSurfaceFormatsKHR = reinterpret_cast<decltype(vkGetPhysicalDeviceSurfaceFormatsKHR)>(
+            vk_get_instance_proc_addr(*pInstance, "vkGetPhysicalDeviceSurfaceFormatsKHR"));
+        vkGetPhysicalDeviceSurfacePresentModesKHR = reinterpret_cast<decltype(vkGetPhysicalDeviceSurfacePresentModesKHR)>(
+            vk_get_instance_proc_addr(*pInstance, "vkGetPhysicalDeviceSurfacePresentModesKHR"));
+        vkGetPhysicalDeviceSurfaceSupportKHR = reinterpret_cast<decltype(vkGetPhysicalDeviceSurfaceSupportKHR)>(
+            vk_get_instance_proc_addr(*pInstance, "vkGetPhysicalDeviceSurfaceSupportKHR"));
+        vkDestroySurfaceKHR = reinterpret_cast<decltype(vkDestroySurfaceKHR)>(vk_get_instance_proc_addr(*pInstance, "vkDestroySurfaceKHR"));
+#endif
 #if defined(VK_KHR_win32_surface)
         vkCreateWin32SurfaceKHR =
             reinterpret_cast<decltype(vkCreateWin32SurfaceKHR)>(vk_get_instance_proc_addr(*pInstance, "vkCreateWin32SurfaceKHR"));
         vkGetPhysicalDeviceWin32PresentationSupportKHR = reinterpret_cast<decltype(vkGetPhysicalDeviceWin32PresentationSupportKHR)>(
             vk_get_instance_proc_addr(*pInstance, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
-#endif
-#if defined(VK_KHR_surface)
-        vkDestroySurfaceKHR = reinterpret_cast<decltype(vkDestroySurfaceKHR)>(vk_get_instance_proc_addr(*pInstance, "vkDestroySurfaceKHR"));
 #endif
 #if defined(VK_EXT_debug_utils)
         vkCreateDebugUtilsMessengerEXT = reinterpret_cast<decltype(vkCreateDebugUtilsMessengerEXT)>(
@@ -127,6 +142,12 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkPhysicalDevice physicalDevice,
     {
         vkDestroyDevice = reinterpret_cast<decltype(vkDestroyDevice)>(vk_get_device_proc_addr(*pDevice, "vkDestroyDevice"));
         vkGetDeviceQueue = reinterpret_cast<decltype(vkGetDeviceQueue)>(vk_get_device_proc_addr(*pDevice, "vkGetDeviceQueue"));
+
+#if defined(VK_KHR_swapchain)
+        vkCreateSwapchainKHR = reinterpret_cast<decltype(vkCreateSwapchainKHR)>(vk_get_device_proc_addr(*pDevice, "vkCreateSwapchainKHR"));
+        vkDestroySwapchainKHR =
+            reinterpret_cast<decltype(vkDestroySwapchainKHR)>(vk_get_device_proc_addr(*pDevice, "vkDestroySwapchainKHR"));
+#endif
     }
 
     return ret;

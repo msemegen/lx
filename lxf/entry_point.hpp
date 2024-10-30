@@ -15,6 +15,8 @@
 namespace lxf {
 class Windower;
 
-std::int64_t
-entry_point(std::string_view params_a, std::span<device::GPU> gpus_a, std::span<device::Display> displays_a, Windower* p_windower_a);
+std::int64_t entry_point(std::string_view params_a,
+                         std::span<const device::GPU*> gpus_a,
+                         std::span<const device::Display*> displays_a,
+                         Windower* p_windower_a);
 } // namespace lxf
