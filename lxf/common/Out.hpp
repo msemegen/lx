@@ -8,15 +8,14 @@
 // std
 #include <utility>
 
-namespace lxf {
-namespace common {
+namespace lxf::common {
 template<typename Type> class Out
 {
 public:
     Out() = delete;
     Out(const Type&) = delete;
-    Out(Type&& param_a)
-        : p(std::move(param_a))
+    Out(Type&& param)
+        : p(std::move(param))
     {
     }
 
@@ -39,9 +38,8 @@ private:
     Type& p;
 };
 
-template<typename Type> Out<Type> out(Type& arg_a)
+template<typename Type> Out<Type> out(Type& arg)
 {
-    return std::move(Out<Type>(arg_a));
+    return std::move(Out<Type>(arg));
 }
-} // namespace common
-} // namespace lxf
+} // namespace lxf::common

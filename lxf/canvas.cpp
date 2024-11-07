@@ -62,7 +62,7 @@ LRESULT __stdcall window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, L
 namespace lxf {
 using namespace common;
 
-bool canvas::Windowed::create_window(Rect<std::int32_t, std::uint32_t> screen_a, const Properties& properties_a)
+bool canvas::Windowed::create_window(Rect<std::int32_t, std::uint32_t> screen, const Properties& properties)
 {
     WNDCLASSEX window_class_descriptor {};
     window_class_descriptor.cbSize = sizeof(WNDCLASSEXW);
@@ -75,22 +75,22 @@ bool canvas::Windowed::create_window(Rect<std::int32_t, std::uint32_t> screen_a,
 
     this->wnd_class = RegisterClassEx(&window_class_descriptor);
 
-    common::Extent<std::uint16_t> wnd_size;
-    common::Position<std::uint16_t> wnd_pos;
+    common::Extent<std::uint16_t, 2u> wnd_size;
+    common::Position<std::uint16_t, 2u> wnd_pos;
 
-    assert(Position::automatic != (properties_a.position & Position::automatic) || Size::custom != (properties_a.size & Size::custom));
+    assert(Position::automatic != (properties.position & Position::automatic) || Size::custom != (properties.size & Size::custom));
 
-    if (Position::custom == (properties_a.position & Position::custom) && Size::custom == (properties_a.size & Size::custom))
+    if (Position::custom == (properties.position & Position::custom) && Size::custom == (properties.size & Size::custom))
     {
-        const std::uint32_t size_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(properties_a.size) >> 16u);
+        const std::uint32_t size_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(properties.size) >> 16u);
         std::memcpy(&wnd_size, &size_tmp, sizeof(wnd_size));
 
-        const std::uint32_t position_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(properties_a.position) >> 16u);
+        const std::uint32_t position_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(properties.position) >> 16u);
         std::memcpy(&wnd_pos, &position_tmp, sizeof(wnd_pos));
     }
-    else if (Position::centered == (properties_a.position & Position::centered) && Size::custom == (properties_a.size & Size::custom))
+    else if (Position::centered == (properties.position & Position::centered) && Size::custom == (properties.size & Size::custom))
     {
-        const std::uint32_t size_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(properties_a.size) >> 16u);
+        const std::uint32_t size_tmp = static_cast<std::uint32_t>(static_cast<std::uint64_t>(properties.size) >> 16u);
         std::memcpy(&wnd_size, &size_tmp, sizeof(wnd_size));
 
         RECT window_rect { .left = 0, .top = 0, .right = wnd_size.w, .bottom = wnd_size.h };
@@ -99,17 +99,17 @@ bool canvas::Windowed::create_window(Rect<std::int32_t, std::uint32_t> screen_a,
         wnd_size.w = static_cast<std::uint16_t>(window_rect.right - window_rect.left);
         wnd_size.h = static_cast<std::uint16_t>(window_rect.bottom - window_rect.top);
 
-        wnd_pos = { .x = static_cast<std::uint16_t>(screen_a.size.w / 2u - wnd_size.w / 2u),
-                    .y = static_cast<std::uint16_t>(screen_a.size.h / 2u - wnd_size.h / 2u) };
+        wnd_pos = { .x = static_cast<std::uint16_t>(screen.size.w / 2u - wnd_size.w / 2u),
+                    .y = static_cast<std::uint16_t>(screen.size.h / 2u - wnd_size.h / 2u) };
     }
-    else if (Position::automatic == (properties_a.position & Position::automatic) && Size::maximize == (properties_a.size & Size::maximize))
+    else if (Position::automatic == (properties.position & Position::automatic) && Size::maximize == (properties.size & Size::maximize))
     {
         wnd_pos = { .x = 0u, .y = 0u };
     }
 
     this->handle = CreateWindowEx(0u,
                                   MAKEINTATOM(this->wnd_class),
-                                  properties_a.title.data(),
+                                  properties.title.data(),
                                   WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION,
                                   wnd_pos.x,
                                   wnd_pos.y,
@@ -133,9 +133,9 @@ bool canvas::Windowed::create_window(Rect<std::int32_t, std::uint32_t> screen_a,
 
     return false;
 }
-void canvas::Windowed::set_visible(bool visible_a)
+void canvas::Windowed::set_visible(bool visible)
 {
-    ShowWindow(this->handle, true == visible_a ? SW_SHOW : SW_HIDE);
+    ShowWindow(this->handle, true == visible ? SW_SHOW : SW_HIDE);
 }
 
 bool canvas::Windowed::update()

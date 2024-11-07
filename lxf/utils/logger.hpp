@@ -43,40 +43,38 @@ public:
 
     using enum Level;
 
-    template<typename... Args_t>
-    static void write(Level level_a, std::string_view module_name_a, std::string_view format_a, Args_t... args_a)
+    template<typename... Args_t> static void write(Level level, std::string_view module_name, std::string_view format, Args_t... args)
     {
-        if ((true == common::bit::flag::is(static_cast<std::uint64_t>(severity), static_cast<std::uint8_t>(level_a)) ||
+        if ((true == common::bit::flag::is(static_cast<std::uint64_t>(severity), static_cast<std::uint8_t>(level)) ||
              true == common::bit::flag::is(static_cast<std::uint64_t>(severity), 0x10ull)) &&
             true == is_open())
         {
             timestamp(std::time(nullptr));
-            log(level_a, module_name_a, std::vformat(std::locale {}, format_a, std::make_format_args(args_a...)));
+            log(level, module_name, std::vformat(std::locale {}, format, std::make_format_args(args...)));
         }
     }
-    template<typename... Args>
-    static void write_line(Level level_a, std::string_view module_name_a, std::string_view format_a, Args... args_a)
+    template<typename... Args> static void write_line(Level level, std::string_view module_name, std::string_view format, Args... args)
     {
-        if ((true == common::bit::flag::is(static_cast<std::uint64_t>(severity), static_cast<std::uint8_t>(level_a))) && true == is_open())
+        if ((true == common::bit::flag::is(static_cast<std::uint64_t>(severity), static_cast<std::uint8_t>(level))) && true == is_open())
         {
             timestamp(std::time(nullptr));
-            log(level_a, module_name_a, std::vformat(std::locale {}, format_a.data(), std::make_format_args(args_a...)));
+            log(level, module_name, std::vformat(std::locale {}, format.data(), std::make_format_args(args...)));
             nl();
         }
     }
 
-    static void set_severity(Severity severity_a)
+    static void set_severity(Severity sev)
     {
-        common::bit::flag::set(reinterpret_cast<std::uint64_t*>(&severity), 0x1Full, static_cast<std::uint64_t>(severity_a));
+        common::bit::flag::set(reinterpret_cast<std::uint64_t*>(&logger::severity), 0x1Full, static_cast<std::uint64_t>(sev));
     }
-    static void clear_severity(Severity severity_a)
+    static void clear_severity(Severity sev)
     {
-        common::bit::flag::clear(reinterpret_cast<std::uint64_t*>(&severity), static_cast<std::uint64_t>(severity_a));
+        common::bit::flag::clear(reinterpret_cast<std::uint64_t*>(&logger::severity), static_cast<std::uint64_t>(sev));
     }
 
-    static void set_console_output(bool flag_a)
+    static void set_console_output(bool flag)
     {
-        redirect_to_console = flag_a;
+        redirect_to_console = flag;
     }
 
     static bool is_open();
@@ -86,23 +84,23 @@ public:
     }
 
 private:
-    static const char* to_string(Level level_a);
+    static const char* to_string(Level level);
 
-    static void timestamp(std::time_t timestamp_a);
-    static void log(Level level_a, std::string_view module_name_a, const std::string& log_a);
+    static void timestamp(std::time_t timestamp);
+    static void log(Level level, std::string_view module_name, const std::string& log);
     static void nl();
 
     inline static Severity severity = Severity::none;
     inline static bool redirect_to_console = false;
 };
 
-constexpr logger::Severity operator|(logger::Severity left_a, logger::Severity right_a)
+constexpr logger::Severity operator|(logger::Severity left, logger::Severity right)
 {
-    return static_cast<logger::Severity>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
+    return static_cast<logger::Severity>(static_cast<std::uint64_t>(left) | static_cast<std::uint64_t>(right));
 }
-constexpr logger::Severity operator&(logger::Severity left_a, logger::Severity right_a)
+constexpr logger::Severity operator&(logger::Severity left, logger::Severity right)
 {
-    return static_cast<logger::Severity>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
+    return static_cast<logger::Severity>(static_cast<std::uint64_t>(left) & static_cast<std::uint64_t>(right));
 }
 } // namespace utils
 } // namespace lxf

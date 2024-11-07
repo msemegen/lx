@@ -27,24 +27,21 @@ struct Version
     {
     }
 
-    Version(std::uint32_t combined_a)
-        : value(combined_a)
+    Version(std::uint32_t combined)
+        : value(combined)
     {
     }
 
-    Version(Limited<std::uint16_t, 0u, 0x3FFu> major_a,
-            Limited<std::uint16_t, 0u, 0x3FFu> minor_a,
-            Limited<std::uint16_t, 0u, 0xFFFu> patch_a)
+    Version(Limited<std::uint16_t, 0u, 0x3FFu> major, Limited<std::uint16_t, 0u, 0x3FFu> minor, Limited<std::uint16_t, 0u, 0xFFFu> patch)
     {
-        this->value = (static_cast<std::uint32_t>(major_a) << 22u) | (static_cast<std::uint32_t>(minor_a) << 12U) |
-                      (static_cast<std::uint32_t>(patch_a));
+        this->value =
+            (static_cast<std::uint32_t>(major) << 22u) | (static_cast<std::uint32_t>(minor) << 12U) | (static_cast<std::uint32_t>(patch));
     }
 
-    void
-    set(Limited<std::uint16_t, 0u, 0x3FFu> major_a, Limited<std::uint16_t, 0u, 0x3FFu> minor_a, Limited<std::uint16_t, 0u, 0xFFFu> patch_a)
+    void set(Limited<std::uint16_t, 0u, 0x3FFu> major, Limited<std::uint16_t, 0u, 0x3FFu> minor, Limited<std::uint16_t, 0u, 0xFFFu> patch)
     {
-        this->value = (static_cast<std::uint32_t>(major_a) << 22u) | (static_cast<std::uint32_t>(minor_a) << 12U) |
-                      (static_cast<std::uint32_t>(patch_a));
+        this->value =
+            (static_cast<std::uint32_t>(major) << 22u) | (static_cast<std::uint32_t>(minor) << 12U) | (static_cast<std::uint32_t>(patch));
     }
 
     Components get() const

@@ -9,150 +9,150 @@
 #include <chrono>
 #include <cstdint>
 
-// xmcu
+// lxf
 #include <lxf/common/non_constructible.hpp>
 
 namespace lxf::common {
 struct bit : private non_constructible
 {
-    template<typename Register_x, typename Index_x> [[nodiscard]] constexpr static bool is(Register_x register_a, Index_x index_a)
+    template<typename Register, typename Index> [[nodiscard]] constexpr static bool is(Register reg, Index index)
     {
-        const Register_x flag = static_cast<Register_x>(0x1u) << index_a;
-        return flag == (register_a & flag);
+        const Register flag = static_cast<Register>(0x1u) << index;
+        return flag == (reg & flag);
     }
 
-    template<typename Register_x, typename Mask_x> [[nodiscard]] constexpr static bool is_any(Register_x register_a, Mask_x mask_a)
+    template<typename Register, typename Mask> [[nodiscard]] constexpr static bool is_any(Register reg, Mask mask)
     {
-        return static_cast<Mask_x>(0u) != (register_a & mask_a);
+        return static_cast<Mask>(0u) != (reg & mask);
     }
 
-    template<typename Register_x, typename Index_x> constexpr static void set(Register_x* p_register_a, Index_x index_a)
+    template<typename Register, typename Index> constexpr static void set(Register* reg, Index index)
     {
-        (*p_register_a) = (*p_register_a) | (static_cast<Register_x>(0x1u) << index_a);
+        (*reg) = (*reg) | (static_cast<Register>(0x1u) << index);
     }
 
-    template<typename Register_x, typename Index_x> constexpr static void clear(Register_x* p_register_a, Index_x index_a)
+    template<typename Register, typename Index> constexpr static void clear(Register* reg, Index index)
     {
-        (*p_register_a) = (*p_register_a) & ~(static_cast<Register_x>(0x1u) << index_a);
+        (*reg) = (*reg) & ~(static_cast<Register>(0x1u) << index);
     }
 
-    template<typename Register_x, typename Index_x> constexpr static void toggle(Register_x* p_register_a, Index_x index_a)
+    template<typename Register, typename Index> constexpr static void toggle(Register* reg, Index index)
     {
-        (*p_register_a) = (*p_register_a) ^ (static_cast<Register_x>(0x1u) << index_a);
+        (*reg) = (*reg) ^ (static_cast<Register>(0x1u) << index);
     }
 
     struct flag : private non_constructible
     {
-        template<typename Register_x, typename Flag_x> [[nodiscard]] constexpr static inline bool is(Register_x register_a, Flag_x flag_a)
+        template<typename Register, typename Flag> [[nodiscard]] constexpr static inline bool is(Register reg, Flag flag)
         {
-            return flag_a == (register_a & flag_a);
+            return flag == (reg & flag);
         }
 
-        template<typename Register_x, typename Mask_x>
-        [[nodiscard]] constexpr static inline Mask_x get(Register_x register_a, Mask_x mask_a)
+        template<typename Register, typename Mask>
+        [[nodiscard]] constexpr static inline Mask get(Register reg, Mask mask)
         {
-            return (register_a & mask_a);
+            return (reg & mask);
         }
 
-        template<typename Register_x, typename Flag_x> constexpr static inline void set(Register_x* p_register_a, Flag_x flag_a)
+        template<typename Register, typename Flag> constexpr static inline void set(Register* reg, Flag flag)
         {
-            (*p_register_a) = (*p_register_a) | flag_a;
+            (*reg) = (*reg) | flag;
         }
 
-        template<typename Register_x, typename Clear_mask_x, typename Flag_x>
-        constexpr static inline void set(Register_x* p_register_a, Clear_mask_x clear_mask_a, Flag_x set_flag_a)
+        template<typename Register, typename Clear_mask, typename Flag>
+        constexpr static inline void set(Register* reg, Clear_mask clear_mask, Flag set_flag)
         {
-            (*p_register_a) = ((*p_register_a & (~clear_mask_a)) | set_flag_a);
+            (*reg) = ((*reg & (~clear_mask)) | set_flag);
         }
 
-        template<typename Register_x, typename Flag_x> constexpr static inline void clear(Register_x* p_register_a, Flag_x flag_a)
+        template<typename Register, typename Flag> constexpr static inline void clear(Register* reg, Flag flag)
         {
-            (*p_register_a) = (*p_register_a) & ~flag_a;
+            (*reg) = (*reg) & ~flag;
         }
 
-        template<typename Register_x, typename Mask_x> constexpr static inline void toggle(Register_x* p_register_a, Mask_x mask_a)
+        template<typename Register, typename Mask> constexpr static inline void toggle(Register* reg, Mask mask)
         {
-            (*p_register_a) = (*p_register_a) ^ mask_a;
+            (*reg) = (*reg) ^ mask;
         }
     };
 
     struct wait_for : private non_constructible
     {
-        template<typename Register_x, typename Mask_x> static void all_set(volatile const Register_x& register_a, Mask_x mask_a)
+        template<typename Register, typename Mask> static void all_set(volatile const Register& reg, Mask mask)
         {
-            while (false == bit::flag::is(register_a, mask_a))
+            while (false == bit::flag::is(reg, mask))
                 ;
         }
 
-        template<typename Register_x, typename Mask_x> static void any_set(volatile const Register_x& register_a, Mask_x mask_a)
+        template<typename Register, typename Mask> static void any_set(volatile const Register& reg, Mask mask)
         {
-            while (false == bit::is_any(register_a, mask_a))
+            while (false == bit::isny(reg, mask))
                 ;
         }
 
-        template<typename Register_x, typename Mask_x> static void all_cleared(volatile const Register_x& register_a, Mask_x mask_a)
+        template<typename Register, typename Mask> static void all_cleared(volatile const Register& reg, Mask mask)
         {
-            while (false == bit::flag::is(~register_a, mask_a))
+            while (false == bit::flag::is(~reg, mask))
                 ;
         }
 
-        template<typename Register_x, typename Mask_x> static void any_cleared(volatile const Register_x& register_a, Mask_x mask_a)
+        template<typename Register, typename Mask> static void any_cleared(volatile const Register& reg, Mask mask)
         {
-            while (false == bit::is_any(~register_a, mask_a))
+            while (false == bit::isny(~reg, mask))
                 ;
         }
 
-        template<typename Register_x, typename Mask_x>
-        static bool all_set(volatile const Register_x& register_a, Mask_x mask_a, std::chrono::milliseconds timeout_a)
+        template<typename Register, typename Mask>
+        static bool all_set(volatile const Register& reg, Mask mask, std::chrono::milliseconds timeout)
         {
-            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout_a;
+            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout;
             bool status = false;
 
             while (std::chrono::steady_clock::now() < timeout && false == status)
             {
-                status = bit::flag::is(register_a, mask_a);
+                status = bit::flag::is(reg, mask);
             }
 
             return status;
         }
 
-        template<typename Register_x, typename Mask_x>
-        static bool any_set(volatile const Register_x& register_a, Mask_x mask_a, std::chrono::milliseconds timeout_a)
+        template<typename Register, typename Mask>
+        static bool any_set(volatile const Register& reg, Mask mask, std::chrono::milliseconds timeout)
         {
-            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout_a;
+            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout;
             bool status = false;
 
             while (std::chrono::steady_clock::now() < timeout && false == status)
             {
-                status = bit::is_any(register_a, mask_a);
+                status = bit::isny(reg, mask);
             }
 
             return status;
         }
 
-        template<typename Register_x, typename Mask_x>
-        static bool all_cleared(const Register_x& register_a, Mask_x mask_a, std::chrono::milliseconds timeout_a)
+        template<typename Register, typename Mask>
+        static bool all_cleared(const Register& reg, Mask mask, std::chrono::milliseconds timeout)
         {
-            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout_a;
+            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout;
             bool status = false;
 
             while (std::chrono::steady_clock::now() < timeout && false == status)
             {
-                status = bit::flag::is(~register_a, mask_a);
+                status = bit::flag::is(~reg, mask);
             }
 
             return status;
         }
 
-        template<typename Register_x, typename Mask_x>
-        static bool any_cleared(volatile const Register_x& register_a, Mask_x mask_a, std::chrono::milliseconds timeout_a)
+        template<typename Register, typename Mask>
+        static bool any_cleared(volatile const Register& reg, Mask mask, std::chrono::milliseconds timeout)
         {
-            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout_a;
+            const std::chrono::steady_clock::time_point timeout = std::chrono::steady_clock::now() + timeout;
             bool status = false;
 
             while (std::chrono::steady_clock::now() < timeout && false == status)
             {
-                status = bit::is_any(~register_a, mask_a);
+                status = bit::isny(~reg, mask);
             }
 
             return status;

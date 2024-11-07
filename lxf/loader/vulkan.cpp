@@ -41,6 +41,7 @@ PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32Prese
 #endif
 #if defined(VK_KHR_swapchain)
 PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR;
+PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR;
 PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR;
 #endif
 #if defined(VK_EXT_debug_utils)
@@ -145,6 +146,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkPhysicalDevice physicalDevice,
 
 #if defined(VK_KHR_swapchain)
         vkCreateSwapchainKHR = reinterpret_cast<decltype(vkCreateSwapchainKHR)>(vk_get_device_proc_addr(*pDevice, "vkCreateSwapchainKHR"));
+        vkGetSwapchainImagesKHR =
+            reinterpret_cast<decltype(vkGetSwapchainImagesKHR)>(vk_get_device_proc_addr(*pDevice, "vkGetSwapchainImagesKHR"));
         vkDestroySwapchainKHR =
             reinterpret_cast<decltype(vkDestroySwapchainKHR)>(vk_get_device_proc_addr(*pDevice, "vkDestroySwapchainKHR"));
 #endif

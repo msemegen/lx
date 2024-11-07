@@ -13,9 +13,9 @@
 #include <lxf/common/Position.hpp>
 
 namespace lxf::common {
-template<typename Position_scalar_t, typename Size_scalar_t> struct Rect
+template<typename Position_scalar, typename Extent_scalar> struct Rect
 {
-    lxf::common::Position<Position_scalar_t> position;
-    lxf::common::Extent<Size_scalar_t> size;
+    lxf::common::Position<Position_scalar, 2u> position;
+    lxf::common::Extent<Extent_scalar, 2u> size;
 };
 } // namespace lxf::common

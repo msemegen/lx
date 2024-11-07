@@ -5,8 +5,7 @@
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  */
 
-namespace lxf {
-namespace common {
+namespace lxf::common {
 class non_copyable
 {
 public:
@@ -18,5 +17,4 @@ protected:
     non_copyable(const non_copyable&) = delete;
     non_copyable& operator=(const non_copyable&) = delete;
 };
-} // namespace common
-} // namespace lxf
+} // namespace lxf::common

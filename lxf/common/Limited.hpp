@@ -10,58 +10,58 @@
 
 namespace lxf {
 namespace common {
-template<typename Type_t, Type_t minimum_t, Type_t maximum_t> class Limited
+template<typename Type, Type minimum, Type maximum> class Limited
 {
-    static_assert(maximum_t >= minimum_t);
+    static_assert(maximum >= minimum);
 
 public:
     constexpr Limited()
-        : value(minimum_t)
+        : value(minimum)
     {
     }
 
-    Limited(const Limited& other_a)
-        : value(other_a.value)
+    Limited(const Limited& other)
+        : value(other.value)
     {
     }
 
-    Limited(Limited&& other_a)
-        : value(other_a.value)
+    Limited(Limited&& other)
+        : value(other.value)
     {
     }
 
-    Limited(Type_t value_a)
-        : value(value_a)
+    Limited(Type value)
+        : value(value)
     {
-        assert(this->value >= minimum_t && this->value <= maximum_t);
+        assert(this->value >= minimum && this->value <= maximum);
     }
 
-    Limited& operator=(const Limited& other_a)
+    Limited& operator=(const Limited& other)
     {
-        if (this != &(other_a))
+        if (this != &(other))
         {
-            this->value = other_a.value;
+            this->value = other.value;
         }
 
         return *this;
     }
 
-    operator Type_t()
+    operator Type()
     {
         return this->value;
     }
-    operator Type_t() const
+    operator Type() const
     {
         return this->value;
     }
 
-    constexpr Type_t get() const
+    constexpr Type get() const
     {
         return this->value;
     }
 
 private:
-    Type_t value;
+    Type value;
 };
 } // namespace common
 } // namespace lxf

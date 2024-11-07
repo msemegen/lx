@@ -181,12 +181,12 @@ const char* logger::to_string(Level level_a)
 } // namespace lxf::utils
 
 using namespace ::lxf;
-int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, _In_ int)
+int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_ int)
 {
     using namespace ::lxf::loader;
     using namespace ::lxf::utils;
 
-    config_parser::allocate(p_cmd_line_a);
+    config_parser::allocate(cmd_line);
 
     // config reading
     {
@@ -458,7 +458,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
                                vk_device_properties.deviceName);
             for (std::uint32_t qf_index = 0; qf_index < queue_family_property_count; qf_index++)
             {
-
                 if (VK_TRUE == vkGetPhysicalDeviceWin32PresentationSupportKHR(gpus_buffer[gpu_index], qf_index))
                 {
                     vk_queue_family_properties_buffer[qf_index].queueFlags |= 0x200u;
@@ -562,7 +561,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
             logger::write_line(logger::debug,
                                module_name,
                                "\t - {}{}, bpp: {}, logical resolution: {}x{}, physical resolution: {}x{}",
-                               device::Display::Properties::Kind::primary == display_properties.kind ? "*" : "",
+                               device::Display::Kind::primary == display_properties.kind ? "*" : "",
                                display_properties.name,
                                display_properties.bits_per_pixel,
                                display_properties.logical_rect.size.w,
@@ -586,7 +585,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR p_cmd_line_a, 
         entry_point_displays[i] = &(displays[i]);
     }
 
-    entry_point(p_cmd_line_a, { &(entry_point_gpus[0]), gpus_count }, { &entry_point_displays[0], displays_count }, &windower);
+    entry_point(cmd_line, { &(entry_point_gpus[0]), gpus_count }, { &entry_point_displays[0], displays_count }, &windower);
 
     if (true == config::vulkan::validation_layer::enabled)
     {

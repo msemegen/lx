@@ -9,6 +9,12 @@
 #include <lxf/entry_point.hpp>
 #include <lxf/renderer.hpp>
 
+// tests
+#include <lxe/math/AABB.hpp>
+#include <lxe/math/Matrix.hpp>
+#include <lxe/math/Vector.hpp>
+#include <lxf/utils/file.hpp>
+
 using namespace ::lxf;
 using namespace ::lxf::common;
 using namespace ::lxf::utils;
@@ -48,13 +54,18 @@ std::int64_t lxf::entry_point(std::string_view,
         displays_a,
         device::filter::Display { .kind = device::filter::Display::primary, .logical_size { .w = 800u, .h = 600 }, .bits_per_pixel = 32u });
 
+    auto handle = utils::file::open("test.bin", file::Mode::read);
+    if (true == utils::file::exists(handle))
+    {
+    }
+
     if (false == compatible_displays.empty())
     {
         canvas::Windowed* p_main_window =
             p_windower_a->create<canvas::Windowed>(compatible_displays[0]->get_properties().logical_rect,
                                                    { .title = "test",
                                                      .position = canvas::Position::centered,
-                                                     .size = canvas::Size::custom | Extent<std::uint16_t> { .w = 800u, .h = 600u } });
+                                                     .size = canvas::Size::custom | Extent<std::uint16_t, 2u> { .w = 800u, .h = 600u } });
         if (nullptr != p_main_window)
         {
             const char* extensions[] = { "VK_KHR_swapchain", "VK_EXT_pageable_device_local_memory", "VK_EXT_memory_priority" };
@@ -98,22 +109,28 @@ std::int64_t lxf::entry_point(std::string_view,
                 p_main_window->set_visible(true);
 
                 const std::uint16_t queue_families_priorities[] = { 1u };
-                const renderer::Context::Properties::Queue_family queue_family[] = {
-                    { .kind = renderer::Context::Properties::Queue_family::graphics | renderer::Context::Properties::Queue_family::compute,
-                      .count = 1u,
-                      .priorities = queue_families_priorities }
-                };
+                const renderer::Context::Queue_family queue_family[] = { { .kind = renderer::Context::Queue_family::graphics |
+                                                                                   renderer::Context::Queue_family::compute,
+                                                                           .count = 1u,
+                                                                           .priorities = queue_families_priorities } };
 
                 renderer::Context* p_context = renderer::create<renderer::Context>(
                     false == compatible_discrete_gpus.empty() ? compatible_discrete_gpus[0] : compatible_integrated_gpus[0],
                     p_main_window,
                     { .queue_families = queue_family,
                       .extensions = extensions,
-                      .swap_chain = { .pixel = renderer::Context::Properties::Swap_chain::Pixel::b8g8r8a8_srgb,
-                                      .color_space = renderer::Context::Properties::Swap_chain::Color_space::srgb_nonlinear_khr,
-                                      .mode = renderer::Context::Properties::Swap_chain::Mode::fifo,
+                      .swap_chain = { .pixel = renderer::Context::Swap_chain::Pixel::b8g8r8a8_srgb,
+                                      .color_space = renderer::Context::Swap_chain::Color_space::srgb_nonlinear_khr,
+                                      .mode = renderer::Context::Swap_chain::Mode::fifo,
                                       .images_count = 3u } });
+                lxe::math::Matrix<float, 3u, 3u> view_matrix;
+                lxe::math::eye(lxf::common::out(view_matrix));
 
+                lxe::math::Vector<float, 2u> force { .x = -1.0f, .y = 2.0f };
+                lxe::math::abs(lxf::common::out(force));
+
+                auto x = 0;
+                x = x;
                 while (true == p_main_window->update())
                 {
                 }

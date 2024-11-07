@@ -5,8 +5,7 @@
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  */
 
-namespace lxf {
-namespace common {
+namespace lxf::common {
 class non_constructible
 {
 protected:
@@ -17,5 +16,4 @@ protected:
     non_constructible& operator=(const non_constructible&) = delete;
     non_constructible& operator=(non_constructible&&) = delete;
 };
-} // namespace common
-} // namespace lxf
+} // namespace lxf::common

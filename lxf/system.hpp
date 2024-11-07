@@ -46,10 +46,10 @@ struct system : common::non_constructible
             help = 0x80
         };
 
-        static Button show(std::string_view title_a, std::string_view message_a, Icon icon_a, Button buttons_a)
+        static Button show(std::string_view title, std::string_view message, Icon icon, Button buttons)
         {
             std::uint32_t ret = MessageBox(
-                HWND_DESKTOP, message_a.data(), title_a.data(), static_cast<std::uint32_t>(icon_a) | get_win32_button_flag(buttons_a));
+                HWND_DESKTOP, message.data(), title.data(), static_cast<std::uint32_t>(icon) | get_win32_button_flag(buttons));
 
             switch (ret)
             {
@@ -82,22 +82,22 @@ struct system : common::non_constructible
         }
 
     private:
-        static std::uint32_t get_win32_button_flag(Button buttons_a);
+        static std::uint32_t get_win32_button_flag(Button buttons);
     };
 };
 
-constexpr system::message_box::Button operator|(system::message_box::Button left_a, system::message_box::Button right_a)
+constexpr system::message_box::Button operator|(system::message_box::Button left, system::message_box::Button right)
 {
-    return static_cast<system::message_box::Button>(static_cast<std::uint32_t>(left_a) | static_cast<std::uint32_t>(right_a));
+    return static_cast<system::message_box::Button>(static_cast<std::uint32_t>(left) | static_cast<std::uint32_t>(right));
 }
-constexpr system::message_box::Button operator&(system::message_box::Button left_a, system::message_box::Button right_a)
+constexpr system::message_box::Button operator&(system::message_box::Button left, system::message_box::Button right)
 {
-    return static_cast<system::message_box::Button>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
+    return static_cast<system::message_box::Button>(static_cast<std::uint32_t>(left) & static_cast<std::uint32_t>(right));
 }
 
-inline std::uint32_t system::message_box::get_win32_button_flag(Button buttons_a)
+inline std::uint32_t system::message_box::get_win32_button_flag(Button buttons)
 {
-    switch (static_cast<std::uint32_t>(buttons_a))
+    switch (static_cast<std::uint32_t>(buttons))
     {
         case static_cast<std::uint32_t>(Button::ok):
             return MB_OK;
@@ -128,7 +128,7 @@ inline std::uint32_t system::message_box::get_win32_button_flag(Button buttons_a
             return 0x0ull;
         }
     }
-    __assume(false);
+    _assume(false);
 }
 
 } // namespace lxf

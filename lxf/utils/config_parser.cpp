@@ -13,14 +13,14 @@ namespace lxf {
 namespace utils {
 using namespace ::lxf::common;
 
-void config_parser::allocate(std::string_view data_a)
+void config_parser::allocate(std::string_view data)
 {
     free();
 
-    storage_capacity = data_a.length() + calculate_tail(data_a) + 1ull;
+    storage_capacity = data.length() + calculate_tail(data) + 1ull;
     p_storage = new char[storage_capacity];
-    std::memcpy(p_storage, data_a.data(), data_a.length());
-    p_storage[data_a.length()] = '\0';
+    std::memcpy(p_storage, data.data(), data.length());
+    p_storage[data.length()] = '\0';
 
     std::vector<Token> tokens = tokenize();
     entries = build(tokens);
@@ -129,9 +129,9 @@ void config_parser::free()
     return ret;
 }
 
-[[nodiscard]] std::vector<config_parser::Entry> config_parser::build(const std::vector<Token>& tokens_a)
+[[nodiscard]] std::vector<config_parser::Entry> config_parser::build(const std::vector<Token>& tokens)
 {
-    if (true == tokens_a.empty())
+    if (true == tokens.empty())
     {
         return {};
     }
@@ -141,27 +141,27 @@ void config_parser::free()
     Entry entry;
     Token::Kind last = various::get_enum_incorrect_value<Token::Kind>();
 
-    for (std::uint64_t i = 0; i < tokens_a.size(); i++)
+    for (std::uint64_t i = 0; i < tokens.size(); i++)
     {
-        Token::Kind current = tokens_a[i].kind;
+        Token::Kind current = tokens[i].kind;
 
         // simple syntax checking
         if (Token::Kind::name == current &&
             (last == various::get_enum_incorrect_value<Token::Kind>() ||
-             (Token::Kind::separator == last && ":" == tokens_a[i - 1ull].value) || Token::Kind::value == last))
+             (Token::Kind::separator == last && ":" == tokens[i - 1ull].value) || Token::Kind::value == last))
         {
             if (false == entry.value.empty())
             {
                 ret.push_back(entry);
                 entry = {};
             }
-            entry.name.push_back(tokens_a[i].value);
+            entry.name.push_back(tokens[i].value);
         }
         else if (false == entry.name.empty() &&
-                 (last == Token::Kind::separator && ("=" == tokens_a[i - 1ull].value || "," == tokens_a[i - 1ull].value)) &&
+                 (last == Token::Kind::separator && ("=" == tokens[i - 1ull].value || "," == tokens[i - 1ull].value)) &&
                  Token::Kind::value == current)
         {
-            entry.value.push_back(tokens_a[i].value);
+            entry.value.push_back(tokens[i].value);
         }
 
         last = current;

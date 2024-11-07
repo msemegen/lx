@@ -71,27 +71,27 @@ struct config : private common::non_constructible
     };
 };
 
-constexpr config::vulkan::validation_layer::Severity operator|(config::vulkan::validation_layer::Severity left_a,
-                                                               config::vulkan::validation_layer::Severity right_a)
+constexpr config::vulkan::validation_layer::Severity operator|(config::vulkan::validation_layer::Severity left,
+                                                               config::vulkan::validation_layer::Severity right)
 {
-    return static_cast<config::vulkan::validation_layer::Severity>(static_cast<std::uint64_t>(left_a) |
-                                                                   static_cast<std::uint64_t>(right_a));
+    return static_cast<config::vulkan::validation_layer::Severity>(static_cast<std::uint64_t>(left) |
+                                                                   static_cast<std::uint64_t>(right));
 }
-constexpr config::vulkan::validation_layer::Severity operator&(config::vulkan::validation_layer::Severity left_a,
-                                                               config::vulkan::validation_layer::Severity right_a)
+constexpr config::vulkan::validation_layer::Severity operator&(config::vulkan::validation_layer::Severity left,
+                                                               config::vulkan::validation_layer::Severity right)
 {
-    return static_cast<config::vulkan::validation_layer::Severity>(static_cast<std::uint64_t>(left_a) &
-                                                                   static_cast<std::uint64_t>(right_a));
+    return static_cast<config::vulkan::validation_layer::Severity>(static_cast<std::uint64_t>(left) &
+                                                                   static_cast<std::uint64_t>(right));
 }
 
-constexpr config::vulkan::validation_layer::Type operator|(config::vulkan::validation_layer::Type left_a,
-                                                           config::vulkan::validation_layer::Type right_a)
+constexpr config::vulkan::validation_layer::Type operator|(config::vulkan::validation_layer::Type left,
+                                                           config::vulkan::validation_layer::Type right)
 {
-    return static_cast<config::vulkan::validation_layer::Type>(static_cast<std::uint64_t>(left_a) | static_cast<std::uint64_t>(right_a));
+    return static_cast<config::vulkan::validation_layer::Type>(static_cast<std::uint64_t>(left) | static_cast<std::uint64_t>(right));
 }
-constexpr config::vulkan::validation_layer::Type operator&(config::vulkan::validation_layer::Type left_a,
-                                                           config::vulkan::validation_layer::Type right_a)
+constexpr config::vulkan::validation_layer::Type operator&(config::vulkan::validation_layer::Type left,
+                                                           config::vulkan::validation_layer::Type right)
 {
-    return static_cast<config::vulkan::validation_layer::Type>(static_cast<std::uint64_t>(left_a) & static_cast<std::uint64_t>(right_a));
+    return static_cast<config::vulkan::validation_layer::Type>(static_cast<std::uint64_t>(left) & static_cast<std::uint64_t>(right));
 }
 } // namespace lxf

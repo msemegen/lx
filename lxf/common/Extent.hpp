@@ -6,27 +6,35 @@
  */
 
 // std
+#include <bit>
 #include <cassert>
 #include <cstdint>
 
+// lxf
+#include <lxf/common/non_constructible.hpp>
+
 namespace lxf::common {
-template<typename Scalar_t> struct Extent
+template<typename Scalar, std::size_t dimmensions> struct Extent : private common::non_constructible
 {
-    Scalar_t w = static_cast<Scalar_t>(0);
-    Scalar_t h = static_cast<Scalar_t>(0);
+};
 
-    Scalar_t operator[](std::size_t index_a) const
+template<typename Scalar> struct Extent<Scalar, 2u>
+{
+    Scalar w = static_cast<Scalar>(0);
+    Scalar h = static_cast<Scalar>(0);
+
+    Scalar operator[](std::size_t index) const
     {
-        assert(index_a <= 2);
+        assert(index <= 2);
 
-        return reinterpret_cast<const Scalar_t*>(this)[index_a];
+        return std::bit_cast<const Scalar*>(this)[index];
     }
 
-    Scalar_t& operator[](std::size_t index_a)
+    Scalar& operator[](std::size_t index)
     {
-        assert(index_a <= 2);
+        assert(index <= 2);
 
-        return reinterpret_cast<Scalar_t*>(this)[index_a];
+        return std::bit_cast<Scalar*>(this)[index];
     }
 };
 } // namespace lxf::common

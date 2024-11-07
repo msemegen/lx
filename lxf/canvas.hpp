@@ -81,26 +81,26 @@ public:
             Size size;
         };
 
-        Windowed(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties& properties_a)
+        Windowed(common::Rect<std::int32_t, std::uint32_t> screen, const Properties& properties)
             : Window()
         {
-            this->created = this->create_window(screen_a, properties_a);
+            this->created = this->create_window(screen, properties);
         }
 
-        void set_visible(bool visible_a);
+        void set_visible(bool visible);
         bool update();
 
-        bool operator==(const Windowed& obj_a)
+        bool operator==(const Windowed& obj)
         {
-            return this->handle == obj_a.handle && this->wnd_class == obj_a.wnd_class;
+            return this->handle == obj.handle && this->wnd_class == obj.wnd_class;
         }
-        bool operator!=(const Windowed& obj_a)
+        bool operator!=(const Windowed& obj)
         {
-            return false == (*this == obj_a);
+            return false == (*this == obj);
         }
 
     private:
-        bool create_window(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties& properties_a);
+        bool create_window(common::Rect<std::int32_t, std::uint32_t> screen, const Properties& properties);
         void destroy();
 
         friend class lxf::Windower;
@@ -110,57 +110,57 @@ public:
     public:
         struct Properties
         {
-            common::Extent<std::uint32_t> resolution;
+            common::Extent<std::uint32_t, 2u> resolution;
             std::uint8_t bits_per_pixel;
         };
 
-        Fullscreen(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties properties_a)
+        Fullscreen(common::Rect<std::int32_t, std::uint32_t> screen, const Properties properties)
             : Window()
         {
-            this->created = this->create_window(screen_a, properties_a);
+            this->created = this->create_window(screen, properties);
         }
 
-        void set_visible(bool visible_a);
+        void set_visible(bool visible);
         bool update();
 
-        bool operator==(const Fullscreen& obj_a)
+        bool operator==(const Fullscreen& obj)
         {
-            return this->handle == obj_a.handle && this->wnd_class == obj_a.wnd_class;
+            return this->handle == obj.handle && this->wnd_class == obj.wnd_class;
         }
-        bool operator!=(const Fullscreen& obj_a)
+        bool operator!=(const Fullscreen& obj)
         {
-            return false == (*this == obj_a);
+            return false == (*this == obj);
         }
 
     private:
-        bool create_window(common::Rect<std::int32_t, std::uint32_t> screen_a, const Properties& properties_a);
+        bool create_window(common::Rect<std::int32_t, std::uint32_t> screen, const Properties& properties);
         void destroy();
 
         friend class lxf::Windower;
     };
 };
 
-constexpr canvas::Size operator|(canvas::Size type_a, common::Extent<std::uint16_t> size_a)
+constexpr canvas::Size operator|(canvas::Size type, common::Extent<std::uint16_t, 2u> size)
 {
-    assert(canvas::Size::custom == type_a);
+    assert(canvas::Size::custom == type);
 
-    return static_cast<canvas::Size>(static_cast<std::uint16_t>(type_a) | (size_a.w << 16u) |
-                                     (static_cast<std::uint64_t>(size_a.h) << 32u));
+    return static_cast<canvas::Size>(static_cast<std::uint16_t>(type) | (size.w << 16u) |
+                                     (static_cast<std::uint64_t>(size.h) << 32u));
 }
-constexpr canvas::Size operator&(canvas::Size left_a, canvas::Size right_a)
+constexpr canvas::Size operator&(canvas::Size left, canvas::Size right)
 {
-    return static_cast<canvas::Size>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
+    return static_cast<canvas::Size>(static_cast<std::uint32_t>(left) & static_cast<std::uint32_t>(right));
 }
 
-constexpr canvas::Position operator|(canvas::Position type_a, common::Position<std::uint16_t> position_a)
+constexpr canvas::Position operator|(canvas::Position type, common::Position<std::uint16_t, 2u> position)
 {
-    assert(canvas::Position::custom == type_a);
+    assert(canvas::Position::custom == type);
 
-    return static_cast<canvas::Position>(static_cast<std::uint16_t>(type_a) | (position_a.x << 16u) |
-                                         (static_cast<std::uint64_t>(position_a.y) << 32u));
+    return static_cast<canvas::Position>(static_cast<std::uint16_t>(type) | (position.x << 16u) |
+                                         (static_cast<std::uint64_t>(position.y) << 32u));
 }
-constexpr canvas::Position operator&(canvas::Position left_a, canvas::Position right_a)
+constexpr canvas::Position operator&(canvas::Position left, canvas::Position right)
 {
-    return static_cast<canvas::Position>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
+    return static_cast<canvas::Position>(static_cast<std::uint32_t>(left) & static_cast<std::uint32_t>(right));
 }
 } // namespace lxf

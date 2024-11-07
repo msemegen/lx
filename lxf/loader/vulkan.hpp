@@ -32,6 +32,7 @@ extern PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin
 #endif
 #if defined(VK_KHR_swapchain)
 extern PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR;
+extern PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR;
 extern PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR;
 #endif
 #if defined(VK_EXT_debug_utils)

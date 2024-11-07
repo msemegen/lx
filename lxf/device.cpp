@@ -14,42 +14,42 @@
 
 #undef max
 
-bool operator==(const VkSurfaceFormatKHR& left_a, const VkSurfaceFormatKHR& right_a)
+bool operator==(const VkSurfaceFormatKHR& left, const VkSurfaceFormatKHR& right)
 {
-    return left_a.format == right_a.format && left_a.colorSpace == right_a.colorSpace;
+    return left.format == right.format && left.colorSpace == right.colorSpace;
 }
-bool operator!=(const VkSurfaceFormatKHR& left_a, const VkSurfaceFormatKHR& right_a)
+bool operator!=(const VkSurfaceFormatKHR& left, const VkSurfaceFormatKHR& right)
 {
-    return false == (left_a == right_a);
+    return false == (left == right);
 }
 
 namespace lxf {
 using namespace common;
 
-template<typename Value_x> bool check_limit(const device::filter::GPU::Limit req_limit_a, Value_x value_a)
+template<typename Value_x> bool check_limit(const device::filter::GPU::Limit req_limit, Value_x value)
 {
-    Value_x l = *(std::bit_cast<Value_x*>(&(req_limit_a.value.data[0])));
+    Value_x l = *(std::bit_cast<Value_x*>(&(req_limit.value.data[0])));
 
-    switch (req_limit_a.value.operation)
+    switch (req_limit.value.operation)
     {
         case device::filter::GPU::Limit::Value::Operation::greater: {
-            return value_a > l;
+            return value > l;
         }
         break;
         case device::filter::GPU::Limit::Value::Operation::greater_or_equal: {
-            return value_a >= l;
+            return value >= l;
         }
         break;
         case device::filter::GPU::Limit::Value::Operation::less: {
-            return value_a < l;
+            return value < l;
         }
         break;
         case device::filter::GPU::Limit::Value::Operation::less_or_equal: {
-            return value_a <= l;
+            return value <= l;
         }
         break;
         case device::filter::GPU::Limit::Value::Operation::equals: {
-            return value_a == l;
+            return value == l;
         }
         break;
     }
@@ -57,18 +57,18 @@ template<typename Value_x> bool check_limit(const device::filter::GPU::Limit req
     return false;
 };
 
-device::GPU::GPU(VkPhysicalDevice vk_physical_device_a,
-                 bool is_primary_a,
-                 std::span<VkQueueFamilyProperties> queues_a,
-                 std::string_view name_a,
-                 const std::vector<std::string_view>& extension_names_a)
-    : vk_physical_device(vk_physical_device_a)
+device::GPU::GPU(VkPhysicalDevice vk_physical_device,
+                 bool is_primary,
+                 std::span<VkQueueFamilyProperties> queues,
+                 std::string_view name,
+                 const std::vector<std::string_view>& extension_names)
+    : vk_physical_device(vk_physical_device)
     , info_idx(std::numeric_limits<std::size_t>::max())
 {
-    auto calculate_extensions_buffer_size = [&extension_names_a]() -> std::size_t {
+    auto calculate_extensions_buffer_size = [&extension_names]() -> std::size_t {
         std::size_t ret = 0u;
 
-        for (std::string_view extension_name : extension_names_a)
+        for (std::string_view extension_name : extension_names)
         {
             ret += extension_name.size() + 1u;
         }
@@ -76,8 +76,8 @@ device::GPU::GPU(VkPhysicalDevice vk_physical_device_a,
         return ret;
     };
 
-    const std::size_t name_buffer_size_bytes = name_a.size() + 1u;
-    const std::size_t queue_families_buffer_size_bytes = queues_a.size() * sizeof(Properties::Queue_family);
+    const std::size_t name_buffer_size_bytes = name.size() + 1u;
+    const std::size_t queue_families_buffer_size_bytes = queues.size() * sizeof(Queue_family);
     const std::size_t extensions_buffer_size_bytes = calculate_extensions_buffer_size();
     const std::size_t flags_buffer_size_bytes = 8u;
 
@@ -94,25 +94,24 @@ device::GPU::GPU(VkPhysicalDevice vk_physical_device_a,
         std::make_unique<std::byte[]>(gpu_info.layout.name_buffer.size_bytes + gpu_info.layout.queue_families_buffer.size_bytes +
                                       gpu_info.layout.extensions_buffer.size_bytes + gpu_info.layout.flags_buffer.size_bytes);
 
-    std::byte* p_current =
-        std::bit_cast<std::byte*>(std::copy(name_a.begin(), name_a.end(), std::bit_cast<char*>(gpu_info.buffer.get()))) + 1u;
+    std::byte* p_current = std::bit_cast<std::byte*>(std::copy(name.begin(), name.end(), std::bit_cast<char*>(gpu_info.buffer.get()))) + 1u;
 
     std::size_t qf_index = 0;
-    for (const VkQueueFamilyProperties& vk_queue_family_properties : queues_a)
+    for (const VkQueueFamilyProperties& vk_queue_family_properties : queues)
     {
-        Properties::Queue_family q { .kind = static_cast<Properties::Queue_family::Kind>(vk_queue_family_properties.queueFlags),
-                                     .count = vk_queue_family_properties.queueCount,
-                                     .index = qf_index++ };
+        Queue_family q { .kind = static_cast<Queue_family::Kind>(vk_queue_family_properties.queueFlags),
+                         .count = vk_queue_family_properties.queueCount,
+                         .index = qf_index++ };
         p_current = std::copy(std::bit_cast<std::byte*>(&q), std::bit_cast<std::byte*>(&q) + sizeof(q), p_current);
     }
 
-    for (std::string_view extension_name : extension_names_a)
+    for (std::string_view extension_name : extension_names)
     {
         p_current =
             std::bit_cast<std::byte*>(std::copy(extension_name.begin(), extension_name.end(), std::bit_cast<char*>(p_current))) + 1u;
     }
 
-    if (true == is_primary_a)
+    if (true == is_primary)
     {
         std::uint64_t* p_flags = std::bit_cast<std::uint64_t*>(gpu_info.buffer.get() + gpu_info.layout.flags_buffer.offset_bytes);
         bit::set(p_flags, 1u);
@@ -148,8 +147,7 @@ device::GPU::Properties device::GPU::get_properties() const
                                                                  gpu_info_buffer[this->info_idx].layout.flags_buffer.offset_bytes +
                                                                  gpu_info_buffer[this->info_idx].layout.flags_buffer.size_bytes);
 
-    return { .kind = this->from(vk_physical_device_properties.deviceType) |
-                     (true == bit::is(*p_flags, 1u) ? Properties::Kind::primary : Properties::Kind { 0x0 }),
+    return { .kind = this->from(vk_physical_device_properties.deviceType) | (true == bit::is(*p_flags, 1u) ? Kind::primary : Kind { 0x0 }),
              .features = this->from(vk_physical_device_features),
              .limits = this->from(vk_physical_device_properties.limits),
              .queue_families = gpu_info_buffer[this->info_idx].get_queue_families(),
@@ -158,36 +156,34 @@ device::GPU::Properties device::GPU::get_properties() const
 }
 
 std::vector<const device::GPU*>
-device::filter::operator()(std::span<const device::GPU*> devices_a, const canvas::Windowed* p_window, const filter::GPU& requirements_a)
+device::filter::operator()(std::span<const device::GPU*> devices, const canvas::Windowed* p_window, const filter::GPU& requirements)
 {
     std::vector<const device::GPU*> ret;
-    ret.reserve(devices_a.size());
+    ret.reserve(devices.size());
 
-    for (const device::GPU* p_gpu : devices_a)
+    for (const device::GPU* p_gpu : devices)
     {
         const device::GPU::Properties properties = p_gpu->get_properties();
 
-        if (true == common::bit::is_any(static_cast<std::uint32_t>(requirements_a.kind), static_cast<std::uint32_t>(properties.kind)) &&
+        if (true == common::bit::is_any(static_cast<std::uint32_t>(requirements.kind), static_cast<std::uint32_t>(properties.kind)) &&
             true ==
-                common::bit::flag::is(static_cast<std::uint32_t>(properties.features), static_cast<std::uint32_t>(requirements_a.features)))
+                common::bit::flag::is(static_cast<std::uint32_t>(properties.features), static_cast<std::uint32_t>(requirements.features)))
         {
             bool qf_compatible = true;
 
-            std::vector<device::GPU::Properties::Queue_family> qf_temp { properties.queue_families.begin(),
-                                                                         properties.queue_families.end() };
+            std::vector<device::GPU::Queue_family> qf_temp { properties.queue_families.begin(), properties.queue_families.end() };
 
-            for (std::size_t qf_req_index = 0; qf_req_index < requirements_a.queue_families.size() && true == qf_compatible; qf_req_index++)
+            for (std::size_t qf_req_index = 0; qf_req_index < requirements.queue_families.size() && true == qf_compatible; qf_req_index++)
             {
                 qf_compatible = false == qf_temp.empty();
 
                 if (true == qf_compatible)
                 {
-                    const filter::GPU::Queue_family qf_req = requirements_a.queue_families[qf_req_index];
-                    auto found_itr =
-                        std::find_if(qf_temp.begin(), qf_temp.end(), [&qf_req](const device::GPU::Properties::Queue_family& qf_a) -> bool {
-                            return qf_a.count >= qf_req.count && true == common::bit::flag::is(static_cast<std::uint32_t>(qf_a.kind),
-                                                                                               static_cast<std::uint32_t>(qf_req.kind));
-                        });
+                    const filter::GPU::Queue_family qf_req = requirements.queue_families[qf_req_index];
+                    auto found_itr = std::find_if(qf_temp.begin(), qf_temp.end(), [&qf_req](const device::GPU::Queue_family& qf) -> bool {
+                        return qf.count >= qf_req.count &&
+                               true == common::bit::flag::is(static_cast<std::uint32_t>(qf.kind), static_cast<std::uint32_t>(qf_req.kind));
+                    });
 
                     qf_compatible = found_itr != qf_temp.end();
 
@@ -200,20 +196,19 @@ device::filter::operator()(std::span<const device::GPU*> devices_a, const canvas
 
             if (true == qf_compatible)
             {
-                if ((false == requirements_a.extensions.empty() && false == properties.extensions.empty()) ||
-                    (true == requirements_a.extensions.empty() && true == properties.extensions.empty()) ||
-                    (true == requirements_a.extensions.empty() && false == properties.extensions.empty()))
+                if ((false == requirements.extensions.empty() && false == properties.extensions.empty()) ||
+                    (true == requirements.extensions.empty() && true == properties.extensions.empty()) ||
+                    (true == requirements.extensions.empty() && false == properties.extensions.empty()))
                 {
                     // chceck extensions
                     bool extension_compatible = true;
                     for (std::size_t extension_req_index = 0u;
-                         extension_req_index < requirements_a.extensions.size() && true == extension_compatible;
+                         extension_req_index < requirements.extensions.size() && true == extension_compatible;
                          extension_req_index++)
                     {
-                        auto found_itr =
-                            std::find_if(properties.extensions.begin(), properties.extensions.end(), [&](const char* p_name_a) {
-                                return 0 == strncmp(requirements_a.extensions[extension_req_index], p_name_a, 128u);
-                            });
+                        auto found_itr = std::find_if(properties.extensions.begin(), properties.extensions.end(), [&](const char* p_name) {
+                            return 0 == strncmp(requirements.extensions[extension_req_index], p_name, 128u);
+                        });
 
                         extension_compatible = properties.extensions.end() != found_itr;
                     }
@@ -222,10 +217,10 @@ device::filter::operator()(std::span<const device::GPU*> devices_a, const canvas
                     {
                         // check limits
                         bool limit_compatible = true;
-                        for (std::size_t limit_req_index = 0u; limit_req_index < requirements_a.limits.size() && true == limit_compatible;
+                        for (std::size_t limit_req_index = 0u; limit_req_index < requirements.limits.size() && true == limit_compatible;
                              limit_req_index++)
                         {
-                            const filter::GPU::Limit limit = requirements_a.limits[limit_req_index];
+                            const filter::GPU::Limit limit = requirements.limits[limit_req_index];
 
                             switch (limit.kind)
                             {
@@ -709,18 +704,18 @@ device::filter::operator()(std::span<const device::GPU*> devices_a, const canvas
                         if (swapchain_surface_formats.end() !=
                                 std::find(swapchain_surface_formats.begin(),
                                           swapchain_surface_formats.end(),
-                                          VkSurfaceFormatKHR { .format = static_cast<VkFormat>(requirements_a.swap_chain.pixel),
+                                          VkSurfaceFormatKHR { .format = static_cast<VkFormat>(requirements.swap_chain.pixel),
                                                                .colorSpace =
-                                                                   static_cast<VkColorSpaceKHR>(requirements_a.swap_chain.color_space) }) &&
+                                                                   static_cast<VkColorSpaceKHR>(requirements.swap_chain.color_space) }) &&
                             presentation_modes.end() != std::find(presentation_modes.begin(),
                                                                   presentation_modes.end(),
-                                                                  static_cast<VkPresentModeKHR>(requirements_a.swap_chain.mode)))
+                                                                  static_cast<VkPresentModeKHR>(requirements.swap_chain.mode)))
                         {
                             RECT window_rect;
                             GetClientRect(*p_window, &window_rect);
 
-                            if (vk_surface_capabilities.minImageCount <= requirements_a.swap_chain.images_count &&
-                                vk_surface_capabilities.maxImageCount >= requirements_a.swap_chain.images_count &&
+                            if (vk_surface_capabilities.minImageCount <= requirements.swap_chain.images_count &&
+                                vk_surface_capabilities.maxImageCount >= requirements.swap_chain.images_count &&
                                 (vk_surface_capabilities.currentExtent.width ==
                                      static_cast<std::uint32_t>(window_rect.right - window_rect.left) &&
                                  vk_surface_capabilities.currentExtent.height ==
@@ -743,21 +738,21 @@ device::filter::operator()(std::span<const device::GPU*> devices_a, const canvas
     return ret;
 }
 
-std::vector<const device::Display*> device::filter::operator()(std::span<const device::Display*> devices_a,
-                                                               const filter::Display& requirements_a)
+std::vector<const device::Display*> device::filter::operator()(std::span<const device::Display*> devices,
+                                                               const filter::Display& requirements)
 {
     std::vector<const device::Display*> ret;
 
-    for (const device::Display* p_display : devices_a)
+    for (const device::Display* p_display : devices)
     {
         const device::Display::Properties properties = p_display->get_properties();
 
-        if (properties.bits_per_pixel >= requirements_a.bits_per_pixel &&
-            (properties.logical_rect.size.w >= requirements_a.logical_size.w &&
-             properties.logical_rect.size.h >= requirements_a.logical_size.h) &&
-            (properties.physical_rect.size.w >= requirements_a.physical_size.w &&
-             properties.physical_rect.size.h >= requirements_a.physical_size.h) &&
-            true == bit::flag::is(static_cast<std::uint32_t>(requirements_a.kind), static_cast<std::uint32_t>(properties.kind)))
+        if (properties.bits_per_pixel >= requirements.bits_per_pixel &&
+            (properties.logical_rect.size.w >= requirements.logical_size.w &&
+             properties.logical_rect.size.h >= requirements.logical_size.h) &&
+            (properties.physical_rect.size.w >= requirements.physical_size.w &&
+             properties.physical_rect.size.h >= requirements.physical_size.h) &&
+            true == bit::flag::is(static_cast<std::uint32_t>(requirements.kind), static_cast<std::uint32_t>(properties.kind)))
         {
             ret.push_back(p_display);
         }
