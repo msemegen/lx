@@ -6,6 +6,24 @@ Graphics::Graphics(const PrimitiveProperties& primitive_properties_a,
                    const DepthProperties& depth_properties_a,
                    const StencilProperties& stencil_properties_a,
                    const MultisamplingProperties& multisampling_properties_a)
+    : vk_pipeline(VK_NULL_HANDLE)
+    , vk_pipeline_layout(VK_NULL_HANDLE)
 {
+    VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO, .pNext = nullptr, .flags = 0u
+    };
+
+    VkPipelineInputAssemblyStateCreateInfo vk_pipeline_input_assembly_state_create_info {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0u,
+        .topology = static_cast<VkPrimitiveTopology>(primitive_properties_a.topology),
+        .primitiveRestartEnable = true == primitive_properties_a.primitive_restart ? VK_TRUE : VK_FALSE
+    };
+
+    VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+                                                                    .pNext = nullptr,
+                                                                    .flags = 0u,
+                                                                    .pInputAssemblyState = &vk_pipeline_input_assembly_state_create_info };
 }
 } // namespace lx::gpu::pipelines

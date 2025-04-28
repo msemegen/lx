@@ -158,7 +158,7 @@ public:
     ~Graphics();
 
 private:
-    VkPipeline vk_pipeline;
-    VkPipelineLayout vk_pipeline_layout;
+    VkPipeline vk_pipeline = VK_NULL_HANDLE;
+    VkPipelineLayout vk_pipeline_layout = VK_NULL_HANDLE;
 };
 } // namespace lx::gpu::pipelines
