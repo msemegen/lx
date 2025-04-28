@@ -58,104 +58,104 @@ public:
 
     */
 
-    struct PrimitiveProperties
+    struct Properties
     {
-        enum class PolygonMode : std::uint32_t
+        struct Primitive
         {
-            fill = VK_POLYGON_MODE_FILL,
-            line = VK_POLYGON_MODE_LINE,
-            point = VK_POLYGON_MODE_POINT,
-        };
-        enum class CullMode : std::uint32_t
-        {
-            front = VK_CULL_MODE_FRONT_BIT,
-            back = VK_CULL_MODE_BACK_BIT
-        };
-        enum class FrontFace : std::uint32_t
-        {
-            counter_clockwise = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-            clockwise = VK_FRONT_FACE_CLOCKWISE
-        };
-        enum class Topology : std::uint32_t
-        {
-            point_list = VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
-            line_list = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-            line_strip = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
-            triangle_list = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-            triangle_strip = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
-            triangle_fan = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN,
-        };
+            enum class PolygonMode : std::uint32_t
+            {
+                fill = VK_POLYGON_MODE_FILL,
+                line = VK_POLYGON_MODE_LINE,
+                point = VK_POLYGON_MODE_POINT,
+            };
+            enum class CullMode : std::uint32_t
+            {
+                front = VK_CULL_MODE_FRONT_BIT,
+                back = VK_CULL_MODE_BACK_BIT
+            };
+            enum class FrontFace : std::uint32_t
+            {
+                counter_clockwise = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                clockwise = VK_FRONT_FACE_CLOCKWISE
+            };
+            enum class Topology : std::uint32_t
+            {
+                point_list = VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+                line_list = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+                line_strip = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
+                triangle_list = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+                triangle_strip = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+                triangle_fan = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN,
+            };
 
-        PolygonMode polygon_mode;
-        CullMode cull_mode;
-        FrontFace front_face;
-        Topology topology;
+            PolygonMode polygon_mode;
+            CullMode cull_mode;
+            FrontFace front_face;
+            Topology topology;
 
-        bool primitive_restart = false;
+            bool primitive_restart = false;
+        } primitive;
+        struct Depth
+        {
+            enum class CompareOperator : std::uint32_t
+            {
+                never = VK_COMPARE_OP_NEVER,
+                less = VK_COMPARE_OP_LESS,
+                equal = VK_COMPARE_OP_EQUAL,
+                less_or_equal = VK_COMPARE_OP_LESS_OR_EQUAL,
+                greater = VK_COMPARE_OP_GREATER,
+                not_equal = VK_COMPARE_OP_NOT_EQUAL,
+                greater_or_equal = VK_COMPARE_OP_GREATER_OR_EQUAL,
+                always = VK_COMPARE_OP_ALWAYS,
+            };
+
+            bool depth_test = false;
+            bool depth_write = false;
+            bool depth_bounds_test = false;
+            bool depth_bias = false;
+            bool depth_clamp = false;
+
+            float min_depth_bounds;
+            float max_depth_bounds;
+
+            float depth_bias_constantFactor;
+            float depth_bias_clamp;
+            float depth_bias_slope_factor;
+
+            CompareOperator compare_operator;
+        } depth;
+        struct Stencil
+        {
+            bool stencil_test = false;
+
+            VkStencilOpState front;
+            VkStencilOpState back;
+        } stencil;
+        struct Multisampling
+        {
+            enum class SampleCount
+            {
+                _1 = VK_SAMPLE_COUNT_1_BIT,
+                _2 = VK_SAMPLE_COUNT_2_BIT,
+                _4 = VK_SAMPLE_COUNT_4_BIT,
+                _8 = VK_SAMPLE_COUNT_8_BIT,
+                _16 = VK_SAMPLE_COUNT_16_BIT,
+                _32 = VK_SAMPLE_COUNT_32_BIT,
+                _64 = VK_SAMPLE_COUNT_64_BIT,
+            };
+
+            SampleCount rasterization_samples;
+            bool sample_shading = false;
+            bool alpha_to_coverage = false;
+            bool alpha_to_one = false;
+
+            float min_sample_shading;
+            const VkSampleMask* pSampleMask;
+        } multisampling;
     };
-    struct DepthProperties
-    {
-        enum class CompareOperator : std::uint32_t
-        {
-            never = VK_COMPARE_OP_NEVER,
-            less = VK_COMPARE_OP_LESS,
-            equal = VK_COMPARE_OP_EQUAL,
-            less_or_equal = VK_COMPARE_OP_LESS_OR_EQUAL,
-            greater = VK_COMPARE_OP_GREATER,
-            not_equal = VK_COMPARE_OP_NOT_EQUAL,
-            greater_or_equal = VK_COMPARE_OP_GREATER_OR_EQUAL,
-            always = VK_COMPARE_OP_ALWAYS,
-        };
 
-        bool depth_test = false;
-        bool depth_write = false;
-        bool depth_bounds_test = false;
-        bool depth_bias = false;
-        bool depth_clamp = false;
-
-        float min_depth_bounds;
-        float max_depth_bounds;
-
-        float depth_bias_constantFactor;
-        float depth_bias_clamp;
-        float depth_bias_slope_factor;
-
-        CompareOperator compare_operator;
-    };
-    struct StencilProperties
-    {
-        bool stencil_test = false;
-
-        VkStencilOpState front;
-        VkStencilOpState back;
-    };
-    struct MultisamplingProperties
-    {
-        enum class SampleCount
-        {
-            _1 = VK_SAMPLE_COUNT_1_BIT,
-            _2 = VK_SAMPLE_COUNT_2_BIT,
-            _4 = VK_SAMPLE_COUNT_4_BIT,
-            _8 = VK_SAMPLE_COUNT_8_BIT,
-            _16 = VK_SAMPLE_COUNT_16_BIT,
-            _32 = VK_SAMPLE_COUNT_32_BIT,
-            _64 = VK_SAMPLE_COUNT_64_BIT,
-        };
-
-        SampleCount rasterization_samples;
-        bool sample_shading = false;
-        bool alpha_to_coverage = false;
-        bool alpha_to_one = false;
-
-        float min_sample_shading;
-        const VkSampleMask* pSampleMask;
-    };
-
-    Graphics(const PrimitiveProperties& primitive_properties_a,
-             const DepthProperties& depth_properties_a,
-             const StencilProperties& stencil_properties_a,
-             const MultisamplingProperties& multisampling_properties_a);
-    ~Graphics();
+    Graphics(const Properties& properties_a);
+    ~Graphics() {}
 
 private:
     VkPipeline vk_pipeline = VK_NULL_HANDLE;

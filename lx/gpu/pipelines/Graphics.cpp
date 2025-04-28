@@ -2,10 +2,7 @@
 #include <lx/gpu/pipelines/Graphics.hpp>
 
 namespace lx::gpu::pipelines {
-Graphics::Graphics(const PrimitiveProperties& primitive_properties_a,
-                   const DepthProperties& depth_properties_a,
-                   const StencilProperties& stencil_properties_a,
-                   const MultisamplingProperties& multisampling_properties_a)
+Graphics::Graphics(const Properties& properties_a)
     : vk_pipeline(VK_NULL_HANDLE)
     , vk_pipeline_layout(VK_NULL_HANDLE)
 {
@@ -17,8 +14,8 @@ Graphics::Graphics(const PrimitiveProperties& primitive_properties_a,
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0u,
-        .topology = static_cast<VkPrimitiveTopology>(primitive_properties_a.topology),
-        .primitiveRestartEnable = true == primitive_properties_a.primitive_restart ? VK_TRUE : VK_FALSE
+        .topology = static_cast<VkPrimitiveTopology>(properties_a.primitive.topology),
+        .primitiveRestartEnable = true == properties_a.primitive.primitive_restart ? VK_TRUE : VK_FALSE
     };
 
     VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
