@@ -255,7 +255,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
                 bool found = false;
                 win32_display_device.cb = sizeof(win32_display_device);
 
-                while (false == found && TRUE == EnumDisplayDevices(nullptr, 0, &win32_display_device, 0u))
+                for (DWORD dev_index = 0u; false == found && TRUE == EnumDisplayDevices(nullptr, dev_index, &win32_display_device, 0u);
+                     dev_index++)
                 {
                     found = DISPLAY_DEVICE_PRIMARY_DEVICE == (win32_display_device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE);
 
