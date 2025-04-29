@@ -2,9 +2,7 @@
 #include <lx/gpu/pipelines/Graphics.hpp>
 
 namespace lx::gpu::pipelines {
-Graphics::Graphics(const Properties& properties_a)
-    : vk_pipeline(VK_NULL_HANDLE)
-    , vk_pipeline_layout(VK_NULL_HANDLE)
+void Graphics::create(const Properties& properties_a)
 {
     VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO, .pNext = nullptr, .flags = 0u
@@ -23,4 +21,6 @@ Graphics::Graphics(const Properties& properties_a)
                                                                     .flags = 0u,
                                                                     .pInputAssemblyState = &vk_pipeline_input_assembly_state_create_info };
 }
+
+void Graphics::destroy() {}
 } // namespace lx::gpu::pipelines

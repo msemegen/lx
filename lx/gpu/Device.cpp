@@ -15,7 +15,7 @@ using namespace lx::containers;
 using namespace lx::devices;
 using namespace lx::utils;
 
-Device::Device(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const VkExtent2D& swap_buffer_extent_a, const Properties& properties_a)
+void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const VkExtent2D& swap_buffer_extent_a, const Properties& properties_a)
 {
     assert(false == properties_a.queue_families.empty());
     assert(false == gpu_a.queue_families.is_empty());

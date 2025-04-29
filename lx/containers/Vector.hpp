@@ -12,17 +12,12 @@ template<typename Type, std::size_t capacity = 0u> class Vector
 {
 public:
     Vector() = default;
+    Vector(Vector<Type, capacity>&&) = default;
+
     Vector(const Vector<Type, capacity>& other_a)
     {
         this->length = other_a.get_length();
         std::copy(other_a.get_buffer(), other_a.get_buffer() + this->length, this->buffer);
-    }
-    Vector(Vector<Type, capacity>&& other_a)
-    {
-        this->length = other_a.get_length();
-        std::copy(other_a.get_buffer(), other_a.get_buffer() + this->length, this->buffer);
-
-        other_a.length = 0u;
     }
     Vector(std::initializer_list<Type> list_a)
         : length(list_a.size())
@@ -74,6 +69,13 @@ public:
         }
 
         return false;
+    }
+
+    template<typename... Arg> void emplace_back(Arg&&... args_a)
+    {
+        assert(this->length < capacity);
+
+        new (&(this->buffer[this->length++])) Type(std::forward<Arg>(args_a)...);
     }
 
     bool pop_back()
@@ -227,6 +229,12 @@ public:
         }
     }
 
+    template<typename... Arg> void emplace_back(Arg&&... args_a)
+    {
+        this->resize(this->get_length() + 2u);
+        new (&(this->buffer[this->length++])) Type(std::forward<Arg>(args_a)...);
+    }
+
     bool pop_back()
     {
         if (this->length >= 0u)
@@ -236,12 +244,6 @@ public:
         }
 
         return false;
-    }
-
-    template<typename... Arg> void emplace_back(Arg&&... args_a)
-    {
-        this->resize(this->get_length() + 2u);
-        new (&(this->buffer[this->length++])) Type(std::forward<Arg>(args_a)...);
     }
 
     void resize(std::size_t capacity_a)

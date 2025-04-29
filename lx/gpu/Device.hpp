@@ -2,10 +2,12 @@
 
 // lx
 #include <lx/Windower.hpp>
+#include <lx/common/non_constructible.hpp>
 #include <lx/common/non_copyable.hpp>
 #include <lx/containers/Vector.hpp>
 #include <lx/devices/GPU.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
+#include <lx/gpu/pipelines/Graphics.hpp>
 
 // std
 #include <cassert>
@@ -15,6 +17,11 @@ class Device : private lx::common::non_copyable
 {
 public:
     using Feature = devices::GPU::Feature;
+
+    struct s : private lx::common::non_constructible
+    {
+        static constexpr std::size_t graphic_pipelines_buffer_capacity = 128u;
+    };
 
     struct QueueFamily
     {
@@ -77,8 +84,6 @@ public:
         SwapChain swap_chain;
     };
 
-    Device() = default;
-    Device(Device&&) = default;
     [[nodiscard]] bool is_created() const
     {
         return VK_NULL_HANDLE != this->vk_device && VK_NULL_HANDLE != this->vk_swap_chain && false == this->vk_queues.is_empty() &&
@@ -94,13 +99,14 @@ public:
         return this->vk_swap_chain;
     }
 
-private:
-    Device(const lx::devices::GPU& gpu_a,
-           VkSurfaceKHR vk_surface_a,
-           const VkExtent2D& swap_buffer_extent_a,
-           const Properties& properties_a);
-    ~Device() = default;
+    template<typename Type> [[nodiscard]] Type* create(typename const Type::Properties& properties) = delete;
+    template<typename Type> void destroy(lx::common::out<Type*> device_a) = delete;
 
+private:
+    void create(const lx::devices::GPU& gpu_a,
+                VkSurfaceKHR vk_surface_a,
+                const VkExtent2D& swap_buffer_extent_a,
+                const Properties& properties_a);
     void destroy()
     {
         if (VK_NULL_HANDLE != this->vk_swap_chain)
@@ -123,6 +129,24 @@ private:
     lx::containers::Vector<VkImage> vk_swap_chain_images;
     lx::containers::Vector<VkImageView> vk_swap_chain_image_views;
 
+    lx::containers::Vector<lx::gpu::pipelines::Graphics, s::graphic_pipelines_buffer_capacity> graphics_pipelines;
+
     friend class Context;
 };
+
+template<> inline [[nodiscard]] lx::gpu::pipelines::Graphics*
+Device::create<lx::gpu::pipelines::Graphics>(const lx::gpu::pipelines::Graphics::Properties& properties_a)
+{
+    lx::gpu::pipelines::Graphics pipeline;
+    pipeline.create(properties_a);
+
+    if (true == pipeline.is_created())
+    {
+        this->graphics_pipelines.emplace_back(std::move(pipeline));
+        return &(this->graphics_pipelines.get_back());
+    }
+
+    return nullptr;
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::pipelines::Graphics*> device_a) {}
 } // namespace lx::gpu

@@ -154,11 +154,18 @@ public:
         } multisampling;
     };
 
-    Graphics(const Properties& properties_a);
-    ~Graphics() {}
+    bool is_created() const
+    {
+        return VK_NULL_HANDLE != this->vk_pipeline && VK_NULL_HANDLE != this->vk_pipeline_layout;
+    }
 
 private:
+    void create(const Properties& properties_a);
+    void destroy();
+
     VkPipeline vk_pipeline = VK_NULL_HANDLE;
     VkPipelineLayout vk_pipeline_layout = VK_NULL_HANDLE;
+
+    friend class Device;
 };
 } // namespace lx::gpu::pipelines

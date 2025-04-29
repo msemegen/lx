@@ -28,6 +28,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
     using namespace lx::common;
     using namespace lx::gpu;
     using namespace lx::utils;
+    using namespace lx::gpu::pipelines;
 
     log_set_filter(logger::dbg | logger::inf | logger::err);
 
@@ -83,6 +84,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
 
             if (true == gpu_device1->is_created()/* && true == gpu_device2->is_created()*/)
             {
+                std::ignore = gpu_device1->create<Graphics>(Graphics::Properties {});
                 log_inf("GPU context created");
 
                 windower_a.set_visible(canvas1, true);
