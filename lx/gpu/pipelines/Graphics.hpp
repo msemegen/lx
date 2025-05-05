@@ -94,7 +94,7 @@ public:
         } primitive;
         struct Depth
         {
-            enum class CompareOperator : std::uint32_t
+            enum class Compare : std::uint32_t
             {
                 never = VK_COMPARE_OP_NEVER,
                 less = VK_COMPARE_OP_LESS,
@@ -106,23 +106,27 @@ public:
                 always = VK_COMPARE_OP_ALWAYS,
             };
 
-            bool depth_test = false;
-            bool depth_write = false;
-            bool depth_bounds_test = false;
-            bool depth_bias = false;
-            bool depth_clamp = false;
+            bool test = false;
+            bool write = false;
+            bool bounds_test = false;
+            bool bias = false;
+            bool clamp = false;
 
-            float min_depth_bounds;
-            float max_depth_bounds;
+            float min_bounds;
+            float max_bounds;
 
-            float depth_bias_constantFactor;
-            float depth_bias_clamp;
-            float depth_bias_slope_factor;
+            float bias_constant_factor;
+            float bias_clamp;
+            float bias_slope_factor;
 
-            CompareOperator compare_operator;
+            Compare compare;
         } depth;
         struct Stencil
         {
+            struct State
+            {
+
+            };
             /*
 typedef enum VkStencilOp {
     VK_STENCIL_OP_KEEP = 0,
@@ -148,8 +152,8 @@ typedef struct VkStencilOpState {
             */
             bool test = false;
 
-            VkStencilOpState front;
-            VkStencilOpState back;
+            State front;
+            State back;
         } stencil;
         struct Multisampling
         {
