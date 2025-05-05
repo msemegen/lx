@@ -7,6 +7,7 @@
 #include <lx/gpu/loader/vulkan.hpp>
 
 // std
+#include <array>
 #include <span>
 
 namespace lx::gpu::pipelines {
@@ -40,13 +41,6 @@ public:
         const VkSampleMask*                      pSampleMask;
     } VkPipelineMultisampleStateCreateInfo;
 
-    typedef struct VkPipelineColorBlendStateCreateInfo {
-        VkBool32                                      logicOpEnable;
-        VkLogicOp                                     logicOp;
-        uint32_t                                      attachmentCount;
-        const VkPipelineColorBlendAttachmentState*    pAttachments;
-        float                                         blendConstants[4];
-    } VkPipelineColorBlendStateCreateInfo;
 
     typedef struct VkPipelineDynamicStateCreateInfo {
         uint32_t                             dynamicStateCount;
@@ -152,7 +146,7 @@ typedef struct VkStencilOpState {
     uint32_t       reference;
 } VkStencilOpState;
             */
-            bool stencil_test = false;
+            bool test = false;
 
             VkStencilOpState front;
             VkStencilOpState back;
@@ -214,79 +208,77 @@ typedef struct VkStencilOpState {
                     zero = VK_BLEND_OP_ZERO_EXT,
                     source = VK_BLEND_OP_SRC_EXT,
                     estination = VK_BLEND_OP_DST_EXT,
-                    VK_BLEND_OP_SRC_OVER_EXT,
-                    VK_BLEND_OP_DST_OVER_EXT,
-                    VK_BLEND_OP_SRC_IN_EXT,
-                    VK_BLEND_OP_DST_IN_EXT,
-                    VK_BLEND_OP_SRC_OUT_EXT,
-                    VK_BLEND_OP_DST_OUT_EXT,
-                    VK_BLEND_OP_SRC_ATOP_EXT,
-                    VK_BLEND_OP_DST_ATOP_EXT,
-                    VK_BLEND_OP_XOR_EXT,
-                    VK_BLEND_OP_MULTIPLY_EXT,
-                    VK_BLEND_OP_SCREEN_EXT,
-                    VK_BLEND_OP_OVERLAY_EXT,
-                    VK_BLEND_OP_DARKEN_EXT,
-                    VK_BLEND_OP_LIGHTEN_EXT,
-                    VK_BLEND_OP_COLORDODGE_EXT,
-                    VK_BLEND_OP_COLORBURN_EXT,
-                    VK_BLEND_OP_HARDLIGHT_EXT,
-                    VK_BLEND_OP_SOFTLIGHT_EXT,
-                    VK_BLEND_OP_DIFFERENCE_EXT,
-                    VK_BLEND_OP_EXCLUSION_EXT,
-                    VK_BLEND_OP_INVERT_EXT,
-                    VK_BLEND_OP_INVERT_RGB_EXT,
-                    VK_BLEND_OP_LINEARDODGE_EXT,
-                    VK_BLEND_OP_LINEARBURN_EXT,
-                    VK_BLEND_OP_VIVIDLIGHT_EXT,
-                    VK_BLEND_OP_LINEARLIGHT_EXT,
-                    VK_BLEND_OP_PINLIGHT_EXT,
-                    VK_BLEND_OP_HARDMIX_EXT,
-                    VK_BLEND_OP_HSL_HUE_EXT,
-                    VK_BLEND_OP_HSL_SATURATION_EXT,
-                    VK_BLEND_OP_HSL_COLOR_EXT,
-                    VK_BLEND_OP_HSL_LUMINOSITY_EXT,
-                    VK_BLEND_OP_PLUS_EXT,
-                    VK_BLEND_OP_PLUS_CLAMPED_EXT,
-                    VK_BLEND_OP_PLUS_CLAMPED_ALPHA_EXT,
-                    VK_BLEND_OP_PLUS_DARKER_EXT,
-                    VK_BLEND_OP_MINUS_EXT,
-                    VK_BLEND_OP_MINUS_CLAMPED_EXT,
-                    VK_BLEND_OP_CONTRAST_EXT,
-                    VK_BLEND_OP_INVERT_OVG_EXT,
-                    VK_BLEND_OP_RED_EXT,
-                    VK_BLEND_OP_GREEN_EXT,
-                    VK_BLEND_OP_BLUE_EXT,
+                    source_over_destination = VK_BLEND_OP_SRC_OVER_EXT,
+                    destination_over_source = VK_BLEND_OP_DST_OVER_EXT,
+                    source_in = VK_BLEND_OP_SRC_IN_EXT,
+                    destination_in = VK_BLEND_OP_DST_IN_EXT,
+                    source_out = VK_BLEND_OP_SRC_OUT_EXT,
+                    destination_out = VK_BLEND_OP_DST_OUT_EXT,
+                    source_atop = VK_BLEND_OP_SRC_ATOP_EXT,
+                    destination_atop = VK_BLEND_OP_DST_ATOP_EXT,
+                    xor_ = VK_BLEND_OP_XOR_EXT,
+                    multiply = VK_BLEND_OP_MULTIPLY_EXT,
+                    screen = VK_BLEND_OP_SCREEN_EXT,
+                    overlay = VK_BLEND_OP_OVERLAY_EXT,
+                    darken = VK_BLEND_OP_DARKEN_EXT,
+                    lighten = VK_BLEND_OP_LIGHTEN_EXT,
+                    color_dodge = VK_BLEND_OP_COLORDODGE_EXT,
+                    color_burn = VK_BLEND_OP_COLORBURN_EXT,
+                    hard_light = VK_BLEND_OP_HARDLIGHT_EXT,
+                    soft_light = VK_BLEND_OP_SOFTLIGHT_EXT,
+                    difference = VK_BLEND_OP_DIFFERENCE_EXT,
+                    exclusion = VK_BLEND_OP_EXCLUSION_EXT,
+                    invert = VK_BLEND_OP_INVERT_EXT,
+                    invert_rgb = VK_BLEND_OP_INVERT_RGB_EXT,
+                    lienear_dodge = VK_BLEND_OP_LINEARDODGE_EXT,
+                    linear_burn = VK_BLEND_OP_LINEARBURN_EXT,
+                    vivid_light = VK_BLEND_OP_VIVIDLIGHT_EXT,
+                    linear_light = VK_BLEND_OP_LINEARLIGHT_EXT,
+                    pin_light = VK_BLEND_OP_PINLIGHT_EXT,
+                    hard_mix = VK_BLEND_OP_HARDMIX_EXT,
+                    hsl_hue = VK_BLEND_OP_HSL_HUE_EXT,
+                    hsl_saturation = VK_BLEND_OP_HSL_SATURATION_EXT,
+                    hsl_color = VK_BLEND_OP_HSL_COLOR_EXT,
+                    hsl_luminosity = VK_BLEND_OP_HSL_LUMINOSITY_EXT,
+                    plus = VK_BLEND_OP_PLUS_EXT,
+                    plus_clamped = VK_BLEND_OP_PLUS_CLAMPED_EXT,
+                    plus_clamped_alpha = VK_BLEND_OP_PLUS_CLAMPED_ALPHA_EXT,
+                    plus_darker = VK_BLEND_OP_PLUS_DARKER_EXT,
+                    minus = VK_BLEND_OP_MINUS_EXT,
+                    minus_clamped = VK_BLEND_OP_MINUS_CLAMPED_EXT,
+                    contrast = VK_BLEND_OP_CONTRAST_EXT,
+                    invert_openvg = VK_BLEND_OP_INVERT_OVG_EXT,
+                    red = VK_BLEND_OP_RED_EXT,
+                    green = VK_BLEND_OP_GREEN_EXT,
+                    blue = VK_BLEND_OP_BLUE_EXT,
                 };
-                // typedef struct VkPipelineColorBlendAttachmentState
-                //{
-                //     VkBool32 blendEnable;
-                //     VkBlendFactor srcColorBlendFactor;
-                //     VkBlendFactor dstColorBlendFactor;
-                //     VkBlendOp colorBlendOp;
-                //     VkBlendFactor srcAlphaBlendFactor;
-                //     VkBlendFactor dstAlphaBlendFactor;
-                //     VkBlendOp alphaBlendOp;
-                //     VkColorComponentFlags colorWriteMask;
-                // } VkPipelineColorBlendAttachmentState;
+                enum WriteMask : std::uint32_t
+                {
+                    r = VK_COLOR_COMPONENT_R_BIT,
+                    g = VK_COLOR_COMPONENT_G_BIT,
+                    b = VK_COLOR_COMPONENT_B_BIT,
+                    a = VK_COLOR_COMPONENT_A_BIT
+                };
 
                 bool enable;
+                WriteMask write_mask;
 
                 struct Color
                 {
-
-                }color;
+                    Factor source_factor;
+                    Factor destination_factor;
+                    Operator opr;
+                } color;
                 struct Alpha
                 {
-
-                }alpha;
-
-                Factor source_color_blend_factor;
-                Factor destination_color_blend_factor;
-                Operator color;
+                    Factor source_factor;
+                    Factor destination_factor;
+                    Operator opr;
+                } alpha;
             };
 
             std::span<Attachment> attachments;
+            std::array<float, 4u> constants;
         } blend;
 
         std::span<Clip> clips;
