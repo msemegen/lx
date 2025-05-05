@@ -57,8 +57,11 @@ public:
 
     struct Properties
     {
-        std::span<Viewport<float>> viewports;
-        std::span<lx::common::Rect<std::int32_t, std::int32_t>> scissors;
+        struct Clip
+        {
+            Viewport<float> viewport;
+            lx::common::Rect<std::int32_t, std::int32_t> scissors;
+        };
 
         struct Primitive
         {
@@ -177,98 +180,116 @@ typedef struct VkStencilOpState {
         } multisampling;
         struct Blend
         {
-            /*
-typedef enum VkBlendOp {
-    VK_BLEND_OP_ADD = 0,
-    VK_BLEND_OP_SUBTRACT = 1,
-    VK_BLEND_OP_REVERSE_SUBTRACT = 2,
-    VK_BLEND_OP_MIN = 3,
-    VK_BLEND_OP_MAX = 4,
-    VK_BLEND_OP_ZERO_EXT = 1000148000,
-    VK_BLEND_OP_SRC_EXT = 1000148001,
-    VK_BLEND_OP_DST_EXT = 1000148002,
-    VK_BLEND_OP_SRC_OVER_EXT = 1000148003,
-    VK_BLEND_OP_DST_OVER_EXT = 1000148004,
-    VK_BLEND_OP_SRC_IN_EXT = 1000148005,
-    VK_BLEND_OP_DST_IN_EXT = 1000148006,
-    VK_BLEND_OP_SRC_OUT_EXT = 1000148007,
-    VK_BLEND_OP_DST_OUT_EXT = 1000148008,
-    VK_BLEND_OP_SRC_ATOP_EXT = 1000148009,
-    VK_BLEND_OP_DST_ATOP_EXT = 1000148010,
-    VK_BLEND_OP_XOR_EXT = 1000148011,
-    VK_BLEND_OP_MULTIPLY_EXT = 1000148012,
-    VK_BLEND_OP_SCREEN_EXT = 1000148013,
-    VK_BLEND_OP_OVERLAY_EXT = 1000148014,
-    VK_BLEND_OP_DARKEN_EXT = 1000148015,
-    VK_BLEND_OP_LIGHTEN_EXT = 1000148016,
-    VK_BLEND_OP_COLORDODGE_EXT = 1000148017,
-    VK_BLEND_OP_COLORBURN_EXT = 1000148018,
-    VK_BLEND_OP_HARDLIGHT_EXT = 1000148019,
-    VK_BLEND_OP_SOFTLIGHT_EXT = 1000148020,
-    VK_BLEND_OP_DIFFERENCE_EXT = 1000148021,
-    VK_BLEND_OP_EXCLUSION_EXT = 1000148022,
-    VK_BLEND_OP_INVERT_EXT = 1000148023,
-    VK_BLEND_OP_INVERT_RGB_EXT = 1000148024,
-    VK_BLEND_OP_LINEARDODGE_EXT = 1000148025,
-    VK_BLEND_OP_LINEARBURN_EXT = 1000148026,
-    VK_BLEND_OP_VIVIDLIGHT_EXT = 1000148027,
-    VK_BLEND_OP_LINEARLIGHT_EXT = 1000148028,
-    VK_BLEND_OP_PINLIGHT_EXT = 1000148029,
-    VK_BLEND_OP_HARDMIX_EXT = 1000148030,
-    VK_BLEND_OP_HSL_HUE_EXT = 1000148031,
-    VK_BLEND_OP_HSL_SATURATION_EXT = 1000148032,
-    VK_BLEND_OP_HSL_COLOR_EXT = 1000148033,
-    VK_BLEND_OP_HSL_LUMINOSITY_EXT = 1000148034,
-    VK_BLEND_OP_PLUS_EXT = 1000148035,
-    VK_BLEND_OP_PLUS_CLAMPED_EXT = 1000148036,
-    VK_BLEND_OP_PLUS_CLAMPED_ALPHA_EXT = 1000148037,
-    VK_BLEND_OP_PLUS_DARKER_EXT = 1000148038,
-    VK_BLEND_OP_MINUS_EXT = 1000148039,
-    VK_BLEND_OP_MINUS_CLAMPED_EXT = 1000148040,
-    VK_BLEND_OP_CONTRAST_EXT = 1000148041,
-    VK_BLEND_OP_INVERT_OVG_EXT = 1000148042,
-    VK_BLEND_OP_RED_EXT = 1000148043,
-    VK_BLEND_OP_GREEN_EXT = 1000148044,
-    VK_BLEND_OP_BLUE_EXT = 1000148045,
-    VK_BLEND_OP_MAX_ENUM = 0x7FFFFFFF
-} VkBlendOp;
+            struct Attachment
+            {
+                enum class Factor : std::uint32_t
+                {
+                    zero = VK_BLEND_FACTOR_ZERO,
+                    one = VK_BLEND_FACTOR_ONE,
+                    source = VK_BLEND_FACTOR_SRC_COLOR,
+                    one_minus_source = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+                    destination = VK_BLEND_FACTOR_DST_COLOR,
+                    one_minus_destination = VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+                    source_alpha = VK_BLEND_FACTOR_SRC_ALPHA,
+                    one_minus_source_alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                    destination_alpha = VK_BLEND_FACTOR_DST_ALPHA,
+                    one_minus_destination_alpha = VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+                    constant_color = VK_BLEND_FACTOR_CONSTANT_COLOR,
+                    one_minus_constant_color = VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
+                    constant_alpha = VK_BLEND_FACTOR_CONSTANT_ALPHA,
+                    one_minus_constant_alpha = VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA,
+                    source_alpha_saturate = VK_BLEND_FACTOR_SRC_ALPHA_SATURATE,
+                    source_1_color = VK_BLEND_FACTOR_SRC1_COLOR,
+                    one_minus_source_1_color = VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR,
+                    source_1_alpha = VK_BLEND_FACTOR_SRC1_ALPHA,
+                    one_minus_source_1_alpha = VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA,
+                };
+                enum class Operator : std::uint32_t
+                {
+                    add = VK_BLEND_OP_ADD,
+                    substract = VK_BLEND_OP_SUBTRACT,
+                    reverse_substract = VK_BLEND_OP_REVERSE_SUBTRACT,
+                    min = VK_BLEND_OP_MIN,
+                    max = VK_BLEND_OP_MAX,
+                    zero = VK_BLEND_OP_ZERO_EXT,
+                    source = VK_BLEND_OP_SRC_EXT,
+                    estination = VK_BLEND_OP_DST_EXT,
+                    VK_BLEND_OP_SRC_OVER_EXT,
+                    VK_BLEND_OP_DST_OVER_EXT,
+                    VK_BLEND_OP_SRC_IN_EXT,
+                    VK_BLEND_OP_DST_IN_EXT,
+                    VK_BLEND_OP_SRC_OUT_EXT,
+                    VK_BLEND_OP_DST_OUT_EXT,
+                    VK_BLEND_OP_SRC_ATOP_EXT,
+                    VK_BLEND_OP_DST_ATOP_EXT,
+                    VK_BLEND_OP_XOR_EXT,
+                    VK_BLEND_OP_MULTIPLY_EXT,
+                    VK_BLEND_OP_SCREEN_EXT,
+                    VK_BLEND_OP_OVERLAY_EXT,
+                    VK_BLEND_OP_DARKEN_EXT,
+                    VK_BLEND_OP_LIGHTEN_EXT,
+                    VK_BLEND_OP_COLORDODGE_EXT,
+                    VK_BLEND_OP_COLORBURN_EXT,
+                    VK_BLEND_OP_HARDLIGHT_EXT,
+                    VK_BLEND_OP_SOFTLIGHT_EXT,
+                    VK_BLEND_OP_DIFFERENCE_EXT,
+                    VK_BLEND_OP_EXCLUSION_EXT,
+                    VK_BLEND_OP_INVERT_EXT,
+                    VK_BLEND_OP_INVERT_RGB_EXT,
+                    VK_BLEND_OP_LINEARDODGE_EXT,
+                    VK_BLEND_OP_LINEARBURN_EXT,
+                    VK_BLEND_OP_VIVIDLIGHT_EXT,
+                    VK_BLEND_OP_LINEARLIGHT_EXT,
+                    VK_BLEND_OP_PINLIGHT_EXT,
+                    VK_BLEND_OP_HARDMIX_EXT,
+                    VK_BLEND_OP_HSL_HUE_EXT,
+                    VK_BLEND_OP_HSL_SATURATION_EXT,
+                    VK_BLEND_OP_HSL_COLOR_EXT,
+                    VK_BLEND_OP_HSL_LUMINOSITY_EXT,
+                    VK_BLEND_OP_PLUS_EXT,
+                    VK_BLEND_OP_PLUS_CLAMPED_EXT,
+                    VK_BLEND_OP_PLUS_CLAMPED_ALPHA_EXT,
+                    VK_BLEND_OP_PLUS_DARKER_EXT,
+                    VK_BLEND_OP_MINUS_EXT,
+                    VK_BLEND_OP_MINUS_CLAMPED_EXT,
+                    VK_BLEND_OP_CONTRAST_EXT,
+                    VK_BLEND_OP_INVERT_OVG_EXT,
+                    VK_BLEND_OP_RED_EXT,
+                    VK_BLEND_OP_GREEN_EXT,
+                    VK_BLEND_OP_BLUE_EXT,
+                };
+                // typedef struct VkPipelineColorBlendAttachmentState
+                //{
+                //     VkBool32 blendEnable;
+                //     VkBlendFactor srcColorBlendFactor;
+                //     VkBlendFactor dstColorBlendFactor;
+                //     VkBlendOp colorBlendOp;
+                //     VkBlendFactor srcAlphaBlendFactor;
+                //     VkBlendFactor dstAlphaBlendFactor;
+                //     VkBlendOp alphaBlendOp;
+                //     VkColorComponentFlags colorWriteMask;
+                // } VkPipelineColorBlendAttachmentState;
 
-typedef enum VkBlendFactor {
-    VK_BLEND_FACTOR_ZERO = 0,
-    VK_BLEND_FACTOR_ONE = 1,
-    VK_BLEND_FACTOR_SRC_COLOR = 2,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR = 3,
-    VK_BLEND_FACTOR_DST_COLOR = 4,
-    VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR = 5,
-    VK_BLEND_FACTOR_SRC_ALPHA = 6,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA = 7,
-    VK_BLEND_FACTOR_DST_ALPHA = 8,
-    VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA = 9,
-    VK_BLEND_FACTOR_CONSTANT_COLOR = 10,
-    VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR = 11,
-    VK_BLEND_FACTOR_CONSTANT_ALPHA = 12,
-    VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA = 13,
-    VK_BLEND_FACTOR_SRC_ALPHA_SATURATE = 14,
-    VK_BLEND_FACTOR_SRC1_COLOR = 15,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR = 16,
-    VK_BLEND_FACTOR_SRC1_ALPHA = 17,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA = 18,
-    VK_BLEND_FACTOR_MAX_ENUM = 0x7FFFFFFF
-} VkBlendFactor;
+                bool enable;
 
-typedef struct VkPipelineColorBlendAttachmentState {
-    VkBool32                 blendEnable;
-    VkBlendFactor            srcColorBlendFactor;
-    VkBlendFactor            dstColorBlendFactor;
-    VkBlendOp                colorBlendOp;
-    VkBlendFactor            srcAlphaBlendFactor;
-    VkBlendFactor            dstAlphaBlendFactor;
-    VkBlendOp                alphaBlendOp;
-    VkColorComponentFlags    colorWriteMask;
-} VkPipelineColorBlendAttachmentState;
+                struct Color
+                {
 
-            */
+                }color;
+                struct Alpha
+                {
+
+                }alpha;
+
+                Factor source_color_blend_factor;
+                Factor destination_color_blend_factor;
+                Operator color;
+            };
+
+            std::span<Attachment> attachments;
         } blend;
+
+        std::span<Clip> clips;
     };
 
     bool is_created() const

@@ -16,10 +16,17 @@ void Graphics::create(const Properties& properties_a)
         .primitiveRestartEnable = true == properties_a.primitive.primitive_restart ? VK_TRUE : VK_FALSE
     };
 
+    VkPipelineColorBlendStateCreateInfo vk_pipeline_color_blend_state_create_info {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0x0u
+    };
+
     VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
                                                                     .pNext = nullptr,
                                                                     .flags = 0u,
-                                                                    .pInputAssemblyState = &vk_pipeline_input_assembly_state_create_info };
+                                                                    .pInputAssemblyState = &vk_pipeline_input_assembly_state_create_info,
+                                                                    .pColorBlendState = &vk_pipeline_color_blend_state_create_info };
 }
 
 void Graphics::destroy() {}
