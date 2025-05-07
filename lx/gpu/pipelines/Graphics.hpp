@@ -3,6 +3,7 @@
 // lx
 #include <lx/common/Rect.hpp>
 #include <lx/common/non_copyable.hpp>
+#include <lx/containers/Vector.hpp>
 #include <lx/gpu/Viewport.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
 
@@ -15,12 +16,6 @@ class Graphics : private lx::common::non_copyable
 {
 public:
     /*
-    typedef struct VkPipelineShaderStageCreateInfo {
-        VkShaderStageFlagBits               stage;
-        VkShaderModule                      module;
-        const char*                         pName;
-        const VkSpecializationInfo*         pSpecializationInfo;
-    } VkPipelineShaderStageCreateInfo;
     typedef struct VkPipelineVertexInputStateCreateInfo {
         uint32_t                                    vertexBindingDescriptionCount;
         const VkVertexInputBindingDescription*      pVertexBindingDescriptions;
@@ -55,6 +50,19 @@ public:
         {
             Viewport<float> viewport;
             lx::common::Rect<std::int32_t, std::int32_t> scissors;
+        };
+        struct Shader
+        {
+            enum class Kind : std::uint64_t
+            {
+                vertex = VK_SHADER_STAGE_VERTEX_BIT,
+                fragment = VK_SHADER_STAGE_FRAGMENT_BIT
+            };
+
+            using enum Kind;
+
+            Kind kind;
+            lx::containers::Vector<std::byte> code;
         };
 
         struct Primitive
@@ -125,7 +133,6 @@ public:
         {
             struct State
             {
-
             };
             /*
 typedef enum VkStencilOp {
@@ -285,6 +292,7 @@ typedef struct VkStencilOpState {
             std::array<float, 4u> constants;
         } blend;
 
+        std::span<Shader> shaders;
         std::span<Clip> clips;
     };
 
