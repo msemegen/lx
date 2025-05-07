@@ -32,10 +32,6 @@ public:
         float                                      lineWidth;
     } VkPipelineRasterizationStateCreateInfo;
 
-    typedef struct VkPipelineMultisampleStateCreateInfo {
-        const VkSampleMask*                      pSampleMask;
-    } VkPipelineMultisampleStateCreateInfo;
-
 
     typedef struct VkPipelineDynamicStateCreateInfo {
         uint32_t                             dynamicStateCount;
@@ -133,6 +129,36 @@ public:
         {
             struct State
             {
+                enum class Compare : std::uint32_t
+                {
+                    never = VK_COMPARE_OP_NEVER,
+                    less = VK_COMPARE_OP_LESS,
+                    equal = VK_COMPARE_OP_EQUAL,
+                    less_or_equal = VK_COMPARE_OP_LESS_OR_EQUAL,
+                    greater = VK_COMPARE_OP_GREATER,
+                    not_equal = VK_COMPARE_OP_NOT_EQUAL,
+                    greater_or_equal = VK_COMPARE_OP_GREATER_OR_EQUAL,
+                    always = VK_COMPARE_OP_ALWAYS,
+                };
+                enum class Operation
+                {
+                    keep = VK_STENCIL_OP_KEEP,
+                    zero = VK_STENCIL_OP_ZERO,
+                    replace = VK_STENCIL_OP_REPLACE,
+                    increment_and_clamp = VK_STENCIL_OP_INCREMENT_AND_CLAMP,
+                    decrement_and_clamp = VK_STENCIL_OP_DECREMENT_AND_CLAMP,
+                    invert = VK_STENCIL_OP_INVERT,
+                    increment_and_wrap = VK_STENCIL_OP_INCREMENT_AND_WRAP,
+                    decrement_and_wrap = VK_STENCIL_OP_DECREMENT_AND_WRAP,
+                };
+                Operation fail;
+                Operation pass;
+                Operation depth_fail;
+
+                Compare compare;
+                std::uint32_t compare_mask;
+                std::uint32_t write_mask;
+                std::uint32_t reference;
             };
             /*
 typedef enum VkStencilOp {
@@ -291,6 +317,18 @@ typedef struct VkStencilOpState {
             std::span<Attachment> attachments;
             std::array<float, 4u> constants;
         } blend;
+        struct VertexInput
+        {
+            struct Binding
+            {
+            };
+            struct Attribute
+            {
+            };
+
+            std::span<Binding> bindings;
+            std::span<Attribute> attributes;
+        } vertex_input;
 
         std::span<Shader> shaders;
         std::span<Clip> clips;
