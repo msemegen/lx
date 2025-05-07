@@ -154,35 +154,11 @@ public:
                 Operation fail;
                 Operation pass;
                 Operation depth_fail;
-
                 Compare compare;
                 std::uint32_t compare_mask;
                 std::uint32_t write_mask;
                 std::uint32_t reference;
             };
-            /*
-typedef enum VkStencilOp {
-    VK_STENCIL_OP_KEEP = 0,
-    VK_STENCIL_OP_ZERO = 1,
-    VK_STENCIL_OP_REPLACE = 2,
-    VK_STENCIL_OP_INCREMENT_AND_CLAMP = 3,
-    VK_STENCIL_OP_DECREMENT_AND_CLAMP = 4,
-    VK_STENCIL_OP_INVERT = 5,
-    VK_STENCIL_OP_INCREMENT_AND_WRAP = 6,
-    VK_STENCIL_OP_DECREMENT_AND_WRAP = 7,
-    VK_STENCIL_OP_MAX_ENUM = 0x7FFFFFFF
-} VkStencilOp;
-
-typedef struct VkStencilOpState {
-    VkStencilOp    failOp;
-    VkStencilOp    passOp;
-    VkStencilOp    depthFailOp;
-    VkCompareOp    compareOp;
-    uint32_t       compareMask;
-    uint32_t       writeMask;
-    uint32_t       reference;
-} VkStencilOpState;
-            */
             bool test = false;
 
             State front;
