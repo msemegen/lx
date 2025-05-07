@@ -15,33 +15,13 @@ namespace lx::gpu::pipelines {
 class Graphics : private lx::common::non_copyable
 {
 public:
-    /*
-    typedef struct VkPipelineVertexInputStateCreateInfo {
-        uint32_t                                    vertexBindingDescriptionCount;
-        const VkVertexInputBindingDescription*      pVertexBindingDescriptions;
-        uint32_t                                    vertexAttributeDescriptionCount;
-        const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions;
-    } VkPipelineVertexInputStateCreateInfo;
-    typedef struct VkPipelineTessellationStateCreateInfo {
-        uint32_t                                  patchControlPoints;
-    } VkPipelineTessellationStateCreateInfo;
-
-
-    typedef struct VkPipelineRasterizationStateCreateInfo {
-        VkBool32                                   rasterizerDiscardEnable;
-        float                                      lineWidth;
-    } VkPipelineRasterizationStateCreateInfo;
-
-
-    typedef struct VkPipelineDynamicStateCreateInfo {
-        uint32_t                             dynamicStateCount;
-        const VkDynamicState*                pDynamicStates;
-    } VkPipelineDynamicStateCreateInfo;
-
-    */
-
     struct Properties
     {
+        enum class DynamicState : std::uint32_t
+        {
+
+        };
+
         struct Clip
         {
             Viewport<float> viewport;
@@ -151,6 +131,7 @@ public:
                     increment_and_wrap = VK_STENCIL_OP_INCREMENT_AND_WRAP,
                     decrement_and_wrap = VK_STENCIL_OP_DECREMENT_AND_WRAP,
                 };
+
                 Operation fail;
                 Operation pass;
                 Operation depth_fail;
@@ -297,9 +278,26 @@ public:
         {
             struct Binding
             {
+                enum class Rate : std::uint32_t
+                {
+                    vertex = VK_VERTEX_INPUT_RATE_VERTEX,
+                    instance = VK_VERTEX_INPUT_RATE_INSTANCE
+                };
+
+                std::uint32_t binding;
+                std::uint32_t stride;
+
+                Rate rate;
             };
             struct Attribute
             {
+                std::uint32_t location;
+                std::uint32_t binding;
+                std::uint32_t offset;
+
+                using Format = lx::gpu::loader::vulkan::Format;
+
+                Format format;
             };
 
             std::span<Binding> bindings;
@@ -308,6 +306,8 @@ public:
 
         std::span<Shader> shaders;
         std::span<Clip> clips;
+
+        lx::containers::Vector<DynamicState> dynamic_states;
     };
 
     bool is_created() const

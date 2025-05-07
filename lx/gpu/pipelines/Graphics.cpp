@@ -17,9 +17,7 @@ void Graphics::create(const Properties& properties_a)
     };
 
     VkPipelineColorBlendStateCreateInfo vk_pipeline_color_blend_state_create_info {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0x0u
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO, .pNext = nullptr, .flags = 0x0u
     };
 
     VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
