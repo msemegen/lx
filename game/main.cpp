@@ -68,23 +68,22 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                                                    .mode = Device::SwapChain::Mode::fifo,
                                                    .images_count = 2u } });
 
-            //auto gpu_device2 = graphics_context.create<Device>(
-            //    gpus_a[1],
-            //    canvas2,
-            //    Device::Properties { .features = Device::Feature::none,
-            //                         .queue_families { std::array {
-            //                             Device::QueueFamily { .kind = Device::QueueFamily::graphics | Device::QueueFamily::transfer,
-            //                                                   .count = 1u,
-            //                                                   .priorities { 1.0f },
-            //                                                   .presentation = true } } },
-            //                         .swap_chain { .format = Device::SwapChain::Format::r8g8b8a8_srgb,
-            //                                       .color_space = Device::SwapChain::ColorSpace::srgb_nonlinear_khr,
-            //                                       .mode = Device::SwapChain::Mode::fifo,
-            //                                       .images_count = 2u } });
+            // auto gpu_device2 = graphics_context.create<Device>(
+            //     gpus_a[1],
+            //     canvas2,
+            //     Device::Properties { .features = Device::Feature::none,
+            //                          .queue_families { std::array {
+            //                              Device::QueueFamily { .kind = Device::QueueFamily::graphics | Device::QueueFamily::transfer,
+            //                                                    .count = 1u,
+            //                                                    .priorities { 1.0f },
+            //                                                    .presentation = true } } },
+            //                          .swap_chain { .format = Device::SwapChain::Format::r8g8b8a8_srgb,
+            //                                        .color_space = Device::SwapChain::ColorSpace::srgb_nonlinear_khr,
+            //                                        .mode = Device::SwapChain::Mode::fifo,
+            //                                        .images_count = 2u } });
 
-            if (true == gpu_device1->is_created()/* && true == gpu_device2->is_created()*/)
+            if (true == gpu_device1->is_created() /* && true == gpu_device2->is_created()*/)
             {
-                std::ignore = gpu_device1->create<Graphics>(Graphics::Properties {});
                 log_inf("GPU context created");
 
                 windower_a.set_visible(canvas1, true);
@@ -93,11 +92,27 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 bool c1 = false;
                 bool c2 = false;
 
+                auto* p =
+                    gpu_device1->create<Graphics>({ .primitive { .polygon_mode = Graphics::Properties::Primitive::PolygonMode::fill,
+                                                                 .cull_mode = Graphics::Properties::Primitive::CullMode::front |
+                                                                              Graphics::Properties::Primitive::CullMode::back,
+                                                                 .front_face = Graphics::Properties::Primitive::FrontFace::clockwise,
+                                                                 .topology = Graphics::Properties::Primitive::Topology::triangle_list },
+                                                    .depth {},
+                                                    .stencil {},
+                                                    .multisampling {},
+                                                    .blend {},
+                                                    .vertex_input {},
+                                                    .shaders {},
+                                                    .clips {} });
+
                 do
                 {
                     c1 = windower_a.update(canvas1);
                     c2 = windower_a.update(canvas2);
                 } while (true == c1 || true == c2);
+
+                gpu_device1->destroy(out(p));
             }
             else
             {
@@ -110,7 +125,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
             }
 
             graphics_context.destroy(out(gpu_device1));
-            //graphics_context.destroy(out(gpu_device2));
+            // graphics_context.destroy(out(gpu_device2));
         }
 
         windower_a.destroy(out(canvas1));

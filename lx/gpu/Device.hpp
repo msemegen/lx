@@ -6,6 +6,7 @@
 #include <lx/common/non_copyable.hpp>
 #include <lx/containers/Vector.hpp>
 #include <lx/devices/GPU.hpp>
+#include <lx/gpu/Buffer.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
 #include <lx/gpu/pipelines/Graphics.hpp>
 
@@ -148,5 +149,11 @@ Device::create<lx::gpu::pipelines::Graphics>(const lx::gpu::pipelines::Graphics:
 
     return nullptr;
 }
-template<> inline void Device::destroy(lx::common::out<lx::gpu::pipelines::Graphics*> device_a) {}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::pipelines::Graphics*> object_a) {}
+
+template<> inline [[nodiscard]] lx::gpu::Buffer* Device::create<lx::gpu::Buffer>(const lx::gpu::Buffer::Properties& properties_a)
+{
+    return nullptr;
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::Buffer*> object_a) {}
 } // namespace lx::gpu

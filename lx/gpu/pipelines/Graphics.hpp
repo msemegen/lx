@@ -324,4 +324,17 @@ private:
 
     friend class Device;
 };
+
+constexpr Graphics::Properties::Primitive::CullMode operator|(Graphics::Properties::Primitive::CullMode left_a,
+                                                              Graphics::Properties::Primitive::CullMode right_a)
+{
+    return static_cast<Graphics::Properties::Primitive::CullMode>(static_cast<std::uint32_t>(left_a) | static_cast<std::uint32_t>(right_a));
+}
+
+constexpr Graphics::Properties::Primitive::CullMode operator&(Graphics::Properties::Primitive::CullMode left_a,
+                                                              Graphics::Properties::Primitive::CullMode right_a)
+{
+    return static_cast<Graphics::Properties::Primitive::CullMode>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
+}
+
 } // namespace lx::gpu::pipelines

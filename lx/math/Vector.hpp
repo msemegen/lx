@@ -245,4 +245,43 @@ template<typename Type> constexpr Type [[nodiscard]] length(Vector<Type, 4u> vec
     Type sq = length_squared(vector_a);
     return static_cast<Type>(std::sqrt(sq));
 }
+
+static_assert(sizeof(Vector<std::int8_t, 2u>) == sizeof(std::int8_t) * 2u);
+static_assert(sizeof(Vector<std::int16_t, 2u>) == sizeof(std::int16_t) * 2u);
+static_assert(sizeof(Vector<std::int32_t, 2u>) == sizeof(std::int32_t) * 2u);
+static_assert(sizeof(Vector<std::int64_t, 2u>) == sizeof(std::int64_t) * 2u);
+
+static_assert(sizeof(Vector<std::uint8_t, 2u>) == sizeof(std::uint8_t) * 2u);
+static_assert(sizeof(Vector<std::uint16_t, 2u>) == sizeof(std::uint16_t) * 2u);
+static_assert(sizeof(Vector<std::uint32_t, 2u>) == sizeof(std::uint32_t) * 2u);
+static_assert(sizeof(Vector<std::uint64_t, 2u>) == sizeof(std::uint64_t) * 2u);
+
+static_assert(sizeof(Vector<float, 2u>) == sizeof(float) * 2u);
+static_assert(sizeof(Vector<double, 2u>) == sizeof(double) * 2u);
+
+static_assert(sizeof(Vector<std::int8_t, 3u>) == sizeof(std::int8_t) * 3u);
+static_assert(sizeof(Vector<std::int16_t, 3u>) == sizeof(std::int16_t) * 3u);
+static_assert(sizeof(Vector<std::int32_t, 3u>) == sizeof(std::int32_t) * 3u);
+static_assert(sizeof(Vector<std::int64_t, 3u>) == sizeof(std::int64_t) * 3u);
+
+static_assert(sizeof(Vector<std::uint8_t, 3u>) == sizeof(std::uint8_t) * 3u);
+static_assert(sizeof(Vector<std::uint16_t, 3u>) == sizeof(std::uint16_t) * 3u);
+static_assert(sizeof(Vector<std::uint32_t, 3u>) == sizeof(std::uint32_t) * 3u);
+static_assert(sizeof(Vector<std::uint64_t, 3u>) == sizeof(std::uint64_t) * 3u);
+
+static_assert(sizeof(Vector<float, 3u>) == sizeof(float) * 3u);
+static_assert(sizeof(Vector<double, 3u>) == sizeof(double) * 3u);
+
+static_assert(sizeof(Vector<std::int8_t, 4u>) == sizeof(std::int8_t) * 4u);
+static_assert(sizeof(Vector<std::int16_t, 4u>) == sizeof(std::int16_t) * 4u);
+static_assert(sizeof(Vector<std::int32_t, 4u>) == sizeof(std::int32_t) * 4u);
+static_assert(sizeof(Vector<std::int64_t, 4u>) == sizeof(std::int64_t) * 4u);
+
+static_assert(sizeof(Vector<std::uint8_t, 4u>) == sizeof(std::uint8_t) * 4u);
+static_assert(sizeof(Vector<std::uint16_t, 4u>) == sizeof(std::uint16_t) * 4u);
+static_assert(sizeof(Vector<std::uint32_t, 4u>) == sizeof(std::uint32_t) * 4u);
+static_assert(sizeof(Vector<std::uint64_t, 4u>) == sizeof(std::uint64_t) * 4u);
+
+static_assert(sizeof(Vector<float, 4u>) == sizeof(float) * 4u);
+static_assert(sizeof(Vector<double, 4u>) == sizeof(double) * 4u);
 } // namespace lx::math
