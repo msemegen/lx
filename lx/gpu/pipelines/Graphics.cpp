@@ -4,7 +4,7 @@
 namespace lx::gpu::pipelines {
 using namespace lx::containers;
 
-void Graphics::create(const Properties& properties_a)
+Graphics::Graphics(VkDevice vk_device_a, const Properties& properties_a)
 {
     Vector<VkVertexInputBindingDescription> vk_vertex_input_binding_descriptions(properties_a.vertex_input.bindings.size());
     Vector<VkVertexInputAttributeDescription> vk_vertex_input_attribute_descriptions(properties_a.vertex_input.attributes.size());
@@ -39,7 +39,8 @@ void Graphics::create(const Properties& properties_a)
     };
 
     VkPipelineColorBlendStateCreateInfo vk_pipeline_color_blend_state_create_info {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO, .pNext = nullptr, .flags = 0x0u
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO, .pNext = nullptr, .flags = 0x0u, .logicOpEnable = VK_TRUE,
+        //.logicOp
     };
 
     VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -50,5 +51,5 @@ void Graphics::create(const Properties& properties_a)
                                                                     .pColorBlendState = &vk_pipeline_color_blend_state_create_info };
 }
 
-void Graphics::destroy() {}
+void Graphics::destroy(VkDevice vk_device_a) {}
 } // namespace lx::gpu::pipelines

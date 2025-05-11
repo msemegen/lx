@@ -96,7 +96,7 @@ public:
     {
         return this->vk_surface;
     }
-    virtual operator VkSurfaceKHR()
+    operator VkSurfaceKHR()
     {
         return this->vk_surface;
     }
@@ -134,7 +134,7 @@ private:
     friend Windower;
 };
 
-template<> bool Windower::update<Windower::Kind::framed>(HWND window_handle); 
+template<> bool Windower::update<Windower::Kind::framed>(HWND window_handle);
 template<> bool Windower::update<Windower::Kind::fullscreen>(HWND window_handle);
 
 inline bool Windower::update(const Canvas<Kind::framed>* canvas_a)

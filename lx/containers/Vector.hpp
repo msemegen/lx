@@ -173,6 +173,8 @@ public:
         , length(other_a.length)
         , buffer(std::make_unique<Type[]>(other_a.capacity))
     {
+        assert(other_a.get_capacity() > 0u);
+
         for (std::size_t i = 0; i < this->get_length(); i++)
         {
             this->buffer[i] = other_a.buffer[i];
@@ -191,12 +193,15 @@ public:
         , length(0)
         , buffer(std::make_unique<Type[]>(capacity_a))
     {
+        assert(capacity_a > 0u);
     }
     Vector(std::initializer_list<Type> list_a)
         : capacity(list_a.size())
         , length(list_a.size())
         , buffer(std::make_unique<Type[]>(list_a.size()))
     {
+        assert(list_a.size() > 0u);
+
         for (std::size_t i = 0; i < this->get_length(); i++)
         {
             this->buffer[i] = *(list_a.begin() + i);
@@ -205,6 +210,8 @@ public:
     Vector(std::span<const Type> data_a)
         : Vector(data_a.size())
     {
+        assert(false == data_a.empty());
+
         this->length = data_a.size();
         std::copy(data_a.begin(), data_a.begin() + this->length, this->buffer.get());
     }

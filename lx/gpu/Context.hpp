@@ -32,11 +32,7 @@ template<> inline [[nodiscard]] lx::gpu::Device* Context::create<lx::gpu::Device
                                                                                   const lx::gpu::Device::Properties& properties_a)
 {
     lx::gpu::Device device;
-    device.create(gpu_a,
-                  *canvas_a,
-                  VkExtent2D { .width = static_cast<std::uint32_t>(canvas_a->get_properties().size.w),
-                               .height = static_cast<std::uint32_t>(canvas_a->get_properties().size.h) },
-                  properties_a);
+    device.create(gpu_a, *canvas_a, properties_a);
 
     if (true == device.is_created())
     {

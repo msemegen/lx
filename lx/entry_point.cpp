@@ -3,8 +3,8 @@
 
 // lx
 #include <lx/containers/Vector.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
 #include <lx/utils/logger.hpp>
+#include <lx/gpu/loader/vulkan.hpp>
 
 // win32
 #include <Windows.h>
@@ -183,11 +183,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
         Vector<const char*> instance_layers;
         Vector<const char*> instance_extensions;
 
-        Vector<const char*, 3u> default_instance_extensions;
+        Vector<const char*, 4u> default_instance_extensions;
         Vector<const char*, 3u> default_instance_layers;
 
         default_instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
         default_instance_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#if defined(VK_KHR_get_physical_device_properties2)
+        default_instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#endif
 
         if (true == config.vulkan.validation.enabled)
         {

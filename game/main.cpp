@@ -46,7 +46,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
             displays_a[0], Canvas<Windower::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
 
         auto canvas2 = windower_a.create<Windower::framed>(
-            displays_a[1], Canvas<Windower::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
+            displays_a[0], Canvas<Windower::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
 
         if (true == canvas1->is_created() && true == canvas2->is_created())
         {
@@ -62,11 +62,15 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                                          Device::QueueFamily { .kind = Device::QueueFamily::graphics | Device::QueueFamily::transfer,
                                                                .count = 1u,
                                                                .priorities { 1.0f },
-                                                               .presentation = true } } },
-                                     .swap_chain { .format = Device::SwapChain::Format::r8g8b8a8_srgb,
-                                                   .color_space = Device::SwapChain::ColorSpace::srgb_nonlinear_khr,
-                                                   .mode = Device::SwapChain::Mode::fifo,
-                                                   .images_count = 2u } });
+                                                               .presentation = true } } } });
+
+            auto swap_chain = gpu_device1->create<lx::gpu::SwapChain>({ .format = SwapChain::Format::r8g8b8a8_srgb,
+                                                                        .color_space = SwapChain::ColorSpace::srgb_nonlinear_khr,
+                                                                        .mode = SwapChain::Mode::fifo,
+                                                                        .images_count = 2u });
+            /*
+             *  .swap_chain {  }
+             */
 
             // auto gpu_device2 = graphics_context.create<Device>(
             //     gpus_a[1],
@@ -92,19 +96,18 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 bool c1 = false;
                 bool c2 = false;
 
-                auto* p =
-                    gpu_device1->create<Graphics>({ .primitive { .polygon_mode = Graphics::Properties::Primitive::PolygonMode::fill,
-                                                                 .cull_mode = Graphics::Properties::Primitive::CullMode::front |
-                                                                              Graphics::Properties::Primitive::CullMode::back,
-                                                                 .front_face = Graphics::Properties::Primitive::FrontFace::clockwise,
-                                                                 .topology = Graphics::Properties::Primitive::Topology::triangle_list },
-                                                    .depth {},
-                                                    .stencil {},
-                                                    .multisampling {},
-                                                    .blend {},
-                                                    .vertex_input {},
-                                                    .shaders {},
-                                                    .clips {} });
+                auto p = gpu_device1->create<Graphics>(
+                    { .primitive { .polygon_mode = Graphics::Primitive::PolygonMode::fill,
+                                   .cull_mode = Graphics::Primitive::CullMode::front | Graphics::Primitive::CullMode::back,
+                                   .front_face = Graphics::Primitive::FrontFace::clockwise,
+                                   .topology = Graphics::Primitive::Topology::triangle_list },
+                      .depth {},
+                      .stencil {},
+                      .multisampling {},
+                      .blend {},
+                      .vertex_input {},
+                      .shaders {},
+                      .clips {} });
 
                 do
                 {

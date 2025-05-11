@@ -9,13 +9,15 @@
 // std
 #include <cassert>
 
+extern VkInstance vk_instance;
+
 namespace lx::gpu {
 using namespace lx::common;
 using namespace lx::containers;
 using namespace lx::devices;
 using namespace lx::utils;
 
-void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const VkExtent2D& swap_buffer_extent_a, const Properties& properties_a)
+void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a)
 {
     assert(false == properties_a.queue_families.empty());
     assert(false == gpu_a.queue_families.is_empty());
@@ -85,36 +87,20 @@ void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const VkExtent2
 
             this->vk_queues.shrink_to_fit();
 
-            VkSwapchainCreateInfoKHR vk_swap_chain_create_info { .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-                                                                 .pNext = nullptr,
-                                                                 .flags = 0x0u,
-                                                                 .surface = vk_surface_a,
-                                                                 .minImageCount =
-                                                                     static_cast<std::uint32_t>(properties_a.swap_chain.images_count),
-                                                                 .imageFormat = static_cast<VkFormat>(properties_a.swap_chain.format),
-                                                                 .imageColorSpace =
-                                                                     static_cast<VkColorSpaceKHR>(properties_a.swap_chain.color_space),
-                                                                 .imageExtent = swap_buffer_extent_a,
-                                                                 .imageArrayLayers = 1u,
-                                                                 .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                                                                 .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-                                                                 .queueFamilyIndexCount = 0u,
-                                                                 .pQueueFamilyIndices = nullptr,
-                                                                 .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-                                                                 .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-                                                                 .presentMode = static_cast<VkPresentModeKHR>(properties_a.swap_chain.mode),
-                                                                 .clipped = VK_TRUE,
-                                                                 .oldSwapchain = VK_NULL_HANDLE };
+            VmaAllocatorCreateInfo vma_allocator_create_info { .physicalDevice = gpu_a,
+                                                               .device = this->vk_device,
+                                                               .preferredLargeHeapBlockSize = 0u,
+                                                               .pAllocationCallbacks = nullptr,
+                                                               .pDeviceMemoryCallbacks = nullptr,
+                                                               .pHeapSizeLimit = nullptr,
+                                                               .pVulkanFunctions = nullptr,
+                                                               .instance = vk_instance };
 
-            success = VK_SUCCESS == vkCreateSwapchainKHR(this->vk_device, &vk_swap_chain_create_info, nullptr, &(this->vk_swap_chain));
+            success = VK_SUCCESS == vmaCreateAllocator(&vma_allocator_create_info, &this->vk_memory_allocator);
 
             if (true == success)
             {
-                std::uint32_t image_count = 0;
-
-                vkGetSwapchainImagesKHR(this->vk_device, this->vk_swap_chain, &image_count, nullptr);
-                this->vk_swap_chain_images.reserve(image_count);
-                vkGetSwapchainImagesKHR(this->vk_device, this->vk_swap_chain, &image_count, this->vk_swap_chain_images.get_buffer());
+                this->vk_surface = vk_surface_a;
             }
         }
     }

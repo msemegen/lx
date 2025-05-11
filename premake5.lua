@@ -31,7 +31,6 @@ project "game"
       symbols "On"
       links { "lx_d.lib", "vulkan-1.lib" }
       targetname "game_d"
-      buildoptions { "/W4" }
       debugdir "output/game"
 
    filter "configurations:Release Windows"
@@ -39,7 +38,6 @@ project "game"
       optimize "On"
       links { "lx.lib" }
       targetname "game"
-      buildoptions { "/W4" }
 
 project "lx"
    kind "staticlib"
@@ -54,23 +52,21 @@ project "lx"
    
    includedirs { ".", "$(VULKAN_SDK)/Include", "externals/" }
    
-   files { "lx/**.hpp", "lx/**.cpp", "externals/**", "lx/**.md" }
+   files { "lx/**.hpp", "lx/**.h", "lx/**.cpp", "externals/**", "lx/**.md" }
 
    vpaths {
-       ["**"] = { "lx/**.hpp", "lx/**.cpp" }
+       ["**"] = { "lx/**.hpp", "lx/**.h", "lx/**.cpp" }
    }
 
    filter "configurations:Debug Windows"
       defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES", "WIN32_LEAN_AND_MEAN", "NOMINMAX" }
       symbols "On"
       targetname "lx_d"
-      buildoptions { "/W4" }
 
    filter "configurations:Release Windows"
       defines { "NDEBUG", "LX_AMD64", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES", "WIN32_LEAN_AND_MEAN", "NOMINMAX" }
       optimize "On"
       targetname "lx"
-      buildoptions { "/W4" }
 
 project "tests"
    kind "ConsoleApp"
@@ -94,10 +90,8 @@ project "tests"
       defines { "DEBUG", "LX_AMD64", "LX_ASSERTION", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES", "CATCH_AMALGAMATED_CUSTOM_MAIN" }
       symbols "On"
       targetname "tests_d"
-      buildoptions { "/W4" }
 
    filter "configurations:Release Windows"
       defines { "NDEBUG", "LX_AMD64", "VK_USE_PLATFORM_WIN32_KHR", "VK_NO_PROTOTYPES", "CATCH_AMALGAMATED_CUSTOM_MAIN" }
       optimize "On"
       targetname "tests"
-      buildoptions { "/W4" }
