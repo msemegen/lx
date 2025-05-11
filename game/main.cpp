@@ -2,6 +2,16 @@
 #include <lx/gpu/Device.hpp>
 #include <lx/utils/logger.hpp>
 
+class App : public lx::Windower::Events::PositionChange::Callback
+{
+public:
+    virtual bool on_position_change() override
+    {
+        printf("position change!!!\n");
+        return true;
+    }
+};
+
 void lx::app::setup(lx::common::out<lx::app::Config> config_a)
 {
     // log config
@@ -30,6 +40,8 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
     using namespace lx::utils;
     using namespace lx::gpu::pipelines;
 
+    App app;
+
     log_set_filter(logger::dbg | logger::inf | logger::err);
 
     log_inf("Command line args: \"{}\"", cmd_line_a);
@@ -50,9 +62,6 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
 
         if (true == canvas1->is_created() && true == canvas2->is_created())
         {
-            windower_a.events.size_size.register_callback();
-            windower_a.events.position_change.register_callback();
-
             log_inf("Canvases created");
             auto gpu_device1 = graphics_context.create<Device>(
                 gpus_a[0],
@@ -93,21 +102,23 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 windower_a.set_visible(canvas1, true);
                 windower_a.set_visible(canvas2, true);
 
+                windower_a.events.position_change.register_callback(inout(canvas1), &app);
+
                 bool c1 = false;
                 bool c2 = false;
 
-                auto p = gpu_device1->create<Graphics>(
-                    { .primitive { .polygon_mode = Graphics::Primitive::PolygonMode::fill,
-                                   .cull_mode = Graphics::Primitive::CullMode::front | Graphics::Primitive::CullMode::back,
-                                   .front_face = Graphics::Primitive::FrontFace::clockwise,
-                                   .topology = Graphics::Primitive::Topology::triangle_list },
-                      .depth {},
-                      .stencil {},
-                      .multisampling {},
-                      .blend {},
-                      .vertex_input {},
-                      .shaders {},
-                      .clips {} });
+                // auto p = gpu_device1->create<Graphics>(
+                //     { .primitive { .polygon_mode = Graphics::Primitive::PolygonMode::fill,
+                //                    .cull_mode = Graphics::Primitive::CullMode::front | Graphics::Primitive::CullMode::back,
+                //                    .front_face = Graphics::Primitive::FrontFace::clockwise,
+                //                    .topology = Graphics::Primitive::Topology::triangle_list },
+                //       .depth {},
+                //       .stencil {},
+                //       .multisampling {},
+                //       .blend {},
+                //       .vertex_input {},
+                //       .shaders {},
+                //       .clips {} });
 
                 do
                 {
@@ -115,7 +126,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                     c2 = windower_a.update(canvas2);
                 } while (true == c1 || true == c2);
 
-                gpu_device1->destroy(out(p));
+                //gpu_device1->destroy(out(p));
             }
             else
             {

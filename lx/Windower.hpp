@@ -36,11 +36,23 @@ public:
     {
         struct SizeChange
         {
-            void register_callback() {}
-        } size_size;
+            class Callback
+            {
+            public:
+                virtual bool on_size_change() = 0;
+            };
+
+            void register_callback(lx::common::inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a);
+        } size_change;
         struct PositionChange
         {
-            void register_callback() {}
+            class Callback
+            {
+            public:
+                virtual bool on_position_change() = 0;
+            };
+
+            void register_callback(lx::common::inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a);
         } position_change;
     } events;
 
@@ -60,12 +72,13 @@ public:
     template<auto Kind> void destroy(lx::common::out<Canvas<Kind>*> canvas_a) = delete;
 
 private:
-    template<auto Kind> bool update(HWND window_handle) = delete;
     void set_visible(HWND window_handle_a, bool visible_a);
 
-    static LRESULT __stdcall window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam);
+    static LRESULT __stdcall framed_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam);
+    static LRESULT __stdcall fullscreen_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam);
 
-    ATOM wnd_class = 0u;
+    ATOM framed_wnd_class = 0u;
+    ATOM fullscreen_wnd_class = 0u;
 
     std::unordered_map<const Canvas<Kind::framed>*, HWND> framed_windows;
     std::unordered_map<const Canvas<Kind::fullscreen>*, HWND> fullscreen_windows;
@@ -110,6 +123,11 @@ private:
     VkSurfaceKHR vk_surface = VK_NULL_HANDLE;
     Properties properties;
 
+    Windower::Events::SizeChange::Callback* p_on_size_change = nullptr;
+    Windower::Events::PositionChange::Callback* p_on_position_change = nullptr;
+
+    bool running = false;
+
     friend Windower;
     friend lx::gpu::Device;
 };
@@ -123,28 +141,21 @@ public:
     };
 
 private:
+    Canvas() = default;
+    Canvas(HWND window_handle_a, const Properties& properties_a);
+
+    void destroy();
+
     VkSurfaceKHR vk_surface = VK_NULL_HANDLE;
+    Properties properties;
 
-    HWND handle = nullptr;
-    ATOM wnd_class = 0u;
+    Windower::Events::SizeChange::Callback* p_on_size_change = nullptr;
+    Windower::Events::PositionChange::Callback* p_on_position_change = nullptr;
 
-    bool created = false;
-    std::size_t id = std::numeric_limits<std::size_t>::max();
+    bool running = false;
 
     friend Windower;
 };
-
-template<> bool Windower::update<Windower::Kind::framed>(HWND window_handle);
-template<> bool Windower::update<Windower::Kind::fullscreen>(HWND window_handle);
-
-inline bool Windower::update(const Canvas<Kind::framed>* canvas_a)
-{
-    return this->update<Kind::framed>(this->framed_windows[canvas_a]);
-}
-inline bool Windower::update(const Canvas<Kind::fullscreen>* canvas_a)
-{
-    return this->update<Kind::fullscreen>(this->fullscreen_windows[canvas_a]);
-}
 
 inline void Windower::set_visible(const Canvas<Kind::framed>* canvas_a, bool visible_a)
 {

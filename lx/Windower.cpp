@@ -4,17 +4,29 @@
 extern VkInstance vk_instance;
 
 namespace {
-constexpr std::string_view lxf_window_class_name = "lxf_window_class";
+constexpr std::string_view lx_framed_window_class_name = "lx_framed_window_class";
+constexpr std::string_view lx_fullscreen_window_class_name = "lx_fullscreen_window_class";
 } // namespace
 
 namespace lx {
 using namespace lx::common;
 
-LRESULT __stdcall Windower::window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam)
+LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam)
 {
+    auto canvas = reinterpret_cast<Canvas<Windower::Kind::framed>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
     switch (message)
     {
+        case WM_CLOSE: {
+            canvas->running = false;
+        }
+        break;
         case WM_SIZE: {
+            if (nullptr != canvas->p_on_size_change)
+            {
+                canvas->p_on_size_change->on_size_change();
+            }
+
             switch (wParam)
             {
                 case SIZE_RESTORED: {
@@ -28,6 +40,61 @@ LRESULT __stdcall Windower::window_procedure(HWND hwnd, uint32_t message, WPARAM
             return 0;
         }
         break;
+
+        case WM_MOVE: {
+            if (nullptr != canvas->p_on_position_change)
+            {
+                canvas->p_on_position_change->on_position_change();
+            }
+        }
+
+        case WM_KILLFOCUS: {
+        }
+        break;
+
+        case WM_SETFOCUS: {
+        }
+        break;
+
+        case WM_DISPLAYCHANGE: {
+            // TODO: detect screen addition / removal
+        }
+        break;
+    }
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+LRESULT __stdcall Windower::fullscreen_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam)
+{
+    auto canvas = reinterpret_cast<Canvas<Windower::Kind::fullscreen>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+    switch (message)
+    {
+        case WM_QUIT: {
+            canvas->running = false;
+        }
+        break;
+        case WM_SIZE: {
+            if (nullptr != canvas->p_on_size_change)
+            {
+                canvas->p_on_size_change->on_size_change();
+            }
+
+            switch (wParam)
+            {
+                case SIZE_RESTORED: {
+                }
+                break;
+
+                case SIZE_MINIMIZED: {
+                }
+                break;
+            }
+            return 0;
+        }
+        break;
+
+        case WM_MOVE: {
+        }
 
         case WM_KILLFOCUS: {
         }
@@ -48,21 +115,29 @@ LRESULT __stdcall Windower::window_procedure(HWND hwnd, uint32_t message, WPARAM
 Windower::Windower()
     : events {}
 {
-    WNDCLASSEX window_class_descriptor {};
-    window_class_descriptor.cbSize = sizeof(WNDCLASSEXW);
-    window_class_descriptor.style = CS_HREDRAW | CS_VREDRAW;
-    window_class_descriptor.lpfnWndProc = Windower::window_procedure;
-    window_class_descriptor.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    window_class_descriptor.hCursor = LoadCursor(NULL, IDC_ARROW);
-    window_class_descriptor.hbrBackground = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
-    window_class_descriptor.lpszClassName = lxf_window_class_name.data();
+    WNDCLASSEX framed_window_class_descriptor { .cbSize = sizeof(WNDCLASSEXW),
+                                                .style = CS_HREDRAW | CS_VREDRAW,
+                                                .lpfnWndProc = Windower::framed_window_procedure,
+                                                .hIcon = LoadIcon(NULL, IDI_APPLICATION),
+                                                .hCursor = LoadCursor(NULL, IDC_ARROW),
+                                                .hbrBackground = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH)),
+                                                .lpszClassName = lx_framed_window_class_name.data() };
+    WNDCLASSEX fullscreen_window_class_descriptor { .cbSize = sizeof(WNDCLASSEXW),
+                                                    .style = CS_HREDRAW | CS_VREDRAW,
+                                                    .lpfnWndProc = Windower::fullscreen_window_procedure,
+                                                    .hIcon = LoadIcon(NULL, IDI_APPLICATION),
+                                                    .hCursor = LoadCursor(NULL, IDC_ARROW),
+                                                    .hbrBackground = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH)),
+                                                    .lpszClassName = lx_framed_window_class_name.data() };
 
-    this->wnd_class = RegisterClassEx(&window_class_descriptor);
+    this->framed_wnd_class = RegisterClassEx(&framed_window_class_descriptor);
+    this->fullscreen_wnd_class = RegisterClassEx(&framed_window_class_descriptor);
 }
 
 Windower::~Windower()
 {
-    UnregisterClass(MAKEINTATOM(this->wnd_class), GetModuleHandle(nullptr));
+    UnregisterClass(MAKEINTATOM(this->framed_wnd_class), GetModuleHandle(nullptr));
+    UnregisterClass(MAKEINTATOM(this->fullscreen_wnd_class), GetModuleHandle(nullptr));
 }
 
 template<>
@@ -77,7 +152,7 @@ Canvas<Windower::Kind::framed>* Windower::create<Windower::Kind::framed>(const l
     };
 
     HWND handle = CreateWindowEx(0u,
-                                 MAKEINTATOM(this->wnd_class),
+                                 MAKEINTATOM(this->framed_wnd_class),
                                  properties_a.title.data(),
                                  WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION,
                                  static_cast<std::int32_t>(position.x),
@@ -118,6 +193,7 @@ Canvas<Windower::framed>::Canvas(HWND window_handle_a, const Properties& propert
                                                            .hwnd = window_handle_a };
 
     vkCreateWin32SurfaceKHR(vk_instance, &vk_surface_create_info, nullptr, &(this->vk_surface));
+    this->running = true;
 }
 
 void Canvas<Windower::framed>::destroy()
@@ -128,41 +204,50 @@ void Canvas<Windower::framed>::destroy()
     ChangeDisplaySettings(nullptr, 0);
 }
 
-template<> bool Windower::update<Windower::Kind::framed>(HWND window_handle_a)
+bool Windower::update(const Canvas<Kind::framed>* canvas_a)
 {
     MSG msg;
-    auto canvas = reinterpret_cast<Canvas<Windower::Kind::framed>*>(GetWindowLongPtr(window_handle_a, GWLP_USERDATA));
 
-    if (nullptr != canvas)
+    if (false == canvas_a->running)
     {
-        if (TRUE == PeekMessage(&msg, window_handle_a, 0, 0, PM_REMOVE))
-        {
-            DispatchMessage(&msg);
-        }
-
-        return true;
+        return false;
     }
-    return false;
+
+    if (TRUE == PeekMessage(&msg, this->framed_windows[canvas_a], 0, 0, PM_REMOVE))
+    {
+        DispatchMessage(&msg);
+    }
+
+    return true;
 }
-template<> bool Windower::update<Windower::Kind::fullscreen>(HWND window_handle_a)
+bool Windower::update(const Canvas<Kind::fullscreen>* canvas_a)
 {
     MSG msg;
-    auto canvas = reinterpret_cast<Canvas<Windower::Kind::fullscreen>*>(GetWindowLongPtr(window_handle_a, GWLP_USERDATA));
 
-    if (nullptr != canvas)
+    if (false == canvas_a->running)
     {
-        if (TRUE == PeekMessage(&msg, window_handle_a, 0, 0, PM_REMOVE))
-        {
-            DispatchMessage(&msg);
-        }
-
-        return true;
+        return false;
     }
-    return false;
+
+    if (TRUE == PeekMessage(&msg, this->fullscreen_windows[canvas_a], 0, 0, PM_REMOVE))
+    {
+        DispatchMessage(&msg);
+    }
+
+    return true;
 }
 
 void Windower::set_visible(HWND windows_handle_a, bool visible)
 {
     ShowWindow(windows_handle_a, true == visible ? SW_SHOW : SW_HIDE);
+}
+
+void Windower::Events::SizeChange::register_callback(inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a)
+{
+    (*canvas)->p_on_size_change = p_callback_a;
+}
+void Windower::Events::PositionChange::register_callback(inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a)
+{
+    (*canvas)->p_on_position_change = p_callback_a;
 }
 } // namespace lx
