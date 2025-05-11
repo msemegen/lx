@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ *	Name: Vector.hpp
+ *  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ */
+
 // std
 #include <array>
 #include <cassert>

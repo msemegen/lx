@@ -15,6 +15,7 @@
 #include <cstdint>
 
 // lxf
+#include <lx/common/Version.hpp>
 #include <lx/common/non_constructible.hpp>
 
 extern PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr;
@@ -95,6 +96,11 @@ struct vulkan : private common::non_constructible
 {
     static bool load();
     static void release();
+
+    static lx::common::Version get_version()
+    {
+        return version;
+    }
 
     enum class Format : std::uint64_t
     {
@@ -404,6 +410,9 @@ struct vulkan : private common::non_constructible
         a4b4g4r4_unorm_pack16_ext = VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT,
         r16g16_s10_5_nv = VK_FORMAT_R16G16_S10_5_NV,
     };
+
+private:
+    inline static lx::common::Version version;
 };
 } // namespace lx::gpu::loader
 
@@ -412,7 +421,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCre
                                                 const VkAllocationCallbacks* pAllocator,
                                                 VkInstance* pInstance);
 
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkPhysicalDevice physicalDevice,
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
+                                              VkPhysicalDevice physicalDevice,
                                               const VkDeviceCreateInfo* pCreateInfo,
                                               const VkAllocationCallbacks* pAllocator,
                                               VkDevice* pDevice);

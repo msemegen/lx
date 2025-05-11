@@ -4,6 +4,8 @@
  */
 
 // this
+#include <lx/common/out.hpp>
+#include <lx/utils/logger.hpp>
 #define VMA_IMPLEMENTATION
 #include <lx/gpu/loader/vulkan.hpp>
 
@@ -11,110 +13,248 @@
 #include <cassert>
 
 namespace {
-HMODULE vk_handle = nullptr;
+HMODULE vk_driver_handle = nullptr;
 } // namespace
 
 PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = nullptr;
 PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr = nullptr;
 
-PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties;
-PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties;
+PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties = nullptr;
+PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties = nullptr;
+PFN_vkEnumerateInstanceVersion vkEnumerateInstanceVersion = nullptr;
 
 // instance level functions
-PFN_vkDestroyInstance vkDestroyInstance;
-PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties;
-PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures;
-PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices;
-PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties;
-PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties;
-PFN_vkGetPhysicalDeviceMemoryProperties vkGetPhysicalDeviceMemoryProperties;
+PFN_vkDestroyInstance vkDestroyInstance = nullptr;
+PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties = nullptr;
+PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures = nullptr;
+PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices = nullptr;
+PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties = nullptr;
+PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties = nullptr;
+PFN_vkGetPhysicalDeviceMemoryProperties vkGetPhysicalDeviceMemoryProperties = nullptr;
 #if defined(VK_KHR_surface)
-PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR;
-PFN_vkGetPhysicalDeviceSurfaceFormatsKHR vkGetPhysicalDeviceSurfaceFormatsKHR;
-PFN_vkGetPhysicalDeviceSurfacePresentModesKHR vkGetPhysicalDeviceSurfacePresentModesKHR;
-PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR;
-PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
+PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
+PFN_vkGetPhysicalDeviceSurfaceFormatsKHR vkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
+PFN_vkGetPhysicalDeviceSurfacePresentModesKHR vkGetPhysicalDeviceSurfacePresentModesKHR = nullptr;
+PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR = nullptr;
+PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR = nullptr;
 #endif
 #if defined(VK_KHR_win32_surface)
-PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
-PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR;
+PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR = nullptr;
+PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR = nullptr;
 #endif
 #if defined(VK_EXT_debug_utils)
-PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
-PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT;
+PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = nullptr;
+PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = nullptr;
 #endif
 
 // device level functions
 #if defined(VK_VERSION_1_0)
-PFN_vkDestroyDevice vkDestroyDevice;
-PFN_vkGetDeviceQueue vkGetDeviceQueue;
-PFN_vkCreateShaderModule vkCreateShaderModule;
-PFN_vkDestroyShaderModule vkDestroyShaderModule;
-PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines;
-PFN_vkDestroyPipeline vkDestroyPipeline;
-PFN_vkAllocateMemory vkAllocateMemory;
-PFN_vkFreeMemory vkFreeMemory;
-PFN_vkMapMemory vkMapMemory;
-PFN_vkUnmapMemory vkUnmapMemory;
-PFN_vkFlushMappedMemoryRanges vkFlushMappedMemoryRanges;
-PFN_vkInvalidateMappedMemoryRanges vkInvalidateMappedMemoryRanges;
-PFN_vkBindBufferMemory vkBindBufferMemory;
-PFN_vkBindImageMemory vkBindImageMemory;
-PFN_vkGetBufferMemoryRequirements vkGetBufferMemoryRequirements;
-PFN_vkGetImageMemoryRequirements vkGetImageMemoryRequirements;
-PFN_vkCreateBuffer vkCreateBuffer;
-PFN_vkDestroyBuffer vkDestroyBuffer;
-PFN_vkCreateImage vkCreateImage;
-PFN_vkDestroyImage vkDestroyImage;
-PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
-PFN_vkCreateImageView vkCreateImageView;
-PFN_vkDestroyImageView vkDestroyImageView;
+PFN_vkDestroyDevice vkDestroyDevice = nullptr;
+PFN_vkGetDeviceQueue vkGetDeviceQueue = nullptr;
+PFN_vkCreateShaderModule vkCreateShaderModule = nullptr;
+PFN_vkDestroyShaderModule vkDestroyShaderModule = nullptr;
+PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines = nullptr;
+PFN_vkDestroyPipeline vkDestroyPipeline = nullptr;
+PFN_vkAllocateMemory vkAllocateMemory = nullptr;
+PFN_vkFreeMemory vkFreeMemory = nullptr;
+PFN_vkMapMemory vkMapMemory = nullptr;
+PFN_vkUnmapMemory vkUnmapMemory = nullptr;
+PFN_vkFlushMappedMemoryRanges vkFlushMappedMemoryRanges = nullptr;
+PFN_vkInvalidateMappedMemoryRanges vkInvalidateMappedMemoryRanges = nullptr;
+PFN_vkBindBufferMemory vkBindBufferMemory = nullptr;
+PFN_vkBindImageMemory vkBindImageMemory = nullptr;
+PFN_vkGetBufferMemoryRequirements vkGetBufferMemoryRequirements = nullptr;
+PFN_vkGetImageMemoryRequirements vkGetImageMemoryRequirements = nullptr;
+PFN_vkCreateBuffer vkCreateBuffer = nullptr;
+PFN_vkDestroyBuffer vkDestroyBuffer = nullptr;
+PFN_vkCreateImage vkCreateImage = nullptr;
+PFN_vkDestroyImage vkDestroyImage = nullptr;
+PFN_vkCmdCopyBuffer vkCmdCopyBuffer = nullptr;
+PFN_vkCreateImageView vkCreateImageView = nullptr;
+PFN_vkDestroyImageView vkDestroyImageView = nullptr;
 #endif
 #if defined(VK_VERSION_1_1)
-PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2;
-PFN_vkGetImageMemoryRequirements2 vkGetImageMemoryRequirements2;
-PFN_vkBindBufferMemory2 vkBindBufferMemory2;
-PFN_vkBindImageMemory2 vkBindImageMemory2;
-PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2;
+PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2 = nullptr;
+PFN_vkGetImageMemoryRequirements2 vkGetImageMemoryRequirements2 = nullptr;
+PFN_vkBindBufferMemory2 vkBindBufferMemory2 = nullptr;
+PFN_vkBindImageMemory2 vkBindImageMemory2 = nullptr;
+PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2 = nullptr;
 #endif
 #if defined(VK_VERSION_1_3)
-PFN_vkGetDeviceBufferMemoryRequirements vkGetDeviceBufferMemoryRequirements;
-PFN_vkGetDeviceImageMemoryRequirements vkGetDeviceImageMemoryRequirements;
+PFN_vkGetDeviceBufferMemoryRequirements vkGetDeviceBufferMemoryRequirements = nullptr;
+PFN_vkGetDeviceImageMemoryRequirements vkGetDeviceImageMemoryRequirements = nullptr;
 #endif
 #if defined(VK_KHR_swapchain)
-PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR;
-PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR;
-PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR;
+PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR = nullptr;
+PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR = nullptr;
+PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR = nullptr;
 #endif
 
-#define LOAD_INSTANCE_LAYER_FUNCTION(function) function = reinterpret_cast<decltype(function)>(vkGetInstanceProcAddr(*pInstance, #function))
-#define LOAD_DEVICE_LAYER_FUNCTION(function) function = reinterpret_cast<decltype(function)>(vkGetDeviceProcAddr(*pDevice, #function))
+namespace {
+template<typename Function> Function load_instance_level_function(VkInstance vk_instance_a, const char* name_a)
+{
+    Function pfn = reinterpret_cast<Function>(vkGetInstanceProcAddr(vk_instance_a, name_a));
+
+    if (nullptr == pfn)
+    {
+        log_err("Cannot load {} Vulkan API function", name_a);
+    }
+    else
+    {
+        log_inf("{} successfuly loaded", name_a);
+    }
+
+    return pfn;
+}
+
+template<typename Function> Function load_device_level_function(VkDevice vk_device_a, const char* name_a)
+{
+    Function pfn = reinterpret_cast<Function>(vkGetDeviceProcAddr(vk_device_a, name_a));
+
+    if (nullptr == pfn)
+    {
+        log_err("Cannot load {} Vulkan API function", name_a);
+    }
+    else
+    {
+        log_inf("{} successfuly loaded", name_a);
+    }
+
+    return pfn;
+}
+
+template<typename Function> void unload_function(lx::common::out<Function> function)
+{
+    if (nullptr != *function)
+    {
+        *function = nullptr;
+    }
+}
+} // namespace
+
+#define LOAD_INSTANCE_LEVEL_FUNCTION(function) function = load_instance_level_function<decltype(function)>(*pInstance, #function)
+#define LOAD_DEVICE_LEVEL_FUNCTION(function) function = load_device_level_function<decltype(function)>(*pDevice, #function)
 
 namespace lx::gpu::loader {
 bool vulkan::load()
 {
-    vk_handle = LoadLibrary("vulkan-1.dll");
-    if (nullptr != vk_handle)
+    vk_driver_handle = LoadLibrary("vulkan-1.dll");
+    if (nullptr != vk_driver_handle)
     {
-        vkGetInstanceProcAddr = reinterpret_cast<decltype(vkGetInstanceProcAddr)>(GetProcAddress(vk_handle, "vkGetInstanceProcAddr"));
-        vkGetDeviceProcAddr = reinterpret_cast<decltype(vkGetDeviceProcAddr)>(GetProcAddress(vk_handle, "vkGetDeviceProcAddr"));
+        version = VK_API_VERSION_1_0;
+
+        vkGetInstanceProcAddr =
+            reinterpret_cast<decltype(vkGetInstanceProcAddr)>(GetProcAddress(vk_driver_handle, "vkGetInstanceProcAddr"));
+        vkGetDeviceProcAddr = reinterpret_cast<decltype(vkGetDeviceProcAddr)>(GetProcAddress(vk_driver_handle, "vkGetDeviceProcAddr"));
 
         vkEnumerateInstanceExtensionProperties = reinterpret_cast<decltype(vkEnumerateInstanceExtensionProperties)>(
-            GetProcAddress(vk_handle, "vkEnumerateInstanceExtensionProperties"));
-        vkEnumerateInstanceLayerProperties =
-            reinterpret_cast<decltype(vkEnumerateInstanceLayerProperties)>(GetProcAddress(vk_handle, "vkEnumerateInstanceLayerProperties"));
+            GetProcAddress(vk_driver_handle, "vkEnumerateInstanceExtensionProperties"));
+        vkEnumerateInstanceLayerProperties = reinterpret_cast<decltype(vkEnumerateInstanceLayerProperties)>(
+            GetProcAddress(vk_driver_handle, "vkEnumerateInstanceLayerProperties"));
+        vkEnumerateInstanceVersion =
+            reinterpret_cast<decltype(vkEnumerateInstanceVersion)>(GetProcAddress(vk_driver_handle, "vkEnumerateInstanceVersion"));
+
+        if (nullptr != vkEnumerateInstanceVersion)
+        {
+            std::uint32_t vk_version;
+            vkEnumerateInstanceVersion(&vk_version);
+
+            version = vk_version;
+        }
+
+        const lx::common::Version::Components vr = version;
+        log_inf("Vulkan version installed on system: {}.{}.{}", vr.major, vr.minor, vr.patch);
 
         return true;
+    }
+    else
+    {
+        log_omg("No Vulkan installed!");
     }
 
     return false;
 }
 void vulkan::release()
 {
-    assert(nullptr != vk_handle);
-    FreeLibrary(vk_handle);
+    assert(nullptr != vk_driver_handle);
 
-    vk_handle = nullptr;
+    unload_function(lx::common::out(vkGetInstanceProcAddr));
+    unload_function(lx::common::out(vkGetDeviceProcAddr));
+
+    unload_function(lx::common::out(vkEnumerateInstanceExtensionProperties));
+    unload_function(lx::common::out(vkEnumerateInstanceLayerProperties));
+    unload_function(lx::common::out(vkEnumerateInstanceVersion));
+
+    // instance level functions
+    unload_function(lx::common::out(vkDestroyInstance));
+    unload_function(lx::common::out(vkGetPhysicalDeviceProperties));
+    unload_function(lx::common::out(vkGetPhysicalDeviceFeatures));
+    unload_function(lx::common::out(vkEnumeratePhysicalDevices));
+    unload_function(lx::common::out(vkEnumerateDeviceExtensionProperties));
+    unload_function(lx::common::out(vkGetPhysicalDeviceQueueFamilyProperties));
+    unload_function(lx::common::out(vkGetPhysicalDeviceMemoryProperties));
+#if defined(VK_KHR_surface)
+    unload_function(lx::common::out(vkGetPhysicalDeviceSurfaceCapabilitiesKHR));
+    unload_function(lx::common::out(vkGetPhysicalDeviceSurfaceFormatsKHR));
+    unload_function(lx::common::out(vkGetPhysicalDeviceSurfacePresentModesKHR));
+    unload_function(lx::common::out(vkGetPhysicalDeviceSurfaceSupportKHR));
+    unload_function(lx::common::out(vkDestroySurfaceKHR));
+#endif
+#if defined(VK_KHR_win32_surface)
+    unload_function(lx::common::out(vkCreateWin32SurfaceKHR));
+    unload_function(lx::common::out(vkGetPhysicalDeviceWin32PresentationSupportKHR));
+#endif
+#if defined(VK_EXT_debug_utils)
+    unload_function(lx::common::out(vkCreateDebugUtilsMessengerEXT));
+    unload_function(lx::common::out(vkDestroyDebugUtilsMessengerEXT));
+#endif
+
+// device level functions
+#if defined(VK_VERSION_1_0)
+    unload_function(lx::common::out(vkDestroyDevice));
+    unload_function(lx::common::out(vkGetDeviceQueue));
+    unload_function(lx::common::out(vkCreateShaderModule));
+    unload_function(lx::common::out(vkDestroyShaderModule));
+    unload_function(lx::common::out(vkCreateGraphicsPipelines));
+    unload_function(lx::common::out(vkDestroyPipeline));
+    unload_function(lx::common::out(vkAllocateMemory));
+    unload_function(lx::common::out(vkFreeMemory));
+    unload_function(lx::common::out(vkMapMemory));
+    unload_function(lx::common::out(vkUnmapMemory));
+    unload_function(lx::common::out(vkFlushMappedMemoryRanges));
+    unload_function(lx::common::out(vkInvalidateMappedMemoryRanges));
+    unload_function(lx::common::out(vkBindBufferMemory));
+    unload_function(lx::common::out(vkBindImageMemory));
+    unload_function(lx::common::out(vkGetBufferMemoryRequirements));
+    unload_function(lx::common::out(vkGetImageMemoryRequirements));
+    unload_function(lx::common::out(vkCreateBuffer));
+    unload_function(lx::common::out(vkDestroyBuffer));
+    unload_function(lx::common::out(vkCreateImage));
+    unload_function(lx::common::out(vkDestroyImage));
+    unload_function(lx::common::out(vkCmdCopyBuffer));
+    unload_function(lx::common::out(vkCreateImageView));
+    unload_function(lx::common::out(vkDestroyImageView));
+#endif
+#if defined(VK_VERSION_1_1)
+    unload_function(lx::common::out(vkGetBufferMemoryRequirements2));
+    unload_function(lx::common::out(vkGetImageMemoryRequirements2));
+    unload_function(lx::common::out(vkBindBufferMemory2));
+    unload_function(lx::common::out(vkBindImageMemory2));
+    unload_function(lx::common::out(vkGetPhysicalDeviceMemoryProperties2));
+#endif
+#if defined(VK_VERSION_1_3)
+    unload_function(lx::common::out(vkGetDeviceBufferMemoryRequirements));
+    unload_function(lx::common::out(vkGetDeviceImageMemoryRequirements));
+#endif
+#if defined(VK_KHR_swapchain)
+    unload_function(lx::common::out(vkCreateSwapchainKHR));
+    unload_function(lx::common::out(vkGetSwapchainImagesKHR));
+    unload_function(lx::common::out(vkDestroySwapchainKHR));
+#endif
+
+    FreeLibrary(vk_driver_handle);
+
+    vk_driver_handle = nullptr;
 }
 
 extern "C" {
@@ -122,90 +262,98 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCre
                                                 const VkAllocationCallbacks* pAllocator,
                                                 VkInstance* pInstance)
 {
-    assert(nullptr != vk_handle);
+    assert(nullptr != vk_driver_handle);
 
-    PFN_vkCreateInstance vk_create_instance = reinterpret_cast<decltype(vk_create_instance)>(GetProcAddress(vk_handle, "vkCreateInstance"));
+    PFN_vkCreateInstance vk_create_instance =
+        reinterpret_cast<decltype(vk_create_instance)>(GetProcAddress(vk_driver_handle, "vkCreateInstance"));
     VkResult ret = vk_create_instance(pCreateInfo, pAllocator, pInstance);
 
     if (VK_SUCCESS == ret)
     {
-        LOAD_INSTANCE_LAYER_FUNCTION(vkDestroyInstance);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceProperties);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceFeatures);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkEnumeratePhysicalDevices);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkEnumerateDeviceExtensionProperties);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceMemoryProperties);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkDestroyInstance);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceProperties);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceFeatures);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkEnumeratePhysicalDevices);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkEnumerateDeviceExtensionProperties);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceMemoryProperties);
 #if defined(VK_KHR_surface)
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceSurfaceFormatsKHR);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceSurfacePresentModesKHR);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceSurfaceSupportKHR);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkDestroySurfaceKHR);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfaceFormatsKHR);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfacePresentModesKHR);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfaceSupportKHR);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkDestroySurfaceKHR);
 #endif
 #if defined(VK_KHR_win32_surface)
-        LOAD_INSTANCE_LAYER_FUNCTION(vkCreateWin32SurfaceKHR);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkGetPhysicalDeviceWin32PresentationSupportKHR);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkCreateWin32SurfaceKHR);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceWin32PresentationSupportKHR);
 #endif
 #if defined(VK_EXT_debug_utils)
-        LOAD_INSTANCE_LAYER_FUNCTION(vkCreateDebugUtilsMessengerEXT);
-        LOAD_INSTANCE_LAYER_FUNCTION(vkDestroyDebugUtilsMessengerEXT);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkCreateDebugUtilsMessengerEXT);
+        LOAD_INSTANCE_LEVEL_FUNCTION(vkDestroyDebugUtilsMessengerEXT);
 #endif
     }
 
     return ret;
 }
 
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkPhysicalDevice physicalDevice,
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
+                                              VkPhysicalDevice physicalDevice,
                                               const VkDeviceCreateInfo* pCreateInfo,
                                               const VkAllocationCallbacks* pAllocator,
                                               VkDevice* pDevice)
 {
-    PFN_vkCreateDevice vk_create_device = reinterpret_cast<decltype(vk_create_device)>(GetProcAddress(vk_handle, "vkCreateDevice"));
+    PFN_vkCreateDevice vk_create_device = reinterpret_cast<decltype(vk_create_device)>(vkGetInstanceProcAddr(instance, "vkCreateDevice"));
     VkResult ret = vk_create_device(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
     if (VK_SUCCESS == ret)
     {
 #if defined(VK_VERSION_1_0)
-        LOAD_DEVICE_LAYER_FUNCTION(vkDestroyDevice);
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetDeviceQueue);
-        LOAD_DEVICE_LAYER_FUNCTION(vkCreateShaderModule);
-        LOAD_DEVICE_LAYER_FUNCTION(vkDestroyShaderModule);
-        LOAD_DEVICE_LAYER_FUNCTION(vkCreateGraphicsPipelines);
-        LOAD_DEVICE_LAYER_FUNCTION(vkDestroyPipeline);
-        LOAD_DEVICE_LAYER_FUNCTION(vkAllocateMemory);
-        LOAD_DEVICE_LAYER_FUNCTION(vkFreeMemory);
-        LOAD_DEVICE_LAYER_FUNCTION(vkMapMemory);
-        LOAD_DEVICE_LAYER_FUNCTION(vkUnmapMemory);
-        LOAD_DEVICE_LAYER_FUNCTION(vkFlushMappedMemoryRanges);
-        LOAD_DEVICE_LAYER_FUNCTION(vkInvalidateMappedMemoryRanges);
-        LOAD_DEVICE_LAYER_FUNCTION(vkBindBufferMemory);
-        LOAD_DEVICE_LAYER_FUNCTION(vkBindImageMemory);
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetBufferMemoryRequirements);
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetImageMemoryRequirements);
-        LOAD_DEVICE_LAYER_FUNCTION(vkCreateBuffer);
-        LOAD_DEVICE_LAYER_FUNCTION(vkDestroyBuffer);
-        LOAD_DEVICE_LAYER_FUNCTION(vkCreateImage);
-        LOAD_DEVICE_LAYER_FUNCTION(vkDestroyImage);
-        LOAD_DEVICE_LAYER_FUNCTION(vkCmdCopyBuffer);
-        LOAD_DEVICE_LAYER_FUNCTION(vkCreateImageView);
-        LOAD_DEVICE_LAYER_FUNCTION(vkDestroyImageView);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyDevice);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkGetDeviceQueue);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkCreateShaderModule);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyShaderModule);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkCreateGraphicsPipelines);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyPipeline);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkAllocateMemory);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkFreeMemory);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkMapMemory);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkUnmapMemory);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkFlushMappedMemoryRanges);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkInvalidateMappedMemoryRanges);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkBindBufferMemory);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkBindImageMemory);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkGetBufferMemoryRequirements);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkGetImageMemoryRequirements);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkCreateBuffer);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyBuffer);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkCreateImage);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyImage);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkCmdCopyBuffer);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkCreateImageView);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyImageView);
 #endif
 #if defined(VK_VERSION_1_1)
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetBufferMemoryRequirements2);
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetImageMemoryRequirements2);
-        LOAD_DEVICE_LAYER_FUNCTION(vkBindBufferMemory2);
-        LOAD_DEVICE_LAYER_FUNCTION(vkBindImageMemory2);
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetPhysicalDeviceMemoryProperties2);
+        if (loader::vulkan::get_version() >= VK_MAKE_API_VERSION(0, 1, 1, 0))
+        {
+            LOAD_DEVICE_LEVEL_FUNCTION(vkGetBufferMemoryRequirements2);
+            LOAD_DEVICE_LEVEL_FUNCTION(vkGetImageMemoryRequirements2);
+            LOAD_DEVICE_LEVEL_FUNCTION(vkBindBufferMemory2);
+            LOAD_DEVICE_LEVEL_FUNCTION(vkBindImageMemory2);
+            LOAD_DEVICE_LEVEL_FUNCTION(vkGetPhysicalDeviceMemoryProperties2);
+        }
 #endif
 #if defined(VK_VERSION_1_3)
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetDeviceBufferMemoryRequirements);
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetDeviceImageMemoryRequirements);
+        if (loader::vulkan::get_version() >= VK_MAKE_API_VERSION(0, 1, 3, 0))
+        {
+            LOAD_DEVICE_LEVEL_FUNCTION(vkGetDeviceBufferMemoryRequirements);
+            LOAD_DEVICE_LEVEL_FUNCTION(vkGetDeviceImageMemoryRequirements);
+        }
 #endif
 #if defined(VK_KHR_swapchain)
-        LOAD_DEVICE_LAYER_FUNCTION(vkCreateSwapchainKHR);
-        LOAD_DEVICE_LAYER_FUNCTION(vkGetSwapchainImagesKHR);
-        LOAD_DEVICE_LAYER_FUNCTION(vkDestroySwapchainKHR);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkCreateSwapchainKHR);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkGetSwapchainImagesKHR);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDestroySwapchainKHR);
 #endif
     }
 

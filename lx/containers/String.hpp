@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ *	Name: String.hpp
+ *  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ */
+
 // lx
 #include <lx/containers/Vector.hpp>
 

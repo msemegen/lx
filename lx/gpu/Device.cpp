@@ -70,7 +70,7 @@ void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Propertie
                                                    .enabledExtensionCount = static_cast<std::uint32_t>(extensions.get_length()),
                                                    .ppEnabledExtensionNames = extensions.get_buffer() };
 
-        bool success = VK_SUCCESS == vkCreateDevice(gpu_a, &vk_device_create_info, nullptr, &(this->vk_device));
+        bool success = VK_SUCCESS == vkCreateDevice(vk_instance, gpu_a, &vk_device_create_info, nullptr, &(this->vk_device));
 
         if (true == success)
         {

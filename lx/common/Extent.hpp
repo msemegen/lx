@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ *	Name: Extent.hpp
+ *  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ */
+
 // lx
 #include <lx/common/non_constructible.hpp>
 

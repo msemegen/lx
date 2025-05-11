@@ -3,8 +3,8 @@
 
 // lx
 #include <lx/containers/Vector.hpp>
-#include <lx/utils/logger.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
+#include <lx/utils/logger.hpp>
 
 // win32
 #include <Windows.h>
@@ -143,27 +143,27 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
     Vector<Display> displays;
     Vector<GPU> gpus;
 
+    lx::app::Config config;
+    lx::app::setup(out(config));
+
+    if (true == config.log.path.is_empty())
+    {
+        // log filename empty error code
+        return -1;
+    }
+
+    errno_t file_err = fopen_s(&p_log_file, config.log.path.get_cstring(), "w+");
+
+    if (0 != file_err)
+    {
+        return -2;
+    }
+
     bool vulkan_loaded = loader::vulkan::load();
     bool vulkan_initialized = false;
 
     if (true == vulkan_loaded)
     {
-        lx::app::Config config;
-        lx::app::setup(out(config));
-
-        if (true == config.log.path.is_empty())
-        {
-            // log filename empty error code
-            return -1;
-        }
-
-        errno_t file_err = fopen_s(&p_log_file, config.log.path.get_cstring(), "w+");
-
-        if (0 != file_err)
-        {
-            return -2;
-        }
-
         if (true == config.log.console)
         {
             log_console_output = static_cast<bool>(AllocConsole());
