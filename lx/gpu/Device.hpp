@@ -6,6 +6,7 @@
 #include <lx/containers/Vector.hpp>
 #include <lx/devices/GPU.hpp>
 #include <lx/gpu/Buffer.hpp>
+#include <lx/gpu/Queue.hpp>
 #include <lx/gpu/SwapChain.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
 #include <lx/gpu/pipelines/Graphics.hpp>
@@ -26,7 +27,7 @@ public:
         using enum Kind;
 
         Kind kind;
-        std::size_t count = 0u;
+        std::size_t members = 0;
 
         lx::containers::Vector<float> priorities;
         bool presentation = false;
@@ -41,7 +42,7 @@ public:
 
     [[nodiscard]] bool is_created() const
     {
-        return VK_NULL_HANDLE != this->vk_device && false == this->vk_queues.is_empty();
+        return VK_NULL_HANDLE != this->vk_device && false == this->queue_families.is_empty();
     }
 
     [[nodiscard]] operator VkDevice() const
@@ -53,7 +54,22 @@ public:
     template<typename Type> void destroy(lx::common::out<Type> object_a) = delete;
 
 private:
-    void create(const lx::devices::GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a);
+    struct QueueInfo
+    {
+        using Kind = devices::GPU::QueueFamily::Kind;
+
+        using enum Kind;
+
+        Kind kind;
+        float priority = 0.0f;
+
+        std::size_t queue_family;
+        std::size_t index;
+
+        bool persentation = false;
+    };
+
+    Device(const lx::devices::GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a);
     void destroy()
     {
         if (VK_NULL_HANDLE != this->vk_device)
@@ -66,9 +82,9 @@ private:
     VkDevice vk_device = VK_NULL_HANDLE;
     VkSurfaceKHR vk_surface = VK_NULL_HANDLE;
 
-    lx::containers::Vector<VkQueue> vk_queues;
-
     VmaAllocator vk_memory_allocator;
+
+    lx::containers::Vector<QueueInfo> queue_families;
 
     friend class Context;
 };
@@ -96,5 +112,13 @@ template<> inline [[nodiscard]] lx::gpu::SwapChain Device::create<lx::gpu::SwapC
 template<> inline void Device::destroy(lx::common::out<lx::gpu::SwapChain> object_a)
 {
     object_a->destroy(this->vk_device);
+}
+
+template<> inline [[nodiscard]] lx::gpu::Queue Device::create<lx::gpu::Queue>(const lx::gpu::Queue::Properties& properties_a)
+{
+    // look for first queue with the same proprties in queue_families
+    // decrease members, and pop_front from priorities
+    // what for queue with multiple types? 
+    return {};
 }
 } // namespace lx::gpu

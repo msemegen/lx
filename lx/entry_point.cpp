@@ -159,27 +159,27 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
         return -2;
     }
 
+    if (true == config.log.console)
+    {
+        log_console_output = static_cast<bool>(AllocConsole());
+
+        if (true == log_console_output)
+        {
+            FILE* fp1 = nullptr;
+            FILE* fp2 = nullptr;
+            FILE* fp3 = nullptr;
+
+            freopen_s(&fp1, "CONIN$", "r", stdin);
+            freopen_s(&fp2, "CONOUT$", "w", stdout);
+            freopen_s(&fp3, "CONOUT$", "w", stderr);
+        }
+    }
+
     bool vulkan_loaded = loader::vulkan::load();
     bool vulkan_initialized = false;
 
     if (true == vulkan_loaded)
     {
-        if (true == config.log.console)
-        {
-            log_console_output = static_cast<bool>(AllocConsole());
-
-            if (true == log_console_output)
-            {
-                FILE* fp1 = nullptr;
-                FILE* fp2 = nullptr;
-                FILE* fp3 = nullptr;
-
-                freopen_s(&fp1, "CONIN$", "r", stdin);
-                freopen_s(&fp2, "CONOUT$", "w", stdout);
-                freopen_s(&fp3, "CONOUT$", "w", stderr);
-            }
-        }
-
         Vector<const char*> instance_layers;
         Vector<const char*> instance_extensions;
 
@@ -650,10 +650,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
                         for (const VkQueueFamilyProperties& vk_queue_family_properties : queue_families_a)
                         {
                             GPU::QueueFamily q { .kind = static_cast<GPU::QueueFamily::Kind>(vk_queue_family_properties.queueFlags),
-                                                 .count = vk_queue_family_properties.queueCount,
+                                                 .members = vk_queue_family_properties.queueCount,
                                                  .index = index++ };
 
-                            log_inf("Q: kind: {}. count: {}, index: {}", static_cast<std::uint32_t>(q.kind), q.count, q.index);
+                            log_inf("Q: kind: {}. members: {}, index: {}", static_cast<std::uint32_t>(q.kind), q.members, q.index);
 
                             ret.push_back(q);
                         }

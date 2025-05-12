@@ -17,7 +17,7 @@ using namespace lx::containers;
 using namespace lx::devices;
 using namespace lx::utils;
 
-void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a)
+Device::Device(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a)
 {
     assert(false == properties_a.queue_families.empty());
     assert(false == gpu_a.queue_families.is_empty());
@@ -26,7 +26,7 @@ void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Propertie
 
     for (std::size_t qf_property_index = 0; qf_property_index < properties_a.queue_families.size(); qf_property_index++)
     {
-        assert(properties_a.queue_families[qf_property_index].count ==
+        assert(properties_a.queue_families[qf_property_index].members ==
                properties_a.queue_families[qf_property_index].priorities.get_length());
 
         auto itr = std::find_if(begin(gpu_a.queue_families), end(gpu_a.queue_families), [&](const GPU::QueueFamily& gpu_qf_a) {
@@ -35,7 +35,7 @@ void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Propertie
                 gpu_a, static_cast<std::uint32_t>(gpu_qf_a.index), vk_surface_a, &has_presentation_support);
 
             return true == bit::flag::is(gpu_qf_a.kind, properties_a.queue_families[qf_property_index].kind) &&
-                   gpu_qf_a.count >= properties_a.queue_families[qf_property_index].count &&
+                   gpu_qf_a.members >= properties_a.queue_families[qf_property_index].members &&
                    static_cast<VkBool32>(properties_a.queue_families[qf_property_index].presentation) == has_presentation_support;
         });
         if (end(gpu_a.queue_families) != itr)
@@ -45,7 +45,7 @@ void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Propertie
                 .pNext = nullptr,
                 .flags = 0x0u,
                 .queueFamilyIndex = static_cast<std::uint32_t>(itr->index),
-                .queueCount = static_cast<std::uint32_t>(properties_a.queue_families[qf_property_index].priorities.get_length()),
+                .queueCount = static_cast<std::uint32_t>(properties_a.queue_families[qf_property_index].members),
                 .pQueuePriorities = properties_a.queue_families[qf_property_index].priorities.get_buffer()
             };
 
@@ -74,19 +74,6 @@ void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Propertie
 
         if (true == success)
         {
-            for (const VkDeviceQueueCreateInfo& vk_queue_descriptor : vk_device_queues_create_info)
-            {
-                for (std::size_t queue_index = 0u; queue_index < vk_queue_descriptor.queueCount; queue_index++)
-                {
-                    VkQueue vk_queue;
-                    vkGetDeviceQueue(
-                        this->vk_device, vk_queue_descriptor.queueFamilyIndex, static_cast<std::uint32_t>(queue_index), &vk_queue);
-                    this->vk_queues.push_back(vk_queue);
-                }
-            }
-
-            this->vk_queues.shrink_to_fit();
-
             VmaAllocatorCreateInfo vma_allocator_create_info { .physicalDevice = gpu_a,
                                                                .device = this->vk_device,
                                                                .preferredLargeHeapBlockSize = 0u,
@@ -100,9 +87,30 @@ void Device::create(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Propertie
 
             if (true == success)
             {
+                /*
+                * push every queue type 
+                */
+                this->queue_families.push_back(QueueInfo{});
                 this->vk_surface = vk_surface_a;
             }
         }
+
+        // if (true == success)
+        //{
+        //     for (const VkDeviceQueueCreateInfo& vk_queue_descriptor : vk_device_queues_create_info)
+        //     {
+        //         for (std::size_t queue_index = 0u; queue_index < vk_queue_descriptor.queueCount; queue_index++)
+        //         {
+        //             VkQueue vk_queue;
+        //             vkGetDeviceQueue(
+        //                 this->vk_device, vk_queue_descriptor.queueFamilyIndex, static_cast<std::uint32_t>(queue_index), &vk_queue);
+        //             this->vk_queues.push_back(vk_queue);
+        //         }
+        //     }
+        //
+        //     this->vk_queues.shrink_to_fit();
+        //
+        // }
     }
     else
     {

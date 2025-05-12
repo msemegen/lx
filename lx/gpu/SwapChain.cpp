@@ -22,7 +22,6 @@ SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Prop
                                                          .presentMode = static_cast<VkPresentModeKHR>(properties_a.mode),
                                                          .clipped = VK_TRUE,
                                                          .oldSwapchain = VK_NULL_HANDLE };
-
     bool success = VK_SUCCESS == vkCreateSwapchainKHR(vk_device_a, &vk_swap_chain_create_info, nullptr, &(this->vk_swap_chain));
 
     if (true == success)
@@ -32,7 +31,8 @@ SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Prop
         vkGetSwapchainImagesKHR(vk_device_a, this->vk_swap_chain, &swap_chain_images_count, nullptr);
         this->vk_swap_chain_images.reserve(swap_chain_images_count);
         vkGetSwapchainImagesKHR(vk_device_a, this->vk_swap_chain, &swap_chain_images_count, this->vk_swap_chain_images.get_buffer());
-
+        
+        this->vk_swap_chain_image_views.reserve(swap_chain_images_count);
         for (std::uint32_t i = 0; i < swap_chain_images_count && true == success; i++)
         {
             VkImageViewCreateInfo vk_image_view_create_info {

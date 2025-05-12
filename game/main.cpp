@@ -50,7 +50,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
 
     for (auto q : gpus_a[0].queue_families)
     {
-        log_inf("Q: kind: {}. count: {}, index: {}", static_cast<std::uint32_t>(q.kind), q.count, q.index);
+        log_inf("Q: kind: {}. members: {}, index: {}", static_cast<std::uint32_t>(q.kind), q.members, q.index);
     }
 
     {
@@ -69,14 +69,17 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 Device::Properties { .features = Device::Feature::none,
                                      .queue_families { std::array {
                                          Device::QueueFamily { .kind = Device::QueueFamily::graphics | Device::QueueFamily::transfer,
-                                                               .count = 1u,
+                                                               .members = 1u,
                                                                .priorities { 1.0f },
                                                                .presentation = true } } } });
 
-            auto swap_chain = gpu_device1->create<lx::gpu::SwapChain>({ .format = SwapChain::Format::r8g8b8a8_srgb,
-                                                                        .color_space = SwapChain::ColorSpace::srgb_nonlinear_khr,
-                                                                        .mode = SwapChain::Mode::fifo,
-                                                                        .images_count = 2u });
+            auto swap_chain = gpu_device1.create<lx::gpu::SwapChain>({ .format = SwapChain::Format::r8g8b8a8_srgb,
+                                                                       .color_space = SwapChain::ColorSpace::srgb_nonlinear_khr,
+                                                                       .mode = SwapChain::Mode::fifo,
+                                                                       .extent { .w = 800u, .h = 600u },
+                                                                       .images_count = 2u });
+
+            auto rendering_queue = gpu_device1.create<lx::gpu::Queue>({});
             /*
              *  .swap_chain {  }
              */
@@ -95,7 +98,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
             //                                        .mode = Device::SwapChain::Mode::fifo,
             //                                        .images_count = 2u } });
 
-            if (true == gpu_device1->is_created() /* && true == gpu_device2->is_created()*/)
+            if (true == gpu_device1.is_created() /* && true == gpu_device2->is_created()*/)
             {
                 log_inf("GPU context created");
 
@@ -126,14 +129,14 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                     c2 = windower_a.update(canvas2);
                 } while (true == c1 || true == c2);
 
-                //gpu_device1->destroy(out(p));
+                // gpu_device1->destroy(out(p));
             }
             else
             {
                 log_err("GPU context not created");
             }
 
-            if (true == gpu_device1->is_created() /*&& true == gpu_device2->is_created()*/)
+            if (true == gpu_device1.is_created() /*&& true == gpu_device2->is_created()*/)
             {
                 log_inf("GPU context destroyed");
             }
