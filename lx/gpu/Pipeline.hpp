@@ -2,6 +2,7 @@
 
 // lx
 #include <lx/common/Rect.hpp>
+#include <lx/common/non_constructible.hpp>
 #include <lx/common/non_copyable.hpp>
 #include <lx/containers/Vector.hpp>
 #include <lx/gpu/Viewport.hpp>
@@ -11,8 +12,24 @@
 #include <array>
 #include <span>
 
-namespace lx::gpu::pipelines {
-class Graphics : private lx::common::non_copyable
+namespace lx::gpu {
+struct pipeline : private lx::common::non_constructible
+{
+    enum class Kind : std::uint32_t
+    {
+        graphics,
+        compute,
+        raytracing
+    };
+
+    using enum Kind;
+};
+
+template<pipeline::Kind kind> class Pipeline : private lx::common::non_constructible
+{
+};
+
+template<> class Pipeline<pipeline::graphics> : private lx::common::non_copyable
 {
 public:
     enum class DynamicState : std::uint32_t
@@ -322,7 +339,7 @@ public:
     }
 
 private:
-    Graphics(VkDevice vk_device_a, const Properties& properties_a);
+    Pipeline(VkDevice vk_device_a, const Properties& properties_a);
     void destroy(VkDevice vk_device_a);
 
     VkPipeline vk_pipeline = VK_NULL_HANDLE;
@@ -331,13 +348,17 @@ private:
     friend class Device;
 };
 
-constexpr Graphics::Primitive::CullMode operator|(Graphics::Primitive::CullMode left_a, Graphics::Primitive::CullMode right_a)
+constexpr Pipeline<pipeline::graphics>::Primitive::CullMode operator|(Pipeline<pipeline::graphics>::Primitive::CullMode left_a,
+                                                                      Pipeline<pipeline::graphics>::Primitive::CullMode right_a)
 {
-    return static_cast<Graphics::Primitive::CullMode>(static_cast<std::uint32_t>(left_a) | static_cast<std::uint32_t>(right_a));
+    return static_cast<Pipeline<pipeline::graphics>::Primitive::CullMode>(static_cast<std::uint32_t>(left_a) |
+                                                                          static_cast<std::uint32_t>(right_a));
 }
 
-constexpr Graphics::Primitive::CullMode operator&(Graphics::Primitive::CullMode left_a, Graphics::Primitive::CullMode right_a)
+constexpr Pipeline<pipeline::graphics>::Primitive::CullMode operator&(Pipeline<pipeline::graphics>::Primitive::CullMode left_a,
+                                                                      Pipeline<pipeline::graphics>::Primitive::CullMode right_a)
 {
-    return static_cast<Graphics::Primitive::CullMode>(static_cast<std::uint32_t>(left_a) & static_cast<std::uint32_t>(right_a));
+    return static_cast<Pipeline<pipeline::graphics>::Primitive::CullMode>(static_cast<std::uint32_t>(left_a) &
+                                                                          static_cast<std::uint32_t>(right_a));
 }
-} // namespace lx::gpu::pipelines
+} // namespace lx::gpu

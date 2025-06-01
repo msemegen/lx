@@ -2,14 +2,16 @@
 
 // lx
 #include <lx/Windower.hpp>
+#include <lx/common/bit.hpp>
 #include <lx/common/non_copyable.hpp>
 #include <lx/containers/Vector.hpp>
 #include <lx/devices/GPU.hpp>
 #include <lx/gpu/Buffer.hpp>
+#include <lx/gpu/CommandPool.hpp>
+#include <lx/gpu/Pipeline.hpp>
 #include <lx/gpu/Queue.hpp>
 #include <lx/gpu/SwapChain.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
-#include <lx/gpu/pipelines/Graphics.hpp>
 
 // std
 #include <cassert>
@@ -20,29 +22,15 @@ class Device : private lx::common::non_copyable
 public:
     using Feature = devices::GPU::Feature;
 
-    struct QueueFamily
-    {
-        using Kind = devices::GPU::QueueFamily::Kind;
-
-        using enum Kind;
-
-        Kind kind;
-        std::size_t members = 0;
-
-        lx::containers::Vector<float> priorities;
-        bool presentation = false;
-    };
-
     struct Properties
     {
         Feature features;
-        std::span<const QueueFamily> queue_families;
         std::span<const char* const> extensions;
     };
 
     [[nodiscard]] bool is_created() const
     {
-        return VK_NULL_HANDLE != this->vk_device && false == this->queue_families.is_empty();
+        return VK_NULL_HANDLE != this->vk_device && false == this->queues.is_empty();
     }
 
     [[nodiscard]] operator VkDevice() const
@@ -63,10 +51,10 @@ private:
         Kind kind;
         float priority = 0.0f;
 
-        std::size_t queue_family;
-        std::size_t index;
+        std::uint32_t index;
+        std::uint32_t family;
 
-        bool persentation = false;
+        bool presentation = false;
     };
 
     Device(const lx::devices::GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a);
@@ -84,17 +72,18 @@ private:
 
     VmaAllocator vk_memory_allocator;
 
-    lx::containers::Vector<QueueInfo> queue_families;
+    lx::containers::Vector<QueueInfo> queues;
 
     friend class Context;
 };
 
-template<> inline [[nodiscard]] lx::gpu::pipelines::Graphics
-Device::create<lx::gpu::pipelines::Graphics>(const lx::gpu::pipelines::Graphics::Properties& properties_a)
+template<>
+inline [[nodiscard]] lx::gpu::Pipeline<lx::gpu::pipeline::graphics> Device::create<lx::gpu::Pipeline<lx::gpu::pipeline::graphics>>(
+    const lx::gpu::Pipeline<lx::gpu::pipeline::graphics>::Properties& properties_a)
 {
     return { this->vk_device, properties_a };
 }
-template<> inline void Device::destroy(lx::common::out<lx::gpu::pipelines::Graphics> object_a)
+template<> inline void Device::destroy(lx::common::out<lx::gpu::Pipeline<lx::gpu::pipeline::graphics>> object_a)
 {
     object_a->destroy(this->vk_device);
 }
@@ -116,9 +105,36 @@ template<> inline void Device::destroy(lx::common::out<lx::gpu::SwapChain> objec
 
 template<> inline [[nodiscard]] lx::gpu::Queue Device::create<lx::gpu::Queue>(const lx::gpu::Queue::Properties& properties_a)
 {
-    // look for first queue with the same proprties in queue_families
-    // decrease members, and pop_front from priorities
-    // what for queue with multiple types? 
-    return {};
+    for (std::size_t i = 0; i < this->queues.get_length(); i++)
+    {
+        if (this->queues[i].kind == properties_a.kind && properties_a.presentation == this->queues[i].presentation)
+        {
+            VkQueue vk_queue;
+            const QueueInfo queue_info = this->queues[i];
+
+            this->queues.erase(i);
+
+            vkGetDeviceQueue(this->vk_device, queue_info.family, queue_info.index, &vk_queue);
+            return { vk_queue, queue_info.index, queue_info.family, queue_info.kind };
+        }
+    }
+
+    for (std::size_t i = 0; i < this->queues.get_length(); i++)
+    {
+        if (true == common::bit::flag::is(this->queues[i].kind, properties_a.kind) &&
+            properties_a.presentation == this->queues[i].presentation)
+        {
+            VkQueue vk_queue;
+            const QueueInfo queue_info = this->queues[i];
+
+            this->queues.erase(i);
+
+            vkGetDeviceQueue(this->vk_device, queue_info.family, queue_info.index, &vk_queue);
+            return { vk_queue, queue_info.index, queue_info.family, queue_info.kind };
+        }
+    }
+
+    return { VK_NULL_HANDLE, std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max(), {} };
 }
+template<> inline void Device::destroy(lx::common::out<lx::gpu::Queue> object_a) {}
 } // namespace lx::gpu

@@ -1,10 +1,10 @@
 // this
-#include <lx/gpu/pipelines/Graphics.hpp>
+#include <lx/gpu/Pipeline.hpp>
 
-namespace lx::gpu::pipelines {
+namespace lx::gpu {
 using namespace lx::containers;
 
-Graphics::Graphics(VkDevice vk_device_a, const Properties& properties_a)
+Pipeline<pipeline::graphics>::Pipeline(VkDevice vk_device_a, const Properties& properties_a)
 {
     Vector<VkVertexInputBindingDescription> vk_vertex_input_binding_descriptions(properties_a.vertex_input.bindings.size());
     Vector<VkVertexInputAttributeDescription> vk_vertex_input_attribute_descriptions(properties_a.vertex_input.attributes.size());
@@ -51,5 +51,5 @@ Graphics::Graphics(VkDevice vk_device_a, const Properties& properties_a)
                                                                     .pColorBlendState = &vk_pipeline_color_blend_state_create_info };
 }
 
-void Graphics::destroy(VkDevice vk_device_a) {}
-} // namespace lx::gpu::pipelines
+void Pipeline<pipeline::graphics>::destroy(VkDevice vk_device_a) {}
+} // namespace lx::gpu

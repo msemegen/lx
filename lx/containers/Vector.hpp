@@ -107,6 +107,21 @@ public:
         return false;
     }
 
+    void erase(std::size_t index_a)
+    {
+        assert(index_a < this->length);
+
+        this->buffer[index_a].~Type();
+
+        for (size_t i = index_a; i < this->length - 1; i++)
+        {
+            new (&(this->buffer[i])) Type(std::move(this->buffer[i + 1]));
+            this->buffer[i + 1].~Type();
+        }
+
+        this->length--;
+    }
+
     std::size_t get_length() const
     {
         return this->length;
@@ -220,6 +235,16 @@ public:
         this->length = data_a.size();
         std::copy(data_a.begin(), data_a.begin() + this->length, this->buffer.get());
     }
+    Vector(std::size_t count_a, Type data_a)
+        : Vector(count_a)
+    {
+        for (std::size_t i = 0; i < this->capacity; i++)
+        {
+            this->buffer[i] = data_a;
+        }
+
+        this->length = count_a;
+    }
 
     void push_back(const Type& data_a)
     {
@@ -279,6 +304,26 @@ public:
     {
         this->resize(length_a);
         this->length = length_a;
+    }
+
+    void erase(std::size_t index_a)
+    {
+        assert(index_a < this->length);
+
+        this->buffer[index_a].~Type();
+
+        for (size_t i = index_a; i < this->length - 1; i++)
+        {
+            new (&(this->buffer[i])) Type(std::move(this->buffer[i + 1]));
+            this->buffer[i + 1].~Type();
+        }
+
+        this->length--;
+    }
+
+    void swap(std::size_t index_left_a, std::size_t index_right_a)
+    {
+        std::swap(this->buffer[index_left_a], this->buffer[index_right_a]);
     }
 
     void shrink_to_fit()

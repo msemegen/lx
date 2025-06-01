@@ -47,6 +47,7 @@ LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message,
                 canvas->p_on_position_change->on_position_change();
             }
         }
+        break;
 
         case WM_KILLFOCUS: {
         }
@@ -95,6 +96,7 @@ LRESULT __stdcall Windower::fullscreen_window_procedure(HWND hwnd, uint32_t mess
 
         case WM_MOVE: {
         }
+        break;
 
         case WM_KILLFOCUS: {
         }

@@ -12,18 +12,46 @@ namespace lx::gpu {
 class Queue : private lx::common::non_copyable
 {
 public:
+    using Kind = devices::GPU::QueueFamily::Kind;
+    using enum Kind;
+
     struct Properties
     {
-        using Kind = devices::GPU::QueueFamily::Kind;
-
-        using enum Kind;
-
         Kind kind;
         bool presentation = false;
     };
 
+    bool is_created()
+    {
+        return VK_NULL_HANDLE != this->vk_queue;
+    }
+
+    std::uint32_t get_index() const
+    {
+        return this->index;
+    }
+    std::uint32_t get_family() const
+    {
+        return this->family;
+    }
+
 private:
-    VkQueue vk_queue;
-    std::uint32_t family_index;
+    Queue(VkQueue vk_queue_a, std::uint32_t index_a, std::uint32_t family_a, Kind kind_a)
+        : vk_queue(vk_queue_a)
+        , index(index_a)
+        , family(family_a)
+        , kind(kind_a)
+    {
+    }
+    void destroy() {}
+
+    VkQueue vk_queue = VK_NULL_HANDLE;
+
+    std::uint32_t index = 0u;
+    std::uint32_t family = 0u;
+
+    Kind kind;
+
+    friend class Device;
 };
 } // namespace lx::gpu

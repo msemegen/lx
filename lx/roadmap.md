@@ -1,7 +1,7 @@
  ### TODO:
  * split between lxe (engine) and lxf (framework)
  * add support for CMake
-
+ 
  ## LFX:
  * logger
  * window management
