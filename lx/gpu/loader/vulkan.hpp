@@ -73,6 +73,9 @@ extern PFN_vkDestroyImage vkDestroyImage;
 extern PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
 extern PFN_vkCreateImageView vkCreateImageView;
 extern PFN_vkDestroyImageView vkDestroyImageView;
+extern PFN_vkCreateCommandPool vkCreateCommandPool;
+extern PFN_vkDestroyCommandPool vkDestroyCommandPool;
+
 #endif
 #if defined(VK_VERSION_1_1)
 extern PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2;

@@ -57,7 +57,7 @@ public:
 
     bool is_created()
     {
-        return false;
+        return VK_NULL_HANDLE != this->vk_swap_chain;
     }
 
     [[nodiscard]] operator VkSwapchainKHR() const

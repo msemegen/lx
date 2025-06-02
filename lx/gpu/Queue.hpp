@@ -26,15 +26,6 @@ public:
         return VK_NULL_HANDLE != this->vk_queue;
     }
 
-    std::uint32_t get_index() const
-    {
-        return this->index;
-    }
-    std::uint32_t get_family() const
-    {
-        return this->family;
-    }
-
 private:
     Queue(VkQueue vk_queue_a, std::uint32_t index_a, std::uint32_t family_a, Kind kind_a)
         : vk_queue(vk_queue_a)

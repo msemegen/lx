@@ -39,6 +39,7 @@ public:
     }
 
     template<typename Type> [[nodiscard]] Type create(typename const Type::Properties& properties) = delete;
+    template<typename Type, typename DependencyType> [[nodiscard]] Type create(const DependencyType& dependency_a) = delete;
     template<typename Type> void destroy(lx::common::out<Type> object_a) = delete;
 
 private:
@@ -137,4 +138,9 @@ template<> inline [[nodiscard]] lx::gpu::Queue Device::create<lx::gpu::Queue>(co
     return { VK_NULL_HANDLE, std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max(), {} };
 }
 template<> inline void Device::destroy(lx::common::out<lx::gpu::Queue> object_a) {}
+
+template<> inline [[nodiscard]] lx::gpu::CommandPool Device::create<lx::gpu::CommandPool>(const lx::gpu::Queue& queue_a)
+{
+    return lx::gpu::CommandPool(this->vk_device, queue_a.family);
+}
 } // namespace lx::gpu

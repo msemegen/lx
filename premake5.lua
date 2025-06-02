@@ -50,7 +50,7 @@ project "lx"
    warnings "Extra"
    characterset "MBCS"
    
-   includedirs { ".", "$(VULKAN_SDK)/Include", "externals/" }
+   includedirs { ".", "$(VULKAN_SDK)/Include" }
    
    files { "lx/**.hpp", "lx/**.h", "lx/**.cpp", "externals/**", "lx/**.md" }
 

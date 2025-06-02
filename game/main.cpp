@@ -86,6 +86,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
 
                 auto rendering_queue =
                     gpu_device1.create<lx::gpu::Queue>({ .kind = Queue::graphics | Queue::transfer, .presentation = true });
+                auto command_pool = gpu_device1.create<lx::gpu::CommandPool>(rendering_queue);
 
                 // auto command_pool = gpu_device1.create<lx::gpu::CommandPool>(rendering_queue);
                 // auto command_buffer = gpu_device1.create<lx::gpu::CommandBuffer>(command_pool);
