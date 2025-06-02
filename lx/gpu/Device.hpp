@@ -141,6 +141,6 @@ template<> inline void Device::destroy(lx::common::out<lx::gpu::Queue> object_a)
 
 template<> inline [[nodiscard]] lx::gpu::CommandPool Device::create<lx::gpu::CommandPool>(const lx::gpu::Queue& queue_a)
 {
-    return lx::gpu::CommandPool(this->vk_device, queue_a.family);
+    return { this->vk_device, queue_a.family };
 }
 } // namespace lx::gpu

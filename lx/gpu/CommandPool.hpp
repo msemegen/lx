@@ -13,6 +13,11 @@ class Queue;
 class CommandPool : public lx::common::non_copyable
 {
 public:
+    void reset()
+    {
+        vkResetCommandPool(this->vk_device, this->vk_command_pool, 0x0u);
+    }
+
     bool is_created() const
     {
         return VK_NULL_HANDLE != this->vk_command_pool;
@@ -27,6 +32,7 @@ private:
     CommandPool(VkDevice vk_device_a, std::uint32_t queue_family_index_a);
 
     VkCommandPool vk_command_pool = VK_NULL_HANDLE;
+    VkDevice vk_device = VK_NULL_HANDLE;
 
     friend class Device;
 };

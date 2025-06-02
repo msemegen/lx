@@ -3,6 +3,7 @@
 
 namespace lx::gpu {
 CommandPool::CommandPool(VkDevice vk_device_a, std::uint32_t queue_family_index_a)
+    : vk_device(vk_device_a)
 {
     const VkCommandPoolCreateInfo vk_command_pool_create_info {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,

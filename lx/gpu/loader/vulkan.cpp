@@ -73,6 +73,7 @@ PFN_vkCmdCopyBuffer vkCmdCopyBuffer = nullptr;
 PFN_vkCreateImageView vkCreateImageView = nullptr;
 PFN_vkDestroyImageView vkDestroyImageView = nullptr;
 PFN_vkCreateCommandPool vkCreateCommandPool = nullptr;
+PFN_vkResetCommandPool vkResetCommandPool = nullptr;
 PFN_vkDestroyCommandPool vkDestroyCommandPool = nullptr;
 
 #endif
@@ -238,6 +239,7 @@ void vulkan::release()
     unload_function(lx::common::out(vkCreateImageView));
     unload_function(lx::common::out(vkDestroyImageView));
     unload_function(lx::common::out(vkCreateCommandPool));
+    unload_function(lx::common::out(vkResetCommandPool));
     unload_function(lx::common::out(vkDestroyCommandPool));
 
 #endif
@@ -339,6 +341,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
         LOAD_DEVICE_LEVEL_FUNCTION(vkCreateImageView);
         LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyImageView);
         LOAD_DEVICE_LEVEL_FUNCTION(vkCreateCommandPool);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkResetCommandPool);
         LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyCommandPool);
 #endif
 #if defined(VK_VERSION_1_1)

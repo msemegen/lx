@@ -74,6 +74,7 @@ extern PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
 extern PFN_vkCreateImageView vkCreateImageView;
 extern PFN_vkDestroyImageView vkDestroyImageView;
 extern PFN_vkCreateCommandPool vkCreateCommandPool;
+extern PFN_vkResetCommandPool vkResetCommandPool;
 extern PFN_vkDestroyCommandPool vkDestroyCommandPool;
 
 #endif
