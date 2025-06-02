@@ -19,6 +19,16 @@ class Device;
 }
 
 namespace lx {
+struct canvas : private lx::common::non_constructible
+{
+    enum class Kind
+    {
+        framed,
+        fullscreen
+    };
+
+    using enum Kind;
+};
 template<auto Kind> class Canvas : private lx::common::non_constructible
 {
 };
@@ -26,12 +36,6 @@ template<auto Kind> class Canvas : private lx::common::non_constructible
 class Windower : private lx::common::non_copyable
 {
 public:
-    enum class Kind
-    {
-        framed,
-        fullscreen
-    };
-
     struct Events
     {
         struct SizeChange
@@ -42,30 +46,28 @@ public:
                 virtual bool on_size_change() = 0;
             };
 
-            void register_callback(lx::common::inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a);
+            void register_callback(lx::common::inout<Canvas<canvas::framed>*> canvas, Callback* p_callback_a);
         } size_change;
         struct PositionChange
         {
             class Callback
             {
             public:
-                virtual bool on_position_change() = 0;
+                virtual bool on_position_change(std::uint64_t pos_x_a, std::uint64_t pos_y_a) = 0;
             };
 
-            void register_callback(lx::common::inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a);
+            void register_callback(lx::common::inout<Canvas<canvas::framed>*> canvas, Callback* p_callback_a);
         } position_change;
     } events;
-
-    using enum Kind;
 
     Windower();
     ~Windower();
 
-    bool update(const Canvas<Kind::framed>* canvas_a);
-    bool update(const Canvas<Kind::fullscreen>* canvas_a);
+    bool update(const Canvas<canvas::framed>* canvas_a);
+    bool update(const Canvas<canvas::fullscreen>* canvas_a);
 
-    void set_visible(const Canvas<Kind::framed>* canvas_a, bool visible_a);
-    void set_visible(const Canvas<Kind::fullscreen>* canvas_a, bool visible_a);
+    void set_visible(const Canvas<canvas::framed>* canvas_a, bool visible_a);
+    void set_visible(const Canvas<canvas::fullscreen>* canvas_a, bool visible_a);
 
     template<auto Kind>
     Canvas<Kind>* create(const lx::devices::Display& display_a, typename const Canvas<Kind>::Properties& properties_a) = delete;
@@ -80,13 +82,13 @@ private:
     ATOM framed_wnd_class = 0u;
     ATOM fullscreen_wnd_class = 0u;
 
-    std::unordered_map<const Canvas<Kind::framed>*, HWND> framed_windows;
-    std::unordered_map<const Canvas<Kind::fullscreen>*, HWND> fullscreen_windows;
+    std::unordered_map<const Canvas<canvas::framed>*, HWND> framed_windows;
+    std::unordered_map<const Canvas<canvas::fullscreen>*, HWND> fullscreen_windows;
 
     friend lx::gpu::Device;
 };
 
-template<> class Canvas<Windower::framed>
+template<> class Canvas<canvas::framed>
 {
 public:
     struct Properties
@@ -131,7 +133,7 @@ private:
     friend Windower;
     friend lx::gpu::Device;
 };
-template<> class Canvas<Windower::fullscreen>
+template<> class Canvas<canvas::fullscreen>
 {
 public:
     struct Properties
@@ -157,21 +159,19 @@ private:
     friend Windower;
 };
 
-inline void Windower::set_visible(const Canvas<Kind::framed>* canvas_a, bool visible_a)
+inline void Windower::set_visible(const Canvas<canvas::framed>* canvas_a, bool visible_a)
 {
     this->set_visible(this->framed_windows[canvas_a], visible_a);
 }
-inline void Windower::set_visible(const Canvas<Kind::fullscreen>* canvas_a, bool visible_a)
+inline void Windower::set_visible(const Canvas<canvas::fullscreen>* canvas_a, bool visible_a)
 {
     this->set_visible(this->fullscreen_windows[canvas_a], visible_a);
 }
 
-template<>
-Canvas<Windower::Kind::framed>* Windower::create<Windower::Kind::framed>(const lx::devices::Display& display_a,
-                                                                         const Canvas<Windower::Kind::framed>::Properties& properties_a);
-template<> void Windower::destroy<Windower::Kind::framed>(lx::common::out<Canvas<Windower::Kind::framed>*> canvas_a);
+template<> Canvas<canvas::framed>* Windower::create<canvas::framed>(const lx::devices::Display& display_a,
+                                                                    const Canvas<canvas::framed>::Properties& properties_a);
+template<> void Windower::destroy<canvas::framed>(lx::common::out<Canvas<canvas::framed>*> canvas_a);
 
-template<> Canvas<Windower::Kind::fullscreen>*
-Windower::create<Windower::Kind::fullscreen>(const lx::devices::Display& display_a,
-                                             const Canvas<Windower::Kind::fullscreen>::Properties& properties_a);
+template<> Canvas<canvas::fullscreen>* Windower::create<canvas::fullscreen>(const lx::devices::Display& display_a,
+                                                                            const Canvas<canvas::fullscreen>::Properties& properties_a);
 } // namespace lx

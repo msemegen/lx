@@ -46,8 +46,8 @@ template<typename Type> struct Vector<Type, 2u>
     const static Vector<Type, 2u> unit_y;
 };
 
-template<typename Type> const Vector<Type, 2u> Vector<Type, 2u>::unit_x = { static_cast<Type>(1), static_cast<Type>(0) };
-template<typename Type> const Vector<Type, 2u> Vector<Type, 2u>::unit_y = { static_cast<Type>(0), static_cast<Type>(1) };
+template<typename Type> const Vector<Type, 2u> Vector<Type, 2u>::unit_x = { .x = static_cast<Type>(1), .y = static_cast<Type>(0) };
+template<typename Type> const Vector<Type, 2u> Vector<Type, 2u>::unit_y = { .x = static_cast<Type>(0), .y = static_cast<Type>(1) };
 
 template<typename Type> [[nodiscard]] bool operator==(Vector<Type, 2u> left_a, Vector<Type, 2u> right_a)
 {

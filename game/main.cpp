@@ -5,7 +5,7 @@
 class App : public lx::Windower::Events::PositionChange::Callback
 {
 public:
-    virtual bool on_position_change() override
+    virtual bool on_position_change(std::uint64_t pos_x_a, std::uint64_t pos_y_a) override
     {
         printf("position change!!!\n");
         return true;
@@ -57,11 +57,11 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
     }
 
     {
-        auto canvas1 = windower_a.create<Windower::framed>(
-            displays_a[0], Canvas<Windower::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
+        auto canvas1 = windower_a.create<canvas::framed>(
+            displays_a[0], Canvas<canvas::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
 
-        auto canvas2 = windower_a.create<Windower::framed>(
-            displays_a[0], Canvas<Windower::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
+        auto canvas2 = windower_a.create<canvas::framed>(
+            displays_a[0], Canvas<canvas::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
 
         if (true == canvas1->is_created() && true == canvas2->is_created())
         {

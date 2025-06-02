@@ -13,7 +13,7 @@ using namespace lx::common;
 
 LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam)
 {
-    auto canvas = reinterpret_cast<Canvas<Windower::Kind::framed>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    auto canvas = reinterpret_cast<Canvas<canvas::framed>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (message)
     {
@@ -44,7 +44,7 @@ LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message,
         case WM_MOVE: {
             if (nullptr != canvas->p_on_position_change)
             {
-                canvas->p_on_position_change->on_position_change();
+                canvas->p_on_position_change->on_position_change(LOWORD(lParam), HIWORD(lParam));
             }
         }
         break;
@@ -66,7 +66,7 @@ LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message,
 }
 LRESULT __stdcall Windower::fullscreen_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam)
 {
-    auto canvas = reinterpret_cast<Canvas<Windower::Kind::fullscreen>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    auto canvas = reinterpret_cast<Canvas<canvas::fullscreen>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (message)
     {
@@ -142,9 +142,8 @@ Windower::~Windower()
     UnregisterClass(MAKEINTATOM(this->fullscreen_wnd_class), GetModuleHandle(nullptr));
 }
 
-template<>
-Canvas<Windower::Kind::framed>* Windower::create<Windower::Kind::framed>(const lx::devices::Display& display_a,
-                                                                         const Canvas<Windower::Kind::framed>::Properties& properties_a)
+template<> Canvas<canvas::framed>* Windower::create<canvas::framed>(const lx::devices::Display& display_a,
+                                                                    const Canvas<canvas::framed>::Properties& properties_a)
 {
     assert(properties_a.size.w > 0u && properties_a.size.h > 0u);
 
@@ -166,7 +165,7 @@ Canvas<Windower::Kind::framed>* Windower::create<Windower::Kind::framed>(const l
                                  GetModuleHandle(nullptr),
                                  nullptr);
 
-    auto canvas = new Canvas<Windower::Kind::framed> { handle, properties_a };
+    auto canvas = new Canvas<canvas::framed> { handle, properties_a };
     this->framed_windows[canvas] = handle;
 
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(canvas));
@@ -174,7 +173,7 @@ Canvas<Windower::Kind::framed>* Windower::create<Windower::Kind::framed>(const l
     return canvas;
 }
 
-template<> void Windower::destroy<Windower::Kind::framed>(out<Canvas<Windower::Kind::framed>*> canvas_a)
+template<> void Windower::destroy<canvas::framed>(out<Canvas<canvas::framed>*> canvas_a)
 {
     (*canvas_a)->destroy();
     DestroyWindow(this->framed_windows[*canvas_a]);
@@ -185,7 +184,7 @@ template<> void Windower::destroy<Windower::Kind::framed>(out<Canvas<Windower::K
     (*canvas_a) = nullptr;
 }
 
-Canvas<Windower::framed>::Canvas(HWND window_handle_a, const Properties& properties_a)
+Canvas<canvas::framed>::Canvas(HWND window_handle_a, const Properties& properties_a)
     : properties(properties_a)
 {
     VkWin32SurfaceCreateInfoKHR vk_surface_create_info = { .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
@@ -198,7 +197,7 @@ Canvas<Windower::framed>::Canvas(HWND window_handle_a, const Properties& propert
     this->running = true;
 }
 
-void Canvas<Windower::framed>::destroy()
+void Canvas<canvas::framed>::destroy()
 {
     vkDestroySurfaceKHR(vk_instance, this->vk_surface, nullptr);
     this->vk_surface = VK_NULL_HANDLE;
@@ -206,7 +205,7 @@ void Canvas<Windower::framed>::destroy()
     ChangeDisplaySettings(nullptr, 0);
 }
 
-bool Windower::update(const Canvas<Kind::framed>* canvas_a)
+bool Windower::update(const Canvas<canvas::framed>* canvas_a)
 {
     MSG msg;
 
@@ -222,7 +221,7 @@ bool Windower::update(const Canvas<Kind::framed>* canvas_a)
 
     return true;
 }
-bool Windower::update(const Canvas<Kind::fullscreen>* canvas_a)
+bool Windower::update(const Canvas<canvas::fullscreen>* canvas_a)
 {
     MSG msg;
 
@@ -244,11 +243,11 @@ void Windower::set_visible(HWND windows_handle_a, bool visible)
     ShowWindow(windows_handle_a, true == visible ? SW_SHOW : SW_HIDE);
 }
 
-void Windower::Events::SizeChange::register_callback(inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a)
+void Windower::Events::SizeChange::register_callback(inout<Canvas<canvas::framed>*> canvas, Callback* p_callback_a)
 {
     (*canvas)->p_on_size_change = p_callback_a;
 }
-void Windower::Events::PositionChange::register_callback(inout<Canvas<Kind::framed>*> canvas, Callback* p_callback_a)
+void Windower::Events::PositionChange::register_callback(inout<Canvas<canvas::framed>*> canvas, Callback* p_callback_a)
 {
     (*canvas)->p_on_position_change = p_callback_a;
 }
