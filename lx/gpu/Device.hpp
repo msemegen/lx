@@ -7,6 +7,7 @@
 #include <lx/containers/Vector.hpp>
 #include <lx/devices/GPU.hpp>
 #include <lx/gpu/Buffer.hpp>
+#include <lx/gpu/CommandList.hpp>
 #include <lx/gpu/CommandPool.hpp>
 #include <lx/gpu/Pipeline.hpp>
 #include <lx/gpu/Queue.hpp>
@@ -40,6 +41,9 @@ public:
 
     template<typename Type> [[nodiscard]] Type create(typename const Type::Properties& properties) = delete;
     template<typename Type, typename DependencyType> [[nodiscard]] Type create(const DependencyType& dependency_a) = delete;
+    template<typename Type, typename DependencyType>
+    [[nodiscard]] Type create(DependencyType* p_dependency_a, typename const Type::Properties& properties) = delete;
+
     template<typename Type> void destroy(lx::common::out<Type> object_a) = delete;
 
 private:
@@ -89,9 +93,11 @@ template<> inline void Device::destroy(lx::common::out<lx::gpu::Pipeline<lx::gpu
     object_a->destroy(this->vk_device);
 }
 
-template<> inline [[nodiscard]] lx::gpu::Buffer Device::create<lx::gpu::Buffer>(const lx::gpu::Buffer::Properties& properties_a)
+template<> inline [[nodiscard]] lx::gpu::Buffer
+Device::create<lx::gpu::Buffer>(lx::gpu::CommandList<lx::gpu::command_list::transfer>* p_command_list_a,
+                                const lx::gpu::Buffer::Properties& properties_a)
 {
-    return {};
+    return { this->vk_device, p_command_list_a, properties_a };
 }
 template<> inline void Device::destroy(lx::common::out<lx::gpu::Buffer> object_a) {}
 
@@ -141,6 +147,24 @@ template<> inline void Device::destroy(lx::common::out<lx::gpu::Queue> object_a)
 
 template<> inline [[nodiscard]] lx::gpu::CommandPool Device::create<lx::gpu::CommandPool>(const lx::gpu::Queue& queue_a)
 {
-    return { this->vk_device, queue_a.family };
+    return { this->vk_device, queue_a.family, queue_a.kind };
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::CommandPool> object_a) {}
+
+template<> inline [[nodiscard]] lx::gpu::CommandList<lx::gpu::command_list::graphics>
+Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics>>(const lx::gpu::CommandPool& command_pool_a)
+{
+    assert(true == common::bit::flag::is(static_cast<std::uint32_t>(command_pool_a.queue_kind),
+                                         static_cast<std::uint32_t>(lx::gpu::command_list::graphics)));
+    return { this->vk_device };
+}
+template<> inline [[nodiscard]] lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>
+Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>>(
+    const lx::gpu::CommandPool& command_pool_a)
+{
+    assert(true == common::bit::flag::is(static_cast<std::uint32_t>(command_pool_a.queue_kind),
+                                         static_cast<std::uint32_t>(lx::gpu::command_list::graphics | lx::gpu::command_list::transfer)));
+
+    return { this->vk_device };
 }
 } // namespace lx::gpu

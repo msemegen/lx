@@ -34,7 +34,6 @@ private:
         , kind(kind_a)
     {
     }
-    void destroy() {}
 
     VkQueue vk_queue = VK_NULL_HANDLE;
 

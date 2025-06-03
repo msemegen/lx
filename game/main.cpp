@@ -2,6 +2,9 @@
 #include <lx/gpu/Device.hpp>
 #include <lx/utils/logger.hpp>
 
+// test
+#include <lx/gpu/CommandList.hpp>
+
 class App : public lx::Windower::Events::PositionChange::Callback
 {
 public:
@@ -24,10 +27,12 @@ void lx::app::setup(lx::common::out<lx::app::Config> config_a)
     // vulkan config
     config_a->vulkan.validation.enabled = true;
     config_a->vulkan.validation.severity = lx::app::Config::vulkan::validation::Severity::verbose;
-    config_a->vulkan.validation.kind =
-        lx::app::Config::vulkan::validation::Kind::coretness | lx::app::Config::vulkan::validation::Kind::device_address_binding |
-        lx::app::Config::vulkan::validation::Kind::general | lx::app::Config::vulkan::validation::Kind::performance;
+    config_a->vulkan.validation.kind = lx::app::Config::vulkan::validation::coretness |
+                                       lx::app::Config::vulkan::validation::device_address_binding |
+                                       lx::app::Config::vulkan::validation::general | lx::app::Config::vulkan::validation::performance;
 }
+
+void foo(const lx::gpu::CommandList<lx::gpu::command_list::transfer>& command_list) {}
 
 std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays_a,
                                   std::span<const lx::devices::GPU> gpus_a,
@@ -50,7 +55,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
     for (auto gpu : gpus_a)
     {
         log_inf("GPU: {}", gpu.name.get_cstring());
-        for (auto q : gpu.queue_families)
+        for (const auto q : gpu.queue_families)
         {
             log_inf("\tQ: kind: {}. members: {}, index: {}", static_cast<std::uint32_t>(q.kind), q.members, q.index);
         }
@@ -87,6 +92,13 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 auto rendering_queue =
                     gpu_device1.create<lx::gpu::Queue>({ .kind = Queue::graphics | Queue::transfer, .presentation = true });
                 auto command_pool = gpu_device1.create<lx::gpu::CommandPool>(rendering_queue);
+                auto command_list = gpu_device1.create<lx::gpu::CommandList<command_list::graphics | command_list::transfer>>(command_pool);
+
+                foo(command_list);
+                // foo(static_cast<const lx::gpu::CommandList<command_list::graphics>&>(command_list));
+
+                auto transfer_list = static_cast<lx::gpu::CommandList<command_list::transfer>>(command_list);
+               // auto buffer = gpu_device1.create<lx::gpu::Buffer>(&transfer_list, lx::gpu::Buffer::Properties {});
 
                 // auto command_pool = gpu_device1.create<lx::gpu::CommandPool>(rendering_queue);
                 // auto command_buffer = gpu_device1.create<lx::gpu::CommandBuffer>(command_pool);

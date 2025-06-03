@@ -2,13 +2,13 @@
 
 // lx
 #include <lx/common/non_copyable.hpp>
+#include <lx/gpu/Queue.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
 
 // std
 #include <cstdint>
 
 namespace lx::gpu {
-class Queue;
 
 class CommandPool : public lx::common::non_copyable
 {
@@ -29,10 +29,12 @@ public:
     }
 
 private:
-    CommandPool(VkDevice vk_device_a, std::uint32_t queue_family_index_a);
+    CommandPool(VkDevice vk_device_a, std::uint32_t queue_family_index_a, lx::gpu::Queue::Kind queue_kind_a);
 
     VkCommandPool vk_command_pool = VK_NULL_HANDLE;
     VkDevice vk_device = VK_NULL_HANDLE;
+
+    lx::gpu::Queue::Kind queue_kind;
 
     friend class Device;
 };
