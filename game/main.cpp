@@ -32,8 +32,6 @@ void lx::app::setup(lx::common::out<lx::app::Config> config_a)
                                        lx::app::Config::vulkan::validation::general | lx::app::Config::vulkan::validation::performance;
 }
 
-void foo(const lx::gpu::CommandList<lx::gpu::command_list::transfer>& command_list) {}
-
 std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays_a,
                                   std::span<const lx::devices::GPU> gpus_a,
                                   gpu::Context& graphics_context_a,
@@ -68,7 +66,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
         auto canvas2 = windower_a.create<canvas::framed>(
             displays_a[0], Canvas<canvas::framed>::Properties { .title = gpus_a[0].name, .size { .w = 800u, .h = 600u } });
 
-        if (true == canvas1->is_created() && true == canvas2->is_created())
+        if (true == canvas1.is_created() && true == canvas2.is_created())
         {
             /*
                     .queue_families { std::array { Device::QueueFamily {
@@ -81,23 +79,30 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
             auto gpu_device1 = graphics_context_a.create<Device>(
                 gpus_a[0], canvas1, Device::Properties { .features = Device::Feature::none, .extensions {} });
 
-            if (true == gpu_device1.is_created())
+            auto gpu_device2 = graphics_context_a.create<Device>(
+                gpus_a[0], canvas2, Device::Properties { .features = Device::Feature::none, .extensions {} });
+
+            if (true == gpu_device1.is_created() && true == gpu_device2.is_created())
             {
                 auto swap_chain = gpu_device1.create<lx::gpu::SwapChain>({ .format = SwapChain::Format::r8g8b8a8_srgb,
                                                                            .color_space = SwapChain::ColorSpace::srgb_nonlinear_khr,
                                                                            .mode = SwapChain::Mode::fifo,
-                                                                           .extent { .w = 800u, .h = 600u },
+                                                                           .extent { canvas1.get_properties().size },
                                                                            .images_count = 2u });
                 auto rendering_queue =
                     gpu_device1.create<lx::gpu::Queue>({ .kind = Queue::graphics | Queue::transfer, .presentation = true });
                 auto command_pool = gpu_device1.create<lx::gpu::CommandPool>(rendering_queue);
                 auto command_list = gpu_device1.create<lx::gpu::CommandList<command_list::graphics | command_list::transfer>>(command_pool);
 
-                foo(command_list);
+                command_list.start();
+                command_list.stop();
+
+                rendering_queue.submit(command_list);
+
                 // foo(static_cast<const lx::gpu::CommandList<command_list::graphics>&>(command_list));
 
                 auto transfer_list = static_cast<lx::gpu::CommandList<command_list::transfer>>(command_list);
-               // auto buffer = gpu_device1.create<lx::gpu::Buffer>(&transfer_list, lx::gpu::Buffer::Properties {});
+                // auto buffer = gpu_device1.create<lx::gpu::Buffer>(&transfer_list, lx::gpu::Buffer::Properties {});
 
                 // auto command_pool = gpu_device1.create<lx::gpu::CommandPool>(rendering_queue);
                 // auto command_buffer = gpu_device1.create<lx::gpu::CommandBuffer>(command_pool);
@@ -147,11 +152,13 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
 
                     do
                     {
-                        c1 = windower_a.update(canvas1);
-                        c2 = windower_a.update(canvas2);
+                        c1 = windower_a.update(out(canvas1));
+                        c2 = windower_a.update(out(canvas2));
                     } while (true == c1 || true == c2);
 
-                    // gpu_device1->destroy(out(p));
+                    gpu_device1.destroy(out(command_list));
+                    gpu_device1.destroy(out(command_pool));
+                    gpu_device1.destroy(out(swap_chain));
                 }
                 else
                 {
@@ -164,7 +171,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 }
 
                 graphics_context_a.destroy(out(gpu_device1));
-                // graphics_context.destroy(out(gpu_device2));
+                graphics_context_a.destroy(out(gpu_device2));
             }
         }
 

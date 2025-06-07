@@ -14,7 +14,8 @@ SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Prop
                                                          .minImageCount = static_cast<std::uint32_t>(properties_a.images_count),
                                                          .imageFormat = static_cast<VkFormat>(properties_a.format),
                                                          .imageColorSpace = static_cast<VkColorSpaceKHR>(properties_a.color_space),
-                                                         .imageExtent = { .width = properties_a.extent.w, .height = properties_a.extent.h },
+                                                         .imageExtent = { .width = static_cast<std::uint32_t>(properties_a.extent.w),
+                                                                          .height = static_cast<std::uint32_t>(properties_a.extent.h) },
                                                          .imageArrayLayers = 1u,
                                                          .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                                          .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -35,7 +36,7 @@ SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Prop
         vkGetSwapchainImagesKHR(vk_device_a, this->vk_swap_chain, &swap_chain_images_count, nullptr);
         this->vk_swap_chain_images.reserve(swap_chain_images_count);
         vkGetSwapchainImagesKHR(vk_device_a, this->vk_swap_chain, &swap_chain_images_count, this->vk_swap_chain_images.get_buffer());
-        
+
         this->vk_swap_chain_image_views.reserve(swap_chain_images_count);
         for (std::uint32_t i = 0; i < swap_chain_images_count && true == success; i++)
         {
@@ -51,7 +52,7 @@ SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Prop
                               .b = VK_COMPONENT_SWIZZLE_IDENTITY,
                               .a = VK_COMPONENT_SWIZZLE_IDENTITY },
                 .subresourceRange {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .baseMipLevel = 1u, .levelCount = 1u, .baseArrayLayer = 0u, .layerCount = 1u }
+                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .baseMipLevel = 0u, .levelCount = 1u, .baseArrayLayer = 0u, .layerCount = 1u }
             };
 
             success =

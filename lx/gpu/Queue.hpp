@@ -3,6 +3,7 @@
 // lx
 #include <lx/common/non_copyable.hpp>
 #include <lx/devices/GPU.hpp>
+#include <lx/gpu/CommandList.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
 
 // std
@@ -20,6 +21,8 @@ public:
         Kind kind;
         bool presentation = false;
     };
+
+    template<command_list::Kind kind> bool submit(const CommandList<kind>& command_list_a) = delete;
 
     bool is_created()
     {
@@ -44,4 +47,7 @@ private:
 
     friend class Device;
 };
+
+template<> bool Queue::submit<command_list::graphics | command_list::transfer>(
+    const CommandList<command_list::graphics | command_list::transfer>& command_list_a);
 } // namespace lx::gpu

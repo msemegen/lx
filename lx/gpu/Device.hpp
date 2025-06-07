@@ -149,7 +149,10 @@ template<> inline [[nodiscard]] lx::gpu::CommandPool Device::create<lx::gpu::Com
 {
     return { this->vk_device, queue_a.family, queue_a.kind };
 }
-template<> inline void Device::destroy(lx::common::out<lx::gpu::CommandPool> object_a) {}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::CommandPool> object_a)
+{
+    object_a->destroy();
+}
 
 template<> inline [[nodiscard]] lx::gpu::CommandList<lx::gpu::command_list::graphics>
 Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics>>(const lx::gpu::CommandPool& command_pool_a)

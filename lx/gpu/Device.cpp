@@ -20,16 +20,17 @@ using namespace lx::utils;
 Device::Device(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a)
 {
     Vector<VkDeviceQueueCreateInfo> vk_device_queues_create_info(gpu_a.queue_families.get_length());
+    Vector<Vector<float>> priorities(gpu_a.queue_families.get_length());
 
-    for (const auto queue_family : gpu_a.queue_families)
+    for (const auto& queue_family : gpu_a.queue_families)
     {
-        Vector<float> priorities(queue_family.members, 1.0f);
+        priorities.push_back(Vector<float>(queue_family.members, 1.0f));
         VkDeviceQueueCreateInfo vk_device_queue_create_info { .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                                                               .pNext = nullptr,
                                                               .flags = 0x0u,
                                                               .queueFamilyIndex = static_cast<std::uint32_t>(queue_family.index),
                                                               .queueCount = static_cast<std::uint32_t>(queue_family.members),
-                                                              .pQueuePriorities = priorities.get_buffer() };
+                                                              .pQueuePriorities = priorities.get_back().get_buffer() };
 
         vk_device_queues_create_info.push_back(vk_device_queue_create_info);
 
@@ -40,7 +41,7 @@ Device::Device(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& pr
                 gpu_a, static_cast<std::uint32_t>(queue_family.index), vk_surface_a, &has_presentation_support);
 
             this->queues.emplace_back(queue_family.kind,
-                                      priorities[i],
+                                      priorities.get_back()[i],
                                       static_cast<std::uint32_t>(queue_family.index),
                                       static_cast<std::uint32_t>(i),
                                       1u == has_presentation_support);

@@ -50,7 +50,7 @@ public:
         Format format;
         ColorSpace color_space;
         Mode mode;
-        lx::common::Extent<std::uint32_t, 2u> extent;
+        lx::common::Extent<std::uint64_t, 2u> extent;
 
         std::size_t images_count;
     };
@@ -69,6 +69,11 @@ private:
     SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a);
     void destroy(VkDevice vk_device_a)
     {
+        for (const auto& vk_image_view : this->vk_swap_chain_image_views)
+        {
+            vkDestroyImageView(vk_device_a, vk_image_view, nullptr);
+        }
+
         if (VK_NULL_HANDLE != this->vk_swap_chain)
         {
             vkDestroySwapchainKHR(vk_device_a, this->vk_swap_chain, nullptr);

@@ -47,6 +47,14 @@ public:
         return VK_NULL_HANDLE != this->vk_command_buffer;
     }
 
+    bool start();
+    bool stop();
+
+    bool is_started() const
+    {
+        return this->started;
+    }
+
     operator VkCommandBuffer() const
     {
         return this->vk_command_buffer;
@@ -59,6 +67,8 @@ private:
     VkDevice vk_device = VK_NULL_HANDLE;
     VkCommandPool vk_command_pool = VK_NULL_HANDLE;
     VkCommandBuffer vk_command_buffer = VK_NULL_HANDLE;
+
+    bool started = false;
 
     friend class CommandList<command_list::Kind::graphics>;
     friend class CommandList<command_list::Kind::transfer>;

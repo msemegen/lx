@@ -13,18 +13,18 @@ using namespace lx::common;
 
 LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam)
 {
-    auto canvas = reinterpret_cast<Canvas<canvas::framed>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    auto data = reinterpret_cast<Canvas<canvas::framed>::Data*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (message)
     {
         case WM_CLOSE: {
-            canvas->running = false;
+            data->running = false;
         }
         break;
         case WM_SIZE: {
-            if (nullptr != canvas->p_on_size_change)
+            if (nullptr != data->on_size_change)
             {
-                canvas->p_on_size_change->on_size_change();
+                data->on_size_change->on_size_change();
             }
 
             switch (wParam)
@@ -42,9 +42,9 @@ LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message,
         break;
 
         case WM_MOVE: {
-            if (nullptr != canvas->p_on_position_change)
+            if (nullptr != data->on_position_change)
             {
-                canvas->p_on_position_change->on_position_change(LOWORD(lParam), HIWORD(lParam));
+                data->on_position_change->on_position_change(LOWORD(lParam), HIWORD(lParam));
             }
         }
         break;
@@ -66,18 +66,18 @@ LRESULT __stdcall Windower::framed_window_procedure(HWND hwnd, uint32_t message,
 }
 LRESULT __stdcall Windower::fullscreen_window_procedure(HWND hwnd, uint32_t message, WPARAM wParam, LPARAM lParam)
 {
-    auto canvas = reinterpret_cast<Canvas<canvas::fullscreen>*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    auto data = reinterpret_cast<Canvas<canvas::fullscreen>::Data*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (message)
     {
         case WM_QUIT: {
-            canvas->running = false;
+            data->running = false;
         }
         break;
         case WM_SIZE: {
-            if (nullptr != canvas->p_on_size_change)
+            if (nullptr != data->on_size_change)
             {
-                canvas->p_on_size_change->on_size_change();
+                data->on_size_change->on_size_change();
             }
 
             switch (wParam)
@@ -142,8 +142,8 @@ Windower::~Windower()
     UnregisterClass(MAKEINTATOM(this->fullscreen_wnd_class), GetModuleHandle(nullptr));
 }
 
-template<> Canvas<canvas::framed>* Windower::create<canvas::framed>(const lx::devices::Display& display_a,
-                                                                    const Canvas<canvas::framed>::Properties& properties_a)
+template<> Canvas<canvas::framed> Windower::create<canvas::framed>(const lx::devices::Display& display_a,
+                                                                   const Canvas<canvas::framed>::Properties& properties_a)
 {
     assert(properties_a.size.w > 0u && properties_a.size.h > 0u);
 
@@ -165,27 +165,22 @@ template<> Canvas<canvas::framed>* Windower::create<canvas::framed>(const lx::de
                                  GetModuleHandle(nullptr),
                                  nullptr);
 
-    auto canvas = new Canvas<canvas::framed> { handle, properties_a };
-    this->framed_windows[canvas] = handle;
+    auto canvas_data = std::make_unique<Canvas<canvas::framed>::Data>();
+    SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(canvas_data.get()));
 
-    SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(canvas));
-
-    return canvas;
+    return { handle, properties_a, std::move(canvas_data) };
 }
 
-template<> void Windower::destroy<canvas::framed>(out<Canvas<canvas::framed>*> canvas_a)
+template<> void Windower::destroy<canvas::framed>(out<Canvas<canvas::framed>> canvas_a)
 {
-    (*canvas_a)->destroy();
-    DestroyWindow(this->framed_windows[*canvas_a]);
-
-    // TODO: remove canvas from framed_windows
-
-    delete (*canvas_a);
-    (*canvas_a) = nullptr;
+    (*canvas_a).destroy();
+    DestroyWindow(canvas_a->window_handle);
 }
 
-Canvas<canvas::framed>::Canvas(HWND window_handle_a, const Properties& properties_a)
-    : properties(properties_a)
+Canvas<canvas::framed>::Canvas(HWND window_handle_a, const Properties& properties_a, std::unique_ptr<Data> data_a)
+    : window_handle(window_handle_a)
+    , properties(properties_a)
+    , data(std::move(data_a))
 {
     VkWin32SurfaceCreateInfoKHR vk_surface_create_info = { .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
                                                            .pNext = nullptr,
@@ -194,7 +189,6 @@ Canvas<canvas::framed>::Canvas(HWND window_handle_a, const Properties& propertie
                                                            .hwnd = window_handle_a };
 
     vkCreateWin32SurfaceKHR(vk_instance, &vk_surface_create_info, nullptr, &(this->vk_surface));
-    this->running = true;
 }
 
 void Canvas<canvas::framed>::destroy()
@@ -202,35 +196,37 @@ void Canvas<canvas::framed>::destroy()
     vkDestroySurfaceKHR(vk_instance, this->vk_surface, nullptr);
     this->vk_surface = VK_NULL_HANDLE;
 
+    this->data.reset();
+
     ChangeDisplaySettings(nullptr, 0);
 }
 
-bool Windower::update(const Canvas<canvas::framed>* canvas_a)
+bool Windower::update(out<Canvas<canvas::framed>> canvas_a)
 {
     MSG msg;
 
-    if (false == canvas_a->running)
+    if (false == canvas_a->data->running)
     {
         return false;
     }
 
-    if (TRUE == PeekMessage(&msg, this->framed_windows[canvas_a], 0, 0, PM_REMOVE))
+    if (TRUE == PeekMessage(&msg, canvas_a->window_handle, 0, 0, PM_REMOVE))
     {
         DispatchMessage(&msg);
     }
 
     return true;
 }
-bool Windower::update(const Canvas<canvas::fullscreen>* canvas_a)
+bool Windower::update(const Canvas<canvas::fullscreen>& canvas_a)
 {
     MSG msg;
 
-    if (false == canvas_a->running)
+    if (false == canvas_a.data->running)
     {
         return false;
     }
 
-    if (TRUE == PeekMessage(&msg, this->fullscreen_windows[canvas_a], 0, 0, PM_REMOVE))
+    if (TRUE == PeekMessage(&msg, canvas_a.window_handle, 0, 0, PM_REMOVE))
     {
         DispatchMessage(&msg);
     }
@@ -243,12 +239,12 @@ void Windower::set_visible(HWND windows_handle_a, bool visible)
     ShowWindow(windows_handle_a, true == visible ? SW_SHOW : SW_HIDE);
 }
 
-void Windower::Events::SizeChange::register_callback(inout<Canvas<canvas::framed>*> canvas, Callback* p_callback_a)
+void Windower::Events::SizeChange::register_callback(inout<Canvas<canvas::framed>> canvas, Callback* p_callback_a)
 {
-    (*canvas)->p_on_size_change = p_callback_a;
+    canvas->data->on_size_change = p_callback_a;
 }
-void Windower::Events::PositionChange::register_callback(inout<Canvas<canvas::framed>*> canvas, Callback* p_callback_a)
+void Windower::Events::PositionChange::register_callback(inout<Canvas<canvas::framed>> canvas, Callback* p_callback_a)
 {
-    (*canvas)->p_on_position_change = p_callback_a;
+    canvas->data->on_position_change = p_callback_a;
 }
 } // namespace lx

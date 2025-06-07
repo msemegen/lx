@@ -78,7 +78,9 @@ extern PFN_vkResetCommandPool vkResetCommandPool;
 extern PFN_vkDestroyCommandPool vkDestroyCommandPool;
 extern PFN_vkAllocateCommandBuffers vkAllocateCommandBuffers;
 extern PFN_vkFreeCommandBuffers vkFreeCommandBuffers;
-
+extern PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
+extern PFN_vkEndCommandBuffer vkEndCommandBuffer;
+extern PFN_vkQueueSubmit vkQueueSubmit;
 #endif
 #if defined(VK_VERSION_1_1)
 extern PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2;
