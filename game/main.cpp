@@ -88,7 +88,6 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                                                                            .mode = SwapChain::Mode::fifo,
                                                                            .extent { .w = 800u, .h = 600u },
                                                                            .images_count = 2u });
-
                 auto rendering_queue =
                     gpu_device1.create<lx::gpu::Queue>({ .kind = Queue::graphics | Queue::transfer, .presentation = true });
                 auto command_pool = gpu_device1.create<lx::gpu::CommandPool>(rendering_queue);

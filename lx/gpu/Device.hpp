@@ -156,8 +156,13 @@ Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics>>(const lx::
 {
     assert(true == common::bit::flag::is(static_cast<std::uint32_t>(command_pool_a.queue_kind),
                                          static_cast<std::uint32_t>(lx::gpu::command_list::graphics)));
-    return { this->vk_device };
+    return { this->vk_device, command_pool_a };
 }
+template<> inline void Device::destroy(lx::common::out<lx::gpu::CommandList<lx::gpu::command_list::graphics>> object_a)
+{
+    object_a->destroy();
+}
+
 template<> inline [[nodiscard]] lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>
 Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>>(
     const lx::gpu::CommandPool& command_pool_a)
@@ -165,6 +170,11 @@ Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::c
     assert(true == common::bit::flag::is(static_cast<std::uint32_t>(command_pool_a.queue_kind),
                                          static_cast<std::uint32_t>(lx::gpu::command_list::graphics | lx::gpu::command_list::transfer)));
 
-    return { this->vk_device };
+    return { this->vk_device, command_pool_a };
+}
+template<> inline void
+Device::destroy(lx::common::out<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>> object_a)
+{
+    object_a->destroy();
 }
 } // namespace lx::gpu

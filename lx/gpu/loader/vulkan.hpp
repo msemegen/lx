@@ -76,6 +76,8 @@ extern PFN_vkDestroyImageView vkDestroyImageView;
 extern PFN_vkCreateCommandPool vkCreateCommandPool;
 extern PFN_vkResetCommandPool vkResetCommandPool;
 extern PFN_vkDestroyCommandPool vkDestroyCommandPool;
+extern PFN_vkAllocateCommandBuffers vkAllocateCommandBuffers;
+extern PFN_vkFreeCommandBuffers vkFreeCommandBuffers;
 
 #endif
 #if defined(VK_VERSION_1_1)

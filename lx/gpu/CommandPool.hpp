@@ -30,6 +30,7 @@ public:
 
 private:
     CommandPool(VkDevice vk_device_a, std::uint32_t queue_family_index_a, lx::gpu::Queue::Kind queue_kind_a);
+    void destroy();
 
     VkCommandPool vk_command_pool = VK_NULL_HANDLE;
     VkDevice vk_device = VK_NULL_HANDLE;

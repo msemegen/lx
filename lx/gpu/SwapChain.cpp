@@ -1,5 +1,8 @@
-// lx
+// this
 #include <lx/gpu/SwapChain.hpp>
+
+// lx
+#include <lx/utils/logger.hpp>
 
 namespace lx::gpu {
 SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a)
@@ -22,7 +25,8 @@ SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Prop
                                                          .presentMode = static_cast<VkPresentModeKHR>(properties_a.mode),
                                                          .clipped = VK_TRUE,
                                                          .oldSwapchain = VK_NULL_HANDLE };
-    bool success = VK_SUCCESS == vkCreateSwapchainKHR(vk_device_a, &vk_swap_chain_create_info, nullptr, &(this->vk_swap_chain));
+    auto res = vkCreateSwapchainKHR(vk_device_a, &vk_swap_chain_create_info, nullptr, &(this->vk_swap_chain));
+    bool success = VK_SUCCESS == res;
 
     if (true == success)
     {
@@ -53,6 +57,10 @@ SwapChain::SwapChain(VkDevice vk_device_a, VkSurfaceKHR vk_surface_a, const Prop
             success =
                 VK_SUCCESS == vkCreateImageView(vk_device_a, &vk_image_view_create_info, nullptr, &(this->vk_swap_chain_image_views[i]));
         }
+    }
+    else
+    {
+        log_err("vkCreateSwapchainKHR failure: {}", static_cast<std::underlying_type_t<decltype(res)>>(res));
     }
 }
 } // namespace lx::gpu

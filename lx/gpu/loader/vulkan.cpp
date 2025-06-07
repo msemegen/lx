@@ -31,6 +31,9 @@ PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices = nullptr;
 PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties = nullptr;
 PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties = nullptr;
 PFN_vkGetPhysicalDeviceMemoryProperties vkGetPhysicalDeviceMemoryProperties = nullptr;
+#if defined(VK_VERSION_1_1)
+PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2 = nullptr;
+#endif
 #if defined(VK_KHR_surface)
 PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
 PFN_vkGetPhysicalDeviceSurfaceFormatsKHR vkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
@@ -75,14 +78,14 @@ PFN_vkDestroyImageView vkDestroyImageView = nullptr;
 PFN_vkCreateCommandPool vkCreateCommandPool = nullptr;
 PFN_vkResetCommandPool vkResetCommandPool = nullptr;
 PFN_vkDestroyCommandPool vkDestroyCommandPool = nullptr;
-
+PFN_vkAllocateCommandBuffers vkAllocateCommandBuffers;
+PFN_vkFreeCommandBuffers vkFreeCommandBuffers;
 #endif
 #if defined(VK_VERSION_1_1)
 PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2 = nullptr;
 PFN_vkGetImageMemoryRequirements2 vkGetImageMemoryRequirements2 = nullptr;
 PFN_vkBindBufferMemory2 vkBindBufferMemory2 = nullptr;
 PFN_vkBindImageMemory2 vkBindImageMemory2 = nullptr;
-PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2 = nullptr;
 #endif
 #if defined(VK_VERSION_1_3)
 PFN_vkGetDeviceBufferMemoryRequirements vkGetDeviceBufferMemoryRequirements = nullptr;
@@ -241,7 +244,8 @@ void vulkan::release()
     unload_function(lx::common::out(vkCreateCommandPool));
     unload_function(lx::common::out(vkResetCommandPool));
     unload_function(lx::common::out(vkDestroyCommandPool));
-
+    unload_function(lx::common::out(vkAllocateCommandBuffers));
+    unload_function(lx::common::out(vkFreeCommandBuffers));
 #endif
 #if defined(VK_VERSION_1_1)
     unload_function(lx::common::out(vkGetBufferMemoryRequirements2));
@@ -285,6 +289,13 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCre
         LOAD_INSTANCE_LEVEL_FUNCTION(vkEnumerateDeviceExtensionProperties);
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceMemoryProperties);
+#if defined(VK_VERSION_1_1)
+        if (loader::vulkan::get_version() >= VK_MAKE_API_VERSION(0, 1, 1, 0))
+        {
+            LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceMemoryProperties2);
+        }
+#endif
+
 #if defined(VK_KHR_surface)
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfaceFormatsKHR);
@@ -343,6 +354,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
         LOAD_DEVICE_LEVEL_FUNCTION(vkCreateCommandPool);
         LOAD_DEVICE_LEVEL_FUNCTION(vkResetCommandPool);
         LOAD_DEVICE_LEVEL_FUNCTION(vkDestroyCommandPool);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkAllocateCommandBuffers);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkFreeCommandBuffers);
 #endif
 #if defined(VK_VERSION_1_1)
         if (loader::vulkan::get_version() >= VK_MAKE_API_VERSION(0, 1, 1, 0))
@@ -351,7 +364,6 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
             LOAD_DEVICE_LEVEL_FUNCTION(vkGetImageMemoryRequirements2);
             LOAD_DEVICE_LEVEL_FUNCTION(vkBindBufferMemory2);
             LOAD_DEVICE_LEVEL_FUNCTION(vkBindImageMemory2);
-            LOAD_DEVICE_LEVEL_FUNCTION(vkGetPhysicalDeviceMemoryProperties2);
         }
 #endif
 #if defined(VK_VERSION_1_3)

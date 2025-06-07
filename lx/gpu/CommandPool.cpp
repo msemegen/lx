@@ -1,6 +1,9 @@
 // this
 #include <lx/gpu/CommandPool.hpp>
 
+// lx
+#include <lx/utils/logger.hpp>
+
 namespace lx::gpu {
 CommandPool::CommandPool(VkDevice vk_device_a, std::uint32_t queue_family_index_a, lx::gpu::Queue::Kind queue_kind_a)
     : vk_device(vk_device_a)
@@ -12,6 +15,16 @@ CommandPool::CommandPool(VkDevice vk_device_a, std::uint32_t queue_family_index_
         .queueFamilyIndex = queue_family_index_a,
     };
 
-    vkCreateCommandPool(vk_device_a, &vk_command_pool_create_info, nullptr, &(this->vk_command_pool));
+    auto res = vkCreateCommandPool(vk_device_a, &vk_command_pool_create_info, nullptr, &(this->vk_command_pool));
+
+    if (VK_SUCCESS != res)
+    {
+        log_err("vkCreateCommandPool failure: {}", static_cast<std::underlying_type_t<decltype(res)>>(res));
+    }
+}
+void CommandPool::destroy()
+{
+    vkDestroyCommandPool(this->vk_device, this->vk_command_pool, nullptr);
+    this->vk_command_pool = VK_NULL_HANDLE;
 }
 } // namespace lx::gpu
