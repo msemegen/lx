@@ -25,11 +25,7 @@ void lx::app::setup(lx::common::out<lx::app::Config> config_a)
     config_a->app.name = "test game";
 
     // vulkan config
-    config_a->vulkan.validation.enabled = true;
-    config_a->vulkan.validation.severity = lx::app::Config::vulkan::validation::Severity::verbose;
-    config_a->vulkan.validation.kind = lx::app::Config::vulkan::validation::coretness |
-                                       lx::app::Config::vulkan::validation::device_address_binding |
-                                       lx::app::Config::vulkan::validation::general | lx::app::Config::vulkan::validation::performance;
+    config_a->vulkan.enable_validation = true;
 }
 
 std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays_a,

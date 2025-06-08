@@ -72,13 +72,15 @@ Device::Device(const GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& pr
 
         if (true == success)
         {
+            const VmaVulkanFunctions vma_functions { .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
+                                                     .vkGetDeviceProcAddr = vkGetDeviceProcAddr };
             VmaAllocatorCreateInfo vma_allocator_create_info { .physicalDevice = gpu_a,
                                                                .device = this->vk_device,
                                                                .preferredLargeHeapBlockSize = 0u,
                                                                .pAllocationCallbacks = nullptr,
                                                                .pDeviceMemoryCallbacks = nullptr,
                                                                .pHeapSizeLimit = nullptr,
-                                                               .pVulkanFunctions = nullptr,
+                                                               .pVulkanFunctions = &vma_functions,
                                                                .instance = vk_instance };
 
             success = VK_SUCCESS == vmaCreateAllocator(&vma_allocator_create_info, &this->vk_memory_allocator);

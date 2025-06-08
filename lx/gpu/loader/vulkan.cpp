@@ -84,16 +84,6 @@ PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
 PFN_vkEndCommandBuffer vkEndCommandBuffer;
 PFN_vkQueueSubmit vkQueueSubmit;
 #endif
-#if defined(VK_VERSION_1_1)
-PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2 = nullptr;
-PFN_vkGetImageMemoryRequirements2 vkGetImageMemoryRequirements2 = nullptr;
-PFN_vkBindBufferMemory2 vkBindBufferMemory2 = nullptr;
-PFN_vkBindImageMemory2 vkBindImageMemory2 = nullptr;
-#endif
-#if defined(VK_VERSION_1_3)
-PFN_vkGetDeviceBufferMemoryRequirements vkGetDeviceBufferMemoryRequirements = nullptr;
-PFN_vkGetDeviceImageMemoryRequirements vkGetDeviceImageMemoryRequirements = nullptr;
-#endif
 #if defined(VK_KHR_swapchain)
 PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR = nullptr;
 PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR = nullptr;
@@ -169,6 +159,8 @@ bool vulkan::load()
             std::uint32_t vk_version;
             vkEnumerateInstanceVersion(&vk_version);
 
+            unload_function(lx::common::out(vkEnumerateInstanceVersion));
+
             version = vk_version;
         }
 
@@ -193,7 +185,6 @@ void vulkan::release()
 
     unload_function(lx::common::out(vkEnumerateInstanceExtensionProperties));
     unload_function(lx::common::out(vkEnumerateInstanceLayerProperties));
-    unload_function(lx::common::out(vkEnumerateInstanceVersion));
 
     // instance level functions
     unload_function(lx::common::out(vkDestroyInstance));
@@ -253,17 +244,6 @@ void vulkan::release()
     unload_function(lx::common::out(vkEndCommandBuffer));
     unload_function(lx::common::out(vkQueueSubmit));
 #endif
-#if defined(VK_VERSION_1_1)
-    unload_function(lx::common::out(vkGetBufferMemoryRequirements2));
-    unload_function(lx::common::out(vkGetImageMemoryRequirements2));
-    unload_function(lx::common::out(vkBindBufferMemory2));
-    unload_function(lx::common::out(vkBindImageMemory2));
-    unload_function(lx::common::out(vkGetPhysicalDeviceMemoryProperties2));
-#endif
-#if defined(VK_VERSION_1_3)
-    unload_function(lx::common::out(vkGetDeviceBufferMemoryRequirements));
-    unload_function(lx::common::out(vkGetDeviceImageMemoryRequirements));
-#endif
 #if defined(VK_KHR_swapchain)
     unload_function(lx::common::out(vkCreateSwapchainKHR));
     unload_function(lx::common::out(vkGetSwapchainImagesKHR));
@@ -295,13 +275,6 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCre
         LOAD_INSTANCE_LEVEL_FUNCTION(vkEnumerateDeviceExtensionProperties);
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceMemoryProperties);
-#if defined(VK_VERSION_1_1)
-        if (loader::vulkan::get_version() >= VK_MAKE_API_VERSION(0, 1, 1, 0))
-        {
-            LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceMemoryProperties2);
-        }
-#endif
-
 #if defined(VK_KHR_surface)
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
         LOAD_INSTANCE_LEVEL_FUNCTION(vkGetPhysicalDeviceSurfaceFormatsKHR);
@@ -366,29 +339,12 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
         LOAD_DEVICE_LEVEL_FUNCTION(vkEndCommandBuffer);
         LOAD_DEVICE_LEVEL_FUNCTION(vkQueueSubmit);
 #endif
-#if defined(VK_VERSION_1_1)
-        if (loader::vulkan::get_version() >= VK_MAKE_API_VERSION(0, 1, 1, 0))
-        {
-            LOAD_DEVICE_LEVEL_FUNCTION(vkGetBufferMemoryRequirements2);
-            LOAD_DEVICE_LEVEL_FUNCTION(vkGetImageMemoryRequirements2);
-            LOAD_DEVICE_LEVEL_FUNCTION(vkBindBufferMemory2);
-            LOAD_DEVICE_LEVEL_FUNCTION(vkBindImageMemory2);
-        }
-#endif
-#if defined(VK_VERSION_1_3)
-        if (loader::vulkan::get_version() >= VK_MAKE_API_VERSION(0, 1, 3, 0))
-        {
-            LOAD_DEVICE_LEVEL_FUNCTION(vkGetDeviceBufferMemoryRequirements);
-            LOAD_DEVICE_LEVEL_FUNCTION(vkGetDeviceImageMemoryRequirements);
-        }
-#endif
 #if defined(VK_KHR_swapchain)
         LOAD_DEVICE_LEVEL_FUNCTION(vkCreateSwapchainKHR);
         LOAD_DEVICE_LEVEL_FUNCTION(vkGetSwapchainImagesKHR);
         LOAD_DEVICE_LEVEL_FUNCTION(vkDestroySwapchainKHR);
 #endif
     }
-
     return ret;
 }
 }

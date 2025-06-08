@@ -82,17 +82,6 @@ extern PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
 extern PFN_vkEndCommandBuffer vkEndCommandBuffer;
 extern PFN_vkQueueSubmit vkQueueSubmit;
 #endif
-#if defined(VK_VERSION_1_1)
-extern PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2;
-extern PFN_vkGetImageMemoryRequirements2 vkGetImageMemoryRequirements2;
-extern PFN_vkBindBufferMemory2 vkBindBufferMemory2;
-extern PFN_vkBindImageMemory2 vkBindImageMemory2;
-extern PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2;
-#endif
-#if defined(VK_VERSION_1_3)
-extern PFN_vkGetDeviceBufferMemoryRequirements vkGetDeviceBufferMemoryRequirements;
-extern PFN_vkGetDeviceImageMemoryRequirements vkGetDeviceImageMemoryRequirements;
-#endif
 #if defined(VK_KHR_swapchain)
 extern PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR;
 extern PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR;
@@ -443,7 +432,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
 #pragma warning(disable : 4324)
 #pragma warning(disable : 4820)
 #pragma warning(disable : 4505)
-#define VMA_STATIC_VULKAN_FUNCTIONS 1
-#define VMA_DYNAMIC_VULKAN_FUNCTIONS 0
+#define VMA_STATIC_VULKAN_FUNCTIONS 0
+#define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 #include <vma/vk_mem_alloc.h>
 #pragma warning(pop)
