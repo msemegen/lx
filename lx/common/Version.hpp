@@ -66,11 +66,6 @@ struct Version
         return this->value;
     }
 
-    operator std::uint32_t&()
-    {
-        return this->value;
-    }
-
 private:
     std::uint32_t value;
 };

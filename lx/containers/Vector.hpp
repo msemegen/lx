@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ *	Name: Vector.hpp
+ *  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ */
+
 // std
 #include <array>
 #include <cassert>
@@ -12,17 +17,12 @@ template<typename Type, std::size_t capacity = 0u> class Vector
 {
 public:
     Vector() = default;
+    Vector(Vector<Type, capacity>&&) = default;
+
     Vector(const Vector<Type, capacity>& other_a)
     {
         this->length = other_a.get_length();
         std::copy(other_a.get_buffer(), other_a.get_buffer() + this->length, this->buffer);
-    }
-    Vector(Vector<Type, capacity>&& other_a)
-    {
-        this->length = other_a.get_length();
-        std::copy(other_a.get_buffer(), other_a.get_buffer() + this->length, this->buffer);
-
-        other_a.length = 0u;
     }
     Vector(std::initializer_list<Type> list_a)
         : length(list_a.size())
@@ -76,6 +76,13 @@ public:
         return false;
     }
 
+    template<typename... Arg> void emplace_back(Arg&&... args_a)
+    {
+        assert(this->length < capacity);
+
+        new (&(this->buffer[this->length++])) Type(std::forward<Arg>(args_a)...);
+    }
+
     bool pop_back()
     {
         if (false == this->is_empty())
@@ -98,6 +105,21 @@ public:
         }
 
         return false;
+    }
+
+    void erase(std::size_t index_a)
+    {
+        assert(index_a < this->length);
+
+        this->buffer[index_a].~Type();
+
+        for (size_t i = index_a; i < this->length - 1; i++)
+        {
+            new (&(this->buffer[i])) Type(std::move(this->buffer[i + 1]));
+            this->buffer[i + 1].~Type();
+        }
+
+        this->length--;
     }
 
     std::size_t get_length() const
@@ -171,6 +193,8 @@ public:
         , length(other_a.length)
         , buffer(std::make_unique<Type[]>(other_a.capacity))
     {
+        assert(other_a.get_capacity() > 0u);
+
         for (std::size_t i = 0; i < this->get_length(); i++)
         {
             this->buffer[i] = other_a.buffer[i];
@@ -189,12 +213,15 @@ public:
         , length(0)
         , buffer(std::make_unique<Type[]>(capacity_a))
     {
+        assert(capacity_a > 0u);
     }
     Vector(std::initializer_list<Type> list_a)
         : capacity(list_a.size())
         , length(list_a.size())
         , buffer(std::make_unique<Type[]>(list_a.size()))
     {
+        assert(list_a.size() > 0u);
+
         for (std::size_t i = 0; i < this->get_length(); i++)
         {
             this->buffer[i] = *(list_a.begin() + i);
@@ -203,8 +230,20 @@ public:
     Vector(std::span<const Type> data_a)
         : Vector(data_a.size())
     {
+        assert(false == data_a.empty());
+
         this->length = data_a.size();
         std::copy(data_a.begin(), data_a.begin() + this->length, this->buffer.get());
+    }
+    Vector(std::size_t count_a, Type data_a)
+        : Vector(count_a)
+    {
+        for (std::size_t i = 0; i < this->capacity; i++)
+        {
+            this->buffer[i] = data_a;
+        }
+
+        this->length = count_a;
     }
 
     void push_back(const Type& data_a)
@@ -227,6 +266,12 @@ public:
         }
     }
 
+    template<typename... Arg> void emplace_back(Arg&&... args_a)
+    {
+        this->resize(this->get_length() + 2u);
+        new (&(this->buffer[this->length++])) Type(std::forward<Arg>(args_a)...);
+    }
+
     bool pop_back()
     {
         if (this->length >= 0u)
@@ -236,12 +281,6 @@ public:
         }
 
         return false;
-    }
-
-    template<typename... Arg> void emplace_back(Arg&&... args_a)
-    {
-        this->resize(this->get_length() + 2u);
-        new (&(this->buffer[this->length++])) Type(std::forward<Arg>(args_a)...);
     }
 
     void resize(std::size_t capacity_a)
@@ -265,6 +304,26 @@ public:
     {
         this->resize(length_a);
         this->length = length_a;
+    }
+
+    void erase(std::size_t index_a)
+    {
+        assert(index_a < this->length);
+
+        this->buffer[index_a].~Type();
+
+        for (size_t i = index_a; i < this->length - 1; i++)
+        {
+            new (&(this->buffer[i])) Type(std::move(this->buffer[i + 1]));
+            this->buffer[i + 1].~Type();
+        }
+
+        this->length--;
+    }
+
+    void swap(std::size_t index_left_a, std::size_t index_right_a)
+    {
+        std::swap(this->buffer[index_left_a], this->buffer[index_right_a]);
     }
 
     void shrink_to_fit()

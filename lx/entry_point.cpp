@@ -51,18 +51,64 @@ BOOL enum_monitors_handler(HMONITOR monitor_handle, HDC, LPRECT, LPARAM user_dat
     return TRUE;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT,
-                                                 VkDebugUtilsMessageTypeFlagsEXT,
+VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity_a,
+                                                 VkDebugUtilsMessageTypeFlagsEXT message_type_a,
                                                  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                                  void*)
 {
-    logger::write_line(logger::dbg, std::source_location::current(), pCallbackData->pMessage);
+    auto severity_to_string = [&]() -> const char* {
+        switch (message_severity_a)
+        {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: {
+                return "sev_vk_inf";
+            }
+
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: {
+                return "sev_vk_wrn";
+            }
+
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
+                return "sev_vk_err";
+            }
+
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: {
+                return "sev_vk_veb";
+            }
+        }
+
+        return "";
+    };
+
+    auto type_to_string = [&]() -> const char* {
+        switch (message_type_a)
+        {
+            case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT: {
+                return "type_vk_gen";
+            }
+
+            case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT: {
+                return "type_vk_vld";
+            }
+
+            case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT: {
+                return "type_vk_pef";
+            }
+
+            case VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT: {
+                return "type_vk_add";
+            }
+        }
+
+        return "";
+    };
+
+    log_dbg("[{}][{}] {}", severity_to_string(), type_to_string(), pCallbackData->pMessage);
     return VK_FALSE;
 }
 
 constexpr std::string_view engine_name = "lx";
 constexpr Version engine_version = Version::Components { .major = 0u, .minor = 0u, .patch = 1u };
-constexpr Version vulkan_version = Version::Components { .major = 1u, .minor = 3u, .patch = 0u };
+constexpr Version vulkan_version = Version::Components { .major = 1u, .minor = 0u, .patch = 0u };
 
 FILE* p_log_file = nullptr;
 bool log_console_output = false;
@@ -143,70 +189,56 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
     Vector<Display> displays;
     Vector<GPU> gpus;
 
+    lx::app::Config config;
+    lx::app::setup(out(config));
+
+    if (true == config.log.path.is_empty())
+    {
+        // log filename empty error code
+        return -1;
+    }
+
+    errno_t file_err = fopen_s(&p_log_file, config.log.path.get_cstring(), "w+");
+
+    if (0 != file_err)
+    {
+        return -2;
+    }
+
+    if (true == config.log.console)
+    {
+        log_console_output = static_cast<bool>(AllocConsole());
+
+        if (true == log_console_output)
+        {
+            FILE* fp1 = nullptr;
+            FILE* fp2 = nullptr;
+            FILE* fp3 = nullptr;
+
+            freopen_s(&fp1, "CONIN$", "r", stdin);
+            freopen_s(&fp2, "CONOUT$", "w", stdout);
+            freopen_s(&fp3, "CONOUT$", "w", stderr);
+        }
+    }
+
     bool vulkan_loaded = loader::vulkan::load();
     bool vulkan_initialized = false;
 
     if (true == vulkan_loaded)
     {
-        lx::app::Config config;
-        lx::app::setup(out(config));
-
-        if (true == config.log.path.is_empty())
-        {
-            // log filename empty error code
-            return -1;
-        }
-
-        errno_t file_err = fopen_s(&p_log_file, config.log.path.get_cstring(), "w+");
-
-        if (0 != file_err)
-        {
-            return -2;
-        }
-
-        if (true == config.log.console)
-        {
-            log_console_output = static_cast<bool>(AllocConsole());
-
-            if (true == log_console_output)
-            {
-                FILE* fp1 = nullptr;
-                FILE* fp2 = nullptr;
-                FILE* fp3 = nullptr;
-
-                freopen_s(&fp1, "CONIN$", "r", stdin);
-                freopen_s(&fp2, "CONOUT$", "w", stdout);
-                freopen_s(&fp3, "CONOUT$", "w", stderr);
-            }
-        }
-
-        Vector<const char*> instance_layers;
-        Vector<const char*> instance_extensions;
-
-        Vector<const char*, 3u> default_instance_extensions;
+        Vector<const char*, 4u> default_instance_extensions;
         Vector<const char*, 3u> default_instance_layers;
 
         default_instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
         default_instance_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#if defined(VK_KHR_get_physical_device_properties2)
+        default_instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#endif
 
-        if (true == config.vulkan.validation.enabled)
+        if (true == config.vulkan.enable_validation)
         {
             default_instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
             default_instance_layers.push_back("VK_LAYER_KHRONOS_validation");
-        }
-
-        if (false == default_instance_extensions.is_empty() || false == config.vulkan.instance.extensions.is_empty())
-        {
-            instance_extensions.resize(default_instance_extensions.get_length() + config.vulkan.instance.extensions.get_length());
-            instance_extensions.push_back(default_instance_extensions);
-            instance_extensions.push_back(config.vulkan.instance.extensions);
-        }
-
-        if (false == default_instance_layers.is_empty() || false == config.vulkan.instance.layers.is_empty())
-        {
-            instance_layers.resize(default_instance_layers.get_length() + config.vulkan.instance.layers.get_length());
-            instance_layers.push_back(default_instance_layers);
-            instance_layers.push_back(config.vulkan.instance.layers);
         }
 
         const VkApplicationInfo application_info { .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -221,21 +253,23 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
             .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
             .pNext = nullptr,
             .flags = 0x0u,
-            .messageSeverity = static_cast<VkDebugUtilsMessageSeverityFlagsEXT>(config.vulkan.validation.severity),
-            .messageType = static_cast<VkDebugUtilsMessageTypeFlagsEXT>(config.vulkan.validation.kind),
+            .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT,
+            .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT,
             .pfnUserCallback = vk_debug_callback,
             .pUserData = nullptr
         };
 
         const VkInstanceCreateInfo vk_instance_create_info {
             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-            .pNext = (true == config.vulkan.validation.enabled ? &debug_messenger_create_info : nullptr),
+            .pNext = (true == config.vulkan.enable_validation ? &debug_messenger_create_info : nullptr),
             .flags = 0x0u,
             .pApplicationInfo = &application_info,
-            .enabledLayerCount = static_cast<std::uint32_t>(instance_layers.get_length()),
-            .ppEnabledLayerNames = instance_layers.get_buffer(),
-            .enabledExtensionCount = static_cast<std::uint32_t>(instance_extensions.get_length()),
-            .ppEnabledExtensionNames = instance_extensions.get_buffer()
+            .enabledLayerCount = static_cast<std::uint32_t>(default_instance_layers.get_length()),
+            .ppEnabledLayerNames = default_instance_layers.get_buffer(),
+            .enabledExtensionCount = static_cast<std::uint32_t>(default_instance_extensions.get_length()),
+            .ppEnabledExtensionNames = default_instance_extensions.get_buffer()
         };
 
         VkResult vk_result = vkCreateInstance(&vk_instance_create_info, nullptr, &vk_instance);
@@ -647,10 +681,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
                         for (const VkQueueFamilyProperties& vk_queue_family_properties : queue_families_a)
                         {
                             GPU::QueueFamily q { .kind = static_cast<GPU::QueueFamily::Kind>(vk_queue_family_properties.queueFlags),
-                                                 .count = vk_queue_family_properties.queueCount,
+                                                 .members = vk_queue_family_properties.queueCount,
                                                  .index = index++ };
 
-                            log_inf("Q: kind: {}. count: {}, index: {}", static_cast<std::uint32_t>(q.kind), q.count, q.index);
+                            log_inf("Q: kind: {}. members: {}, index: {}", static_cast<std::uint32_t>(q.kind), q.members, q.index);
 
                             ret.push_back(q);
                         }

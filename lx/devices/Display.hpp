@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ *	Name: Display.hpp
+ *  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ */
+
 // lx
 #include <lx/common/Rect.hpp>
 #include <lx/containers/String.hpp>

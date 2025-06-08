@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ *	Name: GPU.hpp
+ *  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ */
+
 // lx
 #include <lx/containers/String.hpp>
 #include <lx/containers/Vector.hpp>
@@ -218,7 +223,7 @@ struct GPU
         using enum Kind;
 
         Kind kind;
-        std::size_t count;
+        std::size_t members;
         std::size_t index;
     };
 

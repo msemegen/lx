@@ -63,4 +63,43 @@ template<typename Type> struct Matrix<Type, 4u>
         return std::bit_cast<Vector<Type, 4u>*>(this)[index_a];
     }
 };
+
+static_assert(sizeof(Matrix<std::int8_t, 2u>) == sizeof(Vector<std::int8_t, 2u>) * 2u);
+static_assert(sizeof(Matrix<std::int16_t, 2u>) == sizeof(Vector<std::int16_t, 2u>) * 2u);
+static_assert(sizeof(Matrix<std::int32_t, 2u>) == sizeof(Vector<std::int32_t, 2u>) * 2u);
+static_assert(sizeof(Matrix<std::int64_t, 2u>) == sizeof(Vector<std::int64_t, 2u>) * 2u);
+
+static_assert(sizeof(Matrix<std::uint8_t, 2u>) == sizeof(Vector<std::uint8_t, 2u>) * 2u);
+static_assert(sizeof(Matrix<std::uint16_t, 2u>) == sizeof(Vector<std::uint16_t, 2u>) * 2u);
+static_assert(sizeof(Matrix<std::uint32_t, 2u>) == sizeof(Vector<std::uint32_t, 2u>) * 2u);
+static_assert(sizeof(Matrix<std::uint64_t, 2u>) == sizeof(Vector<std::uint64_t, 2u>) * 2u);
+
+static_assert(sizeof(Matrix<float, 2u>) == sizeof(Vector<float, 2u>) * 2u);
+static_assert(sizeof(Matrix<double, 2u>) == sizeof(Vector<double, 2u>) * 2u);
+
+static_assert(sizeof(Matrix<std::int8_t, 3u>) == sizeof(Vector<std::int8_t, 3u>) * 3u);
+static_assert(sizeof(Matrix<std::int16_t, 3u>) == sizeof(Vector<std::int16_t, 3u>) * 3u);
+static_assert(sizeof(Matrix<std::int32_t, 3u>) == sizeof(Vector<std::int32_t, 3u>) * 3u);
+static_assert(sizeof(Matrix<std::int64_t, 3u>) == sizeof(Vector<std::int64_t, 3u>) * 3u);
+
+static_assert(sizeof(Matrix<std::uint8_t, 3u>) == sizeof(Vector<std::uint8_t, 3u>) * 3u);
+static_assert(sizeof(Matrix<std::uint16_t, 3u>) == sizeof(Vector<std::uint16_t, 3u>) * 3u);
+static_assert(sizeof(Matrix<std::uint32_t, 3u>) == sizeof(Vector<std::uint32_t, 3u>) * 3u);
+static_assert(sizeof(Matrix<std::uint64_t, 3u>) == sizeof(Vector<std::uint64_t, 3u>) * 3u);
+
+static_assert(sizeof(Matrix<float, 3u>) == sizeof(Vector<float, 3u>) * 3u);
+static_assert(sizeof(Matrix<double, 3u>) == sizeof(Vector<double, 3u>) * 3u);
+
+static_assert(sizeof(Matrix<std::int8_t, 4u>) == sizeof(Vector<std::int8_t, 4u>) * 4u);
+static_assert(sizeof(Matrix<std::int16_t, 4u>) == sizeof(Vector<std::int16_t, 4u>) * 4u);
+static_assert(sizeof(Matrix<std::int32_t, 4u>) == sizeof(Vector<std::int32_t, 4u>) * 4u);
+static_assert(sizeof(Matrix<std::int64_t, 4u>) == sizeof(Vector<std::int64_t, 4u>) * 4u);
+
+static_assert(sizeof(Matrix<std::uint8_t, 4u>) == sizeof(Vector<std::uint8_t, 4u>) * 4u);
+static_assert(sizeof(Matrix<std::uint16_t, 4u>) == sizeof(Vector<std::uint16_t, 4u>) * 4u);
+static_assert(sizeof(Matrix<std::uint32_t, 4u>) == sizeof(Vector<std::uint32_t, 4u>) * 4u);
+static_assert(sizeof(Matrix<std::uint64_t, 4u>) == sizeof(Vector<std::uint64_t, 4u>) * 4u);
+
+static_assert(sizeof(Matrix<float, 4u>) == sizeof(Vector<float, 4u>) * 4u);
+static_assert(sizeof(Matrix<double, 4u>) == sizeof(Vector<double, 4u>) * 4u);
 } // namespace lx::math

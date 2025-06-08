@@ -6,13 +6,20 @@
  */
 
 // platform
+#pragma warning(push)
+#pragma warning(disable : 4820)
 #include <vulkan/vulkan.h>
+#pragma warning(pop)
 
 // std
 #include <cstdint>
 
 // lxf
+#include <lx/common/Version.hpp>
 #include <lx/common/non_constructible.hpp>
+
+extern PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr;
+extern PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr;
 
 extern PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties;
 extern PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties;
@@ -48,6 +55,32 @@ extern PFN_vkCreateShaderModule vkCreateShaderModule;
 extern PFN_vkDestroyShaderModule vkDestroyShaderModule;
 extern PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines;
 extern PFN_vkDestroyPipeline vkDestroyPipeline;
+extern PFN_vkGetPhysicalDeviceMemoryProperties vkGetPhysicalDeviceMemoryProperties;
+extern PFN_vkAllocateMemory vkAllocateMemory;
+extern PFN_vkFreeMemory vkFreeMemory;
+extern PFN_vkMapMemory vkMapMemory;
+extern PFN_vkUnmapMemory vkUnmapMemory;
+extern PFN_vkFlushMappedMemoryRanges vkFlushMappedMemoryRanges;
+extern PFN_vkInvalidateMappedMemoryRanges vkInvalidateMappedMemoryRanges;
+extern PFN_vkBindBufferMemory vkBindBufferMemory;
+extern PFN_vkBindImageMemory vkBindImageMemory;
+extern PFN_vkGetBufferMemoryRequirements vkGetBufferMemoryRequirements;
+extern PFN_vkGetImageMemoryRequirements vkGetImageMemoryRequirements;
+extern PFN_vkCreateBuffer vkCreateBuffer;
+extern PFN_vkDestroyBuffer vkDestroyBuffer;
+extern PFN_vkCreateImage vkCreateImage;
+extern PFN_vkDestroyImage vkDestroyImage;
+extern PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
+extern PFN_vkCreateImageView vkCreateImageView;
+extern PFN_vkDestroyImageView vkDestroyImageView;
+extern PFN_vkCreateCommandPool vkCreateCommandPool;
+extern PFN_vkResetCommandPool vkResetCommandPool;
+extern PFN_vkDestroyCommandPool vkDestroyCommandPool;
+extern PFN_vkAllocateCommandBuffers vkAllocateCommandBuffers;
+extern PFN_vkFreeCommandBuffers vkFreeCommandBuffers;
+extern PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
+extern PFN_vkEndCommandBuffer vkEndCommandBuffer;
+extern PFN_vkQueueSubmit vkQueueSubmit;
 #endif
 #if defined(VK_KHR_swapchain)
 extern PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR;
@@ -60,6 +93,11 @@ struct vulkan : private common::non_constructible
 {
     static bool load();
     static void release();
+
+    static lx::common::Version get_version()
+    {
+        return version;
+    }
 
     enum class Format : std::uint64_t
     {
@@ -369,16 +407,32 @@ struct vulkan : private common::non_constructible
         a4b4g4r4_unorm_pack16_ext = VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT,
         r16g16_s10_5_nv = VK_FORMAT_R16G16_S10_5_NV,
     };
+
+private:
+    inline static lx::common::Version version;
 };
-} // namespace lx::renderer::loader
+} // namespace lx::gpu::loader
 
 extern "C" {
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo,
                                                 const VkAllocationCallbacks* pAllocator,
                                                 VkInstance* pInstance);
 
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkPhysicalDevice physicalDevice,
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
+                                              VkPhysicalDevice physicalDevice,
                                               const VkDeviceCreateInfo* pCreateInfo,
                                               const VkAllocationCallbacks* pAllocator,
                                               VkDevice* pDevice);
 }
+
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#pragma warning(disable : 4100)
+#pragma warning(disable : 4189)
+#pragma warning(disable : 4324)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 4505)
+#define VMA_STATIC_VULKAN_FUNCTIONS 0
+#define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
+#include <vma/vk_mem_alloc.h>
+#pragma warning(pop)

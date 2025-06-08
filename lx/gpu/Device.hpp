@@ -2,9 +2,16 @@
 
 // lx
 #include <lx/Windower.hpp>
+#include <lx/common/bit.hpp>
 #include <lx/common/non_copyable.hpp>
 #include <lx/containers/Vector.hpp>
 #include <lx/devices/GPU.hpp>
+#include <lx/gpu/Buffer.hpp>
+#include <lx/gpu/CommandList.hpp>
+#include <lx/gpu/CommandPool.hpp>
+#include <lx/gpu/Pipeline.hpp>
+#include <lx/gpu/Queue.hpp>
+#include <lx/gpu/SwapChain.hpp>
 #include <lx/gpu/loader/vulkan.hpp>
 
 // std
@@ -16,99 +23,48 @@ class Device : private lx::common::non_copyable
 public:
     using Feature = devices::GPU::Feature;
 
-    struct QueueFamily
-    {
-        using Kind = devices::GPU::QueueFamily::Kind;
-
-        using enum Kind;
-
-        Kind kind;
-        std::size_t count = 0u;
-
-        lx::containers::Vector<float> priorities;
-        bool presentation = false;
-    };
-    struct SwapChain
-    {
-        using Format = loader::vulkan::Format;
-
-        enum class ColorSpace : std::uint64_t
-        {
-            srgb_nonlinear_khr = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-            display_p3_nonlinear_ext = VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT,
-            extended_srgb_linear_ext = VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT,
-            display_p3_linear_ext = VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT,
-            dci_p3_nonlinear_ext = VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT,
-            bt709_linear_ext = VK_COLOR_SPACE_BT709_LINEAR_EXT,
-            bt709_nonlinear_ext = VK_COLOR_SPACE_BT709_NONLINEAR_EXT,
-            bt2020_linear_ext = VK_COLOR_SPACE_BT2020_LINEAR_EXT,
-            hdr10_st2084_ext = VK_COLOR_SPACE_HDR10_ST2084_EXT,
-            dolbyvision_ext = VK_COLOR_SPACE_DOLBYVISION_EXT,
-            hdr10_hlg_ext = VK_COLOR_SPACE_HDR10_HLG_EXT,
-            adobergb_linear_ext = VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT,
-            adobergb_nonlinear_ext = VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT,
-            pass_through_ext = VK_COLOR_SPACE_PASS_THROUGH_EXT,
-            extended_srgb_nonlinear_ext = VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT,
-            display_native_amd = VK_COLOR_SPACE_DISPLAY_NATIVE_AMD,
-            space_dci_p3_linear_ext = VK_COLOR_SPACE_DCI_P3_LINEAR_EXT,
-        };
-        enum class Mode : std::uint64_t
-        {
-            immediate = VK_PRESENT_MODE_IMMEDIATE_KHR,
-            mailbox = VK_PRESENT_MODE_MAILBOX_KHR,
-            fifo = VK_PRESENT_MODE_FIFO_KHR,
-            fifo_relaxed = VK_PRESENT_MODE_FIFO_RELAXED_KHR,
-            shared_demand_refresh = VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR,
-            shared_continuous_refresh = VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR,
-        };
-
-        Format format;
-        ColorSpace color_space;
-        Mode mode;
-
-        std::size_t images_count;
-    };
-
     struct Properties
     {
         Feature features;
-        std::span<const QueueFamily> queue_families;
         std::span<const char* const> extensions;
-        SwapChain swap_chain;
     };
 
-    Device() = default;
-    Device(Device&&) = default;
     [[nodiscard]] bool is_created() const
     {
-        return VK_NULL_HANDLE != this->vk_device && VK_NULL_HANDLE != this->vk_swap_chain && false == this->vk_queues.is_empty() &&
-               false == vk_swap_chain_images.is_empty();
+        return VK_NULL_HANDLE != this->vk_device && false == this->queues.is_empty();
     }
 
     [[nodiscard]] operator VkDevice() const
     {
         return this->vk_device;
     }
-    [[nodiscard]] operator VkSwapchainKHR() const
-    {
-        return this->vk_swap_chain;
-    }
+
+    template<typename Type> [[nodiscard]] Type create(typename const Type::Properties& properties) = delete;
+    template<typename Type, typename DependencyType> [[nodiscard]] Type create(const DependencyType& dependency_a) = delete;
+    template<typename Type, typename DependencyType>
+    [[nodiscard]] Type create(DependencyType* p_dependency_a, typename const Type::Properties& properties) = delete;
+
+    template<typename Type> void destroy(lx::common::out<Type> object_a) = delete;
 
 private:
-    Device(const lx::devices::GPU& gpu_a,
-           VkSurfaceKHR vk_surface_a,
-           const VkExtent2D& swap_buffer_extent_a,
-           const Properties& properties_a);
-    ~Device() = default;
+    struct QueueInfo
+    {
+        using Kind = devices::GPU::QueueFamily::Kind;
 
+        using enum Kind;
+
+        Kind kind;
+        float priority = 0.0f;
+
+        std::uint32_t index;
+        std::uint32_t family;
+
+        bool presentation = false;
+    };
+
+    Device(const lx::devices::GPU& gpu_a, VkSurfaceKHR vk_surface_a, const Properties& properties_a);
     void destroy()
     {
-        if (VK_NULL_HANDLE != this->vk_swap_chain)
-        {
-            vkDestroySwapchainKHR(this->vk_device, this->vk_swap_chain, nullptr);
-            this->vk_swap_chain = VK_NULL_HANDLE;
-        }
-
         if (VK_NULL_HANDLE != this->vk_device)
         {
             vkDestroyDevice(this->vk_device, nullptr);
@@ -117,12 +73,111 @@ private:
     }
 
     VkDevice vk_device = VK_NULL_HANDLE;
-    VkSwapchainKHR vk_swap_chain = VK_NULL_HANDLE;
+    VkSurfaceKHR vk_surface = VK_NULL_HANDLE;
 
-    lx::containers::Vector<VkQueue> vk_queues;
-    lx::containers::Vector<VkImage> vk_swap_chain_images;
-    lx::containers::Vector<VkImageView> vk_swap_chain_image_views;
+    VmaAllocator vk_memory_allocator;
+
+    lx::containers::Vector<QueueInfo> queues;
 
     friend class Context;
 };
+
+template<>
+inline [[nodiscard]] lx::gpu::Pipeline<lx::gpu::pipeline::graphics> Device::create<lx::gpu::Pipeline<lx::gpu::pipeline::graphics>>(
+    const lx::gpu::Pipeline<lx::gpu::pipeline::graphics>::Properties& properties_a)
+{
+    return { this->vk_device, properties_a };
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::Pipeline<lx::gpu::pipeline::graphics>> object_a)
+{
+    object_a->destroy(this->vk_device);
+}
+
+template<> inline [[nodiscard]] lx::gpu::Buffer
+Device::create<lx::gpu::Buffer>(lx::gpu::CommandList<lx::gpu::command_list::transfer>* p_command_list_a,
+                                const lx::gpu::Buffer::Properties& properties_a)
+{
+    return { this->vk_device, p_command_list_a, properties_a };
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::Buffer> object_a) {}
+
+template<> inline [[nodiscard]] lx::gpu::SwapChain Device::create<lx::gpu::SwapChain>(const lx::gpu::SwapChain::Properties& properties_a)
+{
+    return { this->vk_device, this->vk_surface, properties_a };
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::SwapChain> object_a)
+{
+    object_a->destroy(this->vk_device);
+}
+
+template<> inline [[nodiscard]] lx::gpu::Queue Device::create<lx::gpu::Queue>(const lx::gpu::Queue::Properties& properties_a)
+{
+    for (std::size_t i = 0; i < this->queues.get_length(); i++)
+    {
+        if (this->queues[i].kind == properties_a.kind && properties_a.presentation == this->queues[i].presentation)
+        {
+            VkQueue vk_queue;
+            const QueueInfo queue_info = this->queues[i];
+
+            this->queues.erase(i);
+
+            vkGetDeviceQueue(this->vk_device, queue_info.family, queue_info.index, &vk_queue);
+            return { vk_queue, queue_info.index, queue_info.family, queue_info.kind };
+        }
+    }
+
+    for (std::size_t i = 0; i < this->queues.get_length(); i++)
+    {
+        if (true == common::bit::flag::is(this->queues[i].kind, properties_a.kind) &&
+            properties_a.presentation == this->queues[i].presentation)
+        {
+            VkQueue vk_queue;
+            const QueueInfo queue_info = this->queues[i];
+
+            this->queues.erase(i);
+
+            vkGetDeviceQueue(this->vk_device, queue_info.family, queue_info.index, &vk_queue);
+            return { vk_queue, queue_info.index, queue_info.family, queue_info.kind };
+        }
+    }
+
+    return { VK_NULL_HANDLE, std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max(), {} };
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::Queue> object_a) {}
+
+template<> inline [[nodiscard]] lx::gpu::CommandPool Device::create<lx::gpu::CommandPool>(const lx::gpu::Queue& queue_a)
+{
+    return { this->vk_device, queue_a.family, queue_a.kind };
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::CommandPool> object_a)
+{
+    object_a->destroy();
+}
+
+template<> inline [[nodiscard]] lx::gpu::CommandList<lx::gpu::command_list::graphics>
+Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics>>(const lx::gpu::CommandPool& command_pool_a)
+{
+    assert(true == common::bit::flag::is(static_cast<std::uint32_t>(command_pool_a.queue_kind),
+                                         static_cast<std::uint32_t>(lx::gpu::command_list::graphics)));
+    return { this->vk_device, command_pool_a };
+}
+template<> inline void Device::destroy(lx::common::out<lx::gpu::CommandList<lx::gpu::command_list::graphics>> object_a)
+{
+    object_a->destroy();
+}
+
+template<> inline [[nodiscard]] lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>
+Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>>(
+    const lx::gpu::CommandPool& command_pool_a)
+{
+    assert(true == common::bit::flag::is(static_cast<std::uint32_t>(command_pool_a.queue_kind),
+                                         static_cast<std::uint32_t>(lx::gpu::command_list::graphics | lx::gpu::command_list::transfer)));
+
+    return { this->vk_device, command_pool_a };
+}
+template<> inline void
+Device::destroy(lx::common::out<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>> object_a)
+{
+    object_a->destroy();
+}
 } // namespace lx::gpu
