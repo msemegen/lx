@@ -81,6 +81,7 @@ extern PFN_vkFreeCommandBuffers vkFreeCommandBuffers;
 extern PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
 extern PFN_vkEndCommandBuffer vkEndCommandBuffer;
 extern PFN_vkQueueSubmit vkQueueSubmit;
+extern PFN_vkDeviceWaitIdle vkDeviceWaitIdle;
 #endif
 #if defined(VK_KHR_swapchain)
 extern PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR;

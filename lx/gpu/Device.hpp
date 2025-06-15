@@ -67,7 +67,9 @@ private:
     {
         if (VK_NULL_HANDLE != this->vk_device)
         {
+            vkDeviceWaitIdle(this->vk_device);
             vkDestroyDevice(this->vk_device, nullptr);
+
             this->vk_device = VK_NULL_HANDLE;
         }
     }

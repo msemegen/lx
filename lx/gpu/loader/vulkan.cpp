@@ -83,6 +83,7 @@ PFN_vkFreeCommandBuffers vkFreeCommandBuffers;
 PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
 PFN_vkEndCommandBuffer vkEndCommandBuffer;
 PFN_vkQueueSubmit vkQueueSubmit;
+PFN_vkDeviceWaitIdle vkDeviceWaitIdle;
 #endif
 #if defined(VK_KHR_swapchain)
 PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR = nullptr;
@@ -243,6 +244,7 @@ void vulkan::release()
     unload_function(lx::common::out(vkBeginCommandBuffer));
     unload_function(lx::common::out(vkEndCommandBuffer));
     unload_function(lx::common::out(vkQueueSubmit));
+    unload_function(lx::common::out(vkDeviceWaitIdle));
 #endif
 #if defined(VK_KHR_swapchain)
     unload_function(lx::common::out(vkCreateSwapchainKHR));
@@ -338,6 +340,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(VkInstance instance,
         LOAD_DEVICE_LEVEL_FUNCTION(vkBeginCommandBuffer);
         LOAD_DEVICE_LEVEL_FUNCTION(vkEndCommandBuffer);
         LOAD_DEVICE_LEVEL_FUNCTION(vkQueueSubmit);
+        LOAD_DEVICE_LEVEL_FUNCTION(vkDeviceWaitIdle);
 #endif
 #if defined(VK_KHR_swapchain)
         LOAD_DEVICE_LEVEL_FUNCTION(vkCreateSwapchainKHR);
