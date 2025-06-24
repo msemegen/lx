@@ -3,6 +3,7 @@
 
 // lx
 #include <lx/common/Out.hpp>
+#include <lx/gpu/Viewport.hpp>
 #include <lx/utils/logger.hpp>
 
 // std
@@ -10,6 +11,7 @@
 
 namespace {
 using namespace lx::common;
+using namespace lx::gpu;
 
 VkCommandBuffer CommandList_create(VkDevice vk_device_a, VkCommandPool vk_command_pool_a)
 {
@@ -37,14 +39,25 @@ void CommandList_destroy(VkDevice vk_device_a, VkCommandPool vk_command_pool_a, 
 
 bool CommandList_start(VkCommandBuffer vk_command_buffer_a)
 {
-    VkCommandBufferBeginInfo vk_command_buffer_begin_info {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, .pNext = nullptr, .flags = 0u, .pInheritanceInfo = nullptr
-    };
+    VkCommandBufferBeginInfo vk_command_buffer_begin_info { .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                                                            .pNext = nullptr,
+                                                            .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
+                                                            .pInheritanceInfo = nullptr };
     return VK_SUCCESS == vkBeginCommandBuffer(vk_command_buffer_a, &vk_command_buffer_begin_info);
 }
 bool CommandList_stop(VkCommandBuffer vk_command_buffer_a)
 {
     return VK_SUCCESS == vkEndCommandBuffer(vk_command_buffer_a);
+}
+
+bool CommandList_set_viewport(VkCommandBuffer vk_command_buffer_a, const Viewport& viewport_a)
+{
+    VkViewport vp { .x = static_cast<float>(viewport_a.position.x),
+                    .y = static_cast<float>(viewport_a.position.y),
+                    .width = static_cast<float>(viewport_a.size.w),
+                    .height = static_cast<float>(viewport_a.size.h),
+                    .minDepth = viewport_a.min_depth,
+                    .maxDepth = viewport_a.max_depth };
 }
 } // namespace
 
@@ -52,33 +65,47 @@ namespace lx::gpu {
 using namespace lx::common;
 
 CommandList<command_list::Kind::graphics | command_list::Kind::transfer>::CommandList(VkDevice vk_device_a, VkCommandPool vk_command_pool_a)
-    : vk_device(vk_device_a)
+    : vk_command_buffer(CommandList_create(vk_device_a, vk_command_pool_a))
     , vk_command_pool(vk_command_pool_a)
-    , vk_command_buffer(CommandList_create(this->vk_device, this->vk_command_pool))
+    , state(State::initial)
 {
 }
 
-void CommandList<command_list::Kind::graphics | command_list::Kind::transfer>::destroy()
+void CommandList<command_list::Kind::graphics | command_list::Kind::transfer>::destroy(VkDevice vk_device_a)
 {
-    CommandList_destroy(this->vk_device, this->vk_command_pool, out(this->vk_command_buffer));
+    CommandList_destroy(vk_device_a, this->vk_command_pool, out(this->vk_command_buffer));
 }
 
 bool CommandList<command_list::Kind::graphics | command_list::Kind::transfer>::start()
 {
-    assert(false == this->is_started());
+    assert(State::initial == this->state || State::invalid == this->state);
 
-    this->started = CommandList_start(this->vk_command_buffer);
-    return this->started;
+    if (true == CommandList_start(this->vk_command_buffer))
+    {
+        this->state = State::recording;
+
+        return true;
+    }
+
+    return false;
 }
 bool CommandList<command_list::Kind::graphics | command_list::Kind::transfer>::stop()
 {
-    assert(true == this->is_started());
+    assert(State::recording == this->state);
 
     if (true == CommandList_stop(this->vk_command_buffer))
     {
-        this->started = false;
+        this->state = State::executable;
+
+        return true;
     }
 
-    return false == this->started;
+    return false;
 }
+
+template<> bool CommandList<command_list::graphics | command_list::transfer>::set<Viewport>(const Viewport& viewport_a)
+{
+    return false;
+}
+
 } // namespace lx::gpu

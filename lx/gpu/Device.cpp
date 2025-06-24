@@ -3,8 +3,10 @@
 
 // lx
 #include <lx/common/bit.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
 #include <lx/utils/logger.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <cassert>

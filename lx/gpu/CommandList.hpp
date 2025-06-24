@@ -3,12 +3,16 @@
 // lx
 #include <lx/common/non_constructible.hpp>
 #include <lx/common/non_copyable.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <cstdint>
 
 namespace lx::gpu {
+struct Viewport;
+
 struct command_list : private lx::common::non_constructible
 {
     enum class Kind : std::uint32_t
@@ -39,21 +43,36 @@ template<command_list::Kind kind> class CommandList : private lx::common::non_co
 {
 };
 
-template<> class CommandList<command_list::Kind::graphics | command_list::Kind::transfer> : private lx::common::non_copyable
+template<> class CommandList<command_list::graphics | command_list::transfer> : private lx::common::non_copyable
 {
 public:
+    enum State : std::uint32_t
+    {
+        initial,
+        recording,
+        executable,
+        pending,
+        invalid
+    };
+
     bool is_created() const
     {
         return VK_NULL_HANDLE != this->vk_command_buffer;
     }
 
+    State get_state() const
+    {
+        return this->state;
+    }
+
     bool start();
     bool stop();
 
-    bool is_started() const
-    {
-        return this->started;
-    }
+    template<typename Type> bool set(const Type& type_a) = delete;
+
+    // graphics pipeline functions:
+    void bind();
+    void draw();
 
     operator VkCommandBuffer() const
     {
@@ -62,27 +81,25 @@ public:
 
 private:
     CommandList(VkDevice vk_device_a, VkCommandPool vk_command_pool_a);
-    void destroy();
+    void destroy(VkDevice vk_device_a);
 
-    VkDevice vk_device = VK_NULL_HANDLE;
-    VkCommandPool vk_command_pool = VK_NULL_HANDLE;
+    State state;
+
     VkCommandBuffer vk_command_buffer = VK_NULL_HANDLE;
+    VkCommandPool vk_command_pool = VK_NULL_HANDLE;
 
-    bool started = false;
-
-    friend class CommandList<command_list::Kind::graphics>;
-    friend class CommandList<command_list::Kind::transfer>;
+    friend class CommandList<command_list::graphics>;
+    friend class CommandList<command_list::transfer>;
 
     friend class Device;
 };
 
-template<> class CommandList<command_list::Kind::graphics> : private lx::common::non_copyable
+template<> class CommandList<command_list::graphics> : private lx::common::non_copyable
 {
 public:
-    CommandList(const CommandList<command_list::Kind::graphics | command_list::Kind::transfer>& other_a)
+    CommandList(const CommandList<command_list::graphics | command_list::transfer>& other_a)
         : vk_command_buffer(other_a.vk_command_buffer)
         , vk_command_pool(other_a.vk_command_pool)
-        , vk_device(other_a.vk_device)
     {
     }
 
@@ -91,25 +108,28 @@ public:
         return this->vk_command_buffer;
     }
 
+    // graphics pipeline functions:
+    void bind_pipeline();
+    void set_view_port();
+    void draw();
+
 private:
     CommandList(VkDevice vk_device_a, VkCommandPool vk_command_pool_a);
-    void destroy();
+    void destroy(VkDevice vk_device_a);
 
     VkCommandBuffer vk_command_buffer = VK_NULL_HANDLE;
     VkCommandPool vk_command_pool = VK_NULL_HANDLE;
-    VkDevice vk_device = VK_NULL_HANDLE;
 
-    friend class CommandList<command_list::Kind::graphics | command_list::Kind::transfer>;
+    friend class CommandList<command_list::graphics | command_list::transfer>;
     friend class Device;
 };
 
-template<> class CommandList<command_list::Kind::transfer> : private lx::common::non_copyable
+template<> class CommandList<command_list::transfer> : private lx::common::non_copyable
 {
 public:
-    CommandList(const CommandList<command_list::Kind::graphics | command_list::Kind::transfer>& other_a)
+    CommandList(const CommandList<command_list::graphics | command_list::transfer>& other_a)
         : vk_command_buffer(other_a.vk_command_buffer)
         , vk_command_pool(other_a.vk_command_pool)
-        , vk_device(other_a.vk_device)
     {
     }
     operator VkCommandBuffer() const
@@ -119,17 +139,16 @@ public:
 
 private:
     CommandList(VkDevice vk_device_a, VkCommandPool vk_command_pool_a);
-    void destroy();
+    void destroy(VkDevice vk_device_a);
 
     VkCommandBuffer vk_command_buffer = VK_NULL_HANDLE;
     VkCommandPool vk_command_pool = VK_NULL_HANDLE;
-    VkDevice vk_device = VK_NULL_HANDLE;
 
-    friend class CommandList<command_list::Kind::graphics | command_list::Kind::transfer>;
+    friend class CommandList<command_list::graphics | command_list::transfer>;
     friend class Device;
 };
 
-template<> class CommandList<command_list::Kind::compute> : private lx::common::non_copyable
+template<> class CommandList<command_list::compute> : private lx::common::non_copyable
 {
 public:
     operator VkCommandBuffer() const
@@ -139,12 +158,13 @@ public:
 
 private:
     CommandList(VkDevice vk_device_a, VkCommandPool vk_command_pool_a);
-    void destroy();
+    void destroy(VkDevice vk_device_a);
 
     VkCommandBuffer vk_command_buffer = VK_NULL_HANDLE;
     VkCommandPool vk_command_pool = VK_NULL_HANDLE;
-    VkDevice vk_device = VK_NULL_HANDLE;
 
     friend class Device;
 };
+
+template<> bool CommandList<command_list::graphics | command_list::transfer>::set<Viewport>(const Viewport& viewport_a);
 } // namespace lx::gpu

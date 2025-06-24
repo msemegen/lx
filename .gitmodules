@@ -1,0 +1,3 @@
+[submodule "externals/lxl"]
+	path = externals/lxl
+	url = https://github.com/msemegen/lxl

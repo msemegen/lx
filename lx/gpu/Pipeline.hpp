@@ -5,8 +5,11 @@
 #include <lx/common/non_constructible.hpp>
 #include <lx/common/non_copyable.hpp>
 #include <lx/containers/Vector.hpp>
+#include <lx/gpu/Format.hpp>
 #include <lx/gpu/Viewport.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <array>
@@ -69,8 +72,6 @@ public:
         CullMode cull_mode;
         FrontFace front_face;
         Topology topology;
-
-        bool primitive_restart = false;
     };
     struct Depth
     {
@@ -88,12 +89,8 @@ public:
 
         bool test = false;
         bool write = false;
-        bool bounds_test = false;
         bool bias = false;
         bool clamp = false;
-
-        float min_bounds;
-        float max_bounds;
 
         float bias_constant_factor;
         float bias_clamp;
@@ -291,7 +288,7 @@ public:
             std::uint32_t binding;
             std::uint32_t offset;
 
-            using Format = lx::gpu::loader::vulkan::Format;
+            using Format = lx::gpu::Format;
 
             Format format;
         };
@@ -301,7 +298,7 @@ public:
     };
     struct Clip
     {
-        Viewport<float> viewport;
+        Viewport viewport;
         lx::common::Rect<std::int32_t, std::int32_t> scissors;
     };
     struct Shader

@@ -4,7 +4,10 @@
 #include <lx/common/Extent.hpp>
 #include <lx/common/non_copyable.hpp>
 #include <lx/containers/Vector.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
+#include <lx/gpu/Format.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <cstdlib>
@@ -13,7 +16,7 @@ namespace lx::gpu {
 class SwapChain : private lx::common::non_copyable
 {
 public:
-    using Format = loader::vulkan::Format;
+    using Format = lx::gpu::Format;
 
     enum class ColorSpace : std::uint64_t
     {

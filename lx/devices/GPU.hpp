@@ -8,7 +8,9 @@
 // lx
 #include <lx/containers/String.hpp>
 #include <lx/containers/Vector.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <cstddef>

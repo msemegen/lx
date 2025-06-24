@@ -76,7 +76,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 gpus_a[0], canvas1, Device::Properties { .features = Device::Feature::none, .extensions {} });
 
             auto gpu_device2 = graphics_context_a.create<Device>(
-                gpus_a[0], canvas2, Device::Properties { .features = Device::Feature::none, .extensions {} });
+                gpus_a[1], canvas2, Device::Properties { .features = Device::Feature::none, .extensions {} });
 
             if (true == gpu_device1.is_created() && true == gpu_device2.is_created())
             {
@@ -91,9 +91,11 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                 auto command_list = gpu_device1.create<lx::gpu::CommandList<command_list::graphics | command_list::transfer>>(command_pool);
 
                 command_list.start();
-                command_list.stop();
 
+                command_list.stop();
                 rendering_queue.submit(command_list);
+
+                //auto graphics_pipeline = gpu_device1.create<lx::gpu::Pipeline<lx::gpu::pipeline::graphics>>({});
 
                 // foo(static_cast<const lx::gpu::CommandList<command_list::graphics>&>(command_list));
 
@@ -107,21 +109,7 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                  *  .swap_chain {  }
                  */
 
-                // auto gpu_device2 = graphics_context.create<Device>(
-                //     gpus_a[1],
-                //     canvas2,
-                //     Device::Properties { .features = Device::Feature::none,
-                //                          .queue_families { std::array {
-                //                              Device::QueueFamily { .kind = Device::QueueFamily::graphics | Device::QueueFamily::transfer,
-                //                                                    .count = 1u,
-                //                                                    .priorities { 1.0f },
-                //                                                    .presentation = true } } },
-                //                          .swap_chain { .format = Device::SwapChain::Format::r8g8b8a8_srgb,
-                //                                        .color_space = Device::SwapChain::ColorSpace::srgb_nonlinear_khr,
-                //                                        .mode = Device::SwapChain::Mode::fifo,
-                //                                        .images_count = 2u } });
-
-                if (true == gpu_device1.is_created() /* && true == gpu_device2->is_created()*/)
+                // if (true == gpu_device1.is_created() /* && true == gpu_device2->is_created()*/)
                 {
                     log_inf("GPU context created");
 
@@ -155,27 +143,23 @@ std::int32_t lx::app::entry_point(std::span<const lx::devices::Display> displays
                     gpu_device1.destroy(out(command_list));
                     gpu_device1.destroy(out(command_pool));
                     gpu_device1.destroy(out(swap_chain));
-                }
-                else
-                {
-                    log_err("GPU context not created");
-                }
 
-                if (true == gpu_device1.is_created() /*&& true == gpu_device2->is_created()*/)
-                {
-                    log_inf("GPU context destroyed");
-                }
+                    if (true == gpu_device1.is_created() /*&& true == gpu_device2->is_created()*/)
+                    {
+                        log_inf("GPU context destroyed");
+                    }
 
-                graphics_context_a.destroy(out(gpu_device1));
-                graphics_context_a.destroy(out(gpu_device2));
+                    graphics_context_a.destroy(out(gpu_device1));
+                    graphics_context_a.destroy(out(gpu_device2));
+                }
             }
+
+            windower_a.destroy(out(canvas1));
+            windower_a.destroy(out(canvas2));
         }
 
-        windower_a.destroy(out(canvas1));
-        windower_a.destroy(out(canvas2));
+        log_inf("Window destroyed");
+
+        return 0;
     }
-
-    log_inf("Window destroyed");
-
-    return 0;
 }

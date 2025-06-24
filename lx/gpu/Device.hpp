@@ -12,7 +12,9 @@
 #include <lx/gpu/Pipeline.hpp>
 #include <lx/gpu/Queue.hpp>
 #include <lx/gpu/SwapChain.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <cassert>
@@ -165,7 +167,7 @@ Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics>>(const lx::
 }
 template<> inline void Device::destroy(lx::common::out<lx::gpu::CommandList<lx::gpu::command_list::graphics>> object_a)
 {
-    object_a->destroy();
+    object_a->destroy(this->vk_device);
 }
 
 template<> inline [[nodiscard]] lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>
@@ -180,6 +182,6 @@ Device::create<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::c
 template<> inline void
 Device::destroy(lx::common::out<lx::gpu::CommandList<lx::gpu::command_list::graphics | lx::gpu::command_list::transfer>> object_a)
 {
-    object_a->destroy();
+    object_a->destroy(this->vk_device);
 }
 } // namespace lx::gpu

@@ -3,8 +3,10 @@
 
 // lx
 #include <lx/containers/Vector.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
 #include <lx/utils/logger.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // win32
 #include <Windows.h>
@@ -221,10 +223,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
         }
     }
 
-    bool vulkan_loaded = loader::vulkan::load();
+    std::uint32_t loaded_vulkan_version = lxlCreate();
     bool vulkan_initialized = false;
 
-    if (true == vulkan_loaded)
+    if (0u != loaded_vulkan_version)
     {
         Vector<const char*, 4u> default_instance_extensions;
         Vector<const char*, 3u> default_instance_layers;
@@ -760,7 +762,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR cmd_line, _In_
             lx::gpu::Context graphics_context;
             std::int32_t entry_point_ret = lx::app::entry_point(displays, gpus, graphics_context, windower, cmd_line);
 
-            loader::vulkan::release();
+            lxlDestroy();
 
             if (nullptr != p_log_file)
             {

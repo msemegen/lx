@@ -3,7 +3,9 @@
 // lx
 #include <lx/common/non_copyable.hpp>
 #include <lx/gpu/Queue.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <cstdint>

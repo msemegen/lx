@@ -4,7 +4,9 @@
 #include <lx/common/non_copyable.hpp>
 #include <lx/devices/GPU.hpp>
 #include <lx/gpu/CommandList.hpp>
-#include <lx/gpu/loader/vulkan.hpp>
+
+// externals
+#include <lxl/lxl.h>
 
 // std
 #include <cstdint>

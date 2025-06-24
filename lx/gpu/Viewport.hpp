@@ -5,12 +5,12 @@
 #include <lx/common/Position.hpp>
 
 namespace lx::gpu {
-template<typename Type> struct Viewport
+struct Viewport
 {
-    lx::common::Position<Type, 2u> position;
-    lx::common::Extent<Type, 2u> size;
+    lx::common::Position<std::int32_t, 2u> position;
+    lx::common::Extent<std::uint32_t, 2u> size;
 
-    Type min_depth;
-    Type max_depth;
+    float min_depth;
+    float max_depth;
 };
 } // namespace lx::gpu
